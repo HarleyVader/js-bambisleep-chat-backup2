@@ -907,15 +907,44 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
         socketStore.set(socket.id, { socket, worker: lmstudio, files: [] });
         logger.info(`Client connected: ${socket.id} sockets: ${socketStore.size}`);
 
-        // Chat message handling
+        // Chat message handlingAdd commentMore actions
         socket.on('chat message', async (msg) => {
           try {
+            const timestamp = new Date().toISOString();
+
+            // Create message object with consistent structure
+            const messageData = {
+              username: socket.bambiUsername || 'anonbambi',
+              data: msg.data,
+              timestamp: timestamp
+            };
+
+            // Broadcast message to all connected clients first for responsiveness
+            io.emit('chat message', messageData);
+
+            // Then save to database asynchronously
+            try {
+              // Ensure ChatMessage model is available
+              const ChatMessage = mongoose.models.ChatMessage || (await import('./models/ChatMessage.js')).default;
+
+              // Save message to database
+              const savedMessage = await ChatMessage.saveMessage(messageData);
+              logger.debug(`Chat message saved to database: ${savedMessage._id}`);
+
+              // Give XP for chat interactions
+              xpSystem.awardXP(socket, 1, 'chat');
+            } catch (dbError) {
+              // Log database error but don't disrupt the user experience
+              logger.error(`Failed to save chat message: ${dbError.message}`, {
+                username: messageData.username,
+                messageLength: messageData.data?.length || 0
+              });
+            }
             // Chat message handler code...
           } catch (error) {
             logger.error('Error in chat message handler:', error);
           }
         });
-
         // Username setting
         socket.on('set username', (username) => {
           try {
