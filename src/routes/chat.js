@@ -3,6 +3,7 @@ import ChatMessage from '../models/ChatMessage.js';
 import Logger from '../utils/logger.js';
 import footerConfig from '../config/footer.config.js';
 import config from '../config/config.js';
+import Profile from '../models/Profile.js';
 
 const router = express.Router();
 const logger = new Logger('Chat');
@@ -32,9 +33,7 @@ router.get('/', async (req, res) => {
     let profile = null;
     if (username && username !== 'anonBambi') {
       try {
-        // Assuming getProfile function exists (imported from Profile model)
-        const Profile = await import('../models/Profile.js').then(module => module.getProfile);
-        profile = await Profile(username);
+        profile = await Profile.findByUsername(username);
       } catch (error) {
         logger.error(`Error fetching profile for ${username}:`, error);
       }

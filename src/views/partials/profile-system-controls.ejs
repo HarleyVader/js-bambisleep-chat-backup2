@@ -276,8 +276,7 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
             <div id="frequency-description" class="frequency-description">
               Alpha waves (8-14Hz) promote relaxed focus and are ideal for gentle trance states.
             </div>
-            
-            <div id="custom-freq-container" class="brainwave-control-group" style="<%= (systemControls.brainwaveMode === 'custom') ? '' : 'display: none' %>">
+              <div id="custom-freq-container" class="brainwave-control-group" style="<%= (systemControls.brainwaveMode === 'custom') ? '' : 'display: none;' %>">
               <label for="custom-frequency">Beat Frequency:</label>
               <div class="slider-container">
                 <input type="range" id="custom-frequency" min="1" max="30" value="<%= systemControls.customFrequency || 10 %>" step="0.5" class="brainwave-slider">
@@ -311,92 +310,74 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
       <% } %>
       
         <% if (userLevel >= 8) { %>
-        <!-- Advanced Binaural panel -->
-        <div id="advanced-binaural-panel" class="control-panel">
-          <h3>Advanced Binaural Patterns</h3>
-          <div class="advanced-binaural-info">
-            <p>This advanced feature allows more complex brainwave entrainment patterns that change over time.</p>
-            <div class="science-reference">
-              <i class="fas fa-flask"></i> Based on recent neuroscience research on frequency-following response.
-              <a href="#" id="science-link" class="info-link">Learn more</a>
-            </div>
-          </div>
-          
-          <div class="binaural-toggle">
-            <input type="checkbox" id="advanced-binaural-enable" <%= systemControls.advancedBinauralEnabled ? 'checked' : '' %>>
-            <label for="advanced-binaural-enable">Enable Advanced Patterns</label>
-          </div>
-          
-          <div class="binaural-controls">
-            <div class="binaural-control-group">
-              <label for="pattern-select">Pattern Type:</label>
-              <select id="pattern-select" class="binaural-select">
-                <option value="descent" <%= (systemControls.binauralPattern === 'descent') ? 'selected' : '' %>>Descent (Alpha to Theta to Delta)</option>
-                <option value="ascent" <%= (systemControls.binauralPattern === 'ascent') ? 'selected' : '' %>>Ascent (Delta to Theta to Alpha)</option>
-                <option value="focus" <%= (systemControls.binauralPattern === 'focus') ? 'selected' : '' %>>Focus Cycle (Alpha-Beta-Alpha)</option>
-                <option value="trance" <%= (systemControls.binauralPattern === 'trance') ? 'selected' : '' %>>Deep Trance (Alpha-Theta Loop)</option>
-                <option value="custom" <%= (systemControls.binauralPattern === 'custom') ? 'selected' : '' %>>Custom Pattern</option>
-              </select>
-            </div>
-            
-            <div id="pattern-description" class="pattern-description">
-              Descent pattern gradually moves from alert Alpha waves down through Theta into deep Delta, creating a natural descent into trance.
-            </div>
-            
-            <div id="custom-pattern-container" class="binaural-control-group" style="<%= (systemControls.binauralPattern === 'custom') ? '' : 'display: none' %>">
-              <label>Custom Pattern Sequence:</label>
-              <div class="custom-pattern-editor">
-                <div class="pattern-segments">
-                  <div class="pattern-segment">
-                    <select class="segment-wave">
-                      <option value="alpha">Alpha</option>
-                      <option value="theta">Theta</option>
-                      <option value="delta">Delta</option>
-                      <option value="beta">Beta</option>
-                    </select>
-                    <input type="number" class="segment-duration" min="1" max="60" value="5"> mins
-                    <button class="remove-segment">×</button>
-                  </div>
-                </div>
-                <button id="add-segment" class="secondary-btn">Add Segment</button>
-              </div>
-            </div>
-            
-            <div class="binaural-control-group">
-              <label for="pattern-duration">Total Duration:</label>
-              <div class="slider-container">
-                <input type="range" id="pattern-duration" min="5" max="60" value="<%= systemControls.patternDuration || 20 %>" step="5" class="binaural-slider">
-                <span id="pattern-duration-value"><%= systemControls.patternDuration || 20 %> minutes</span>
-              </div>
-            </div>
-            
-            <div class="binaural-control-group">
-              <label for="transition-time">Transition Time:</label>
-              <div class="slider-container">
-                <input type="range" id="transition-time" min="10" max="120" value="<%= systemControls.transitionTime || 30 %>" step="10" class="binaural-slider">
-                <span id="transition-time-value"><%= systemControls.transitionTime || 30 %> seconds</span>
-              </div>
-            </div>
-            
-            <div class="binaural-visualization">
-              <canvas id="pattern-visualization" width="400" height="120"></canvas>
-              <div class="visualization-legend">
-                <span class="beta-legend">Beta</span>
-                <span class="alpha-legend">Alpha</span>
-                <span class="theta-legend">Theta</span>
-                <span class="delta-legend">Delta</span>
-                <div class="time-axis">Time (minutes)</div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="binaural-actions">
-            <button id="play-advanced-binaural" class="secondary-btn">Play Pattern</button>
-            <button id="stop-advanced-binaural" class="secondary-btn" disabled>Stop</button>
-            <button id="save-advanced-binaural" class="save-btn">Save Settings</button>
-          </div>
-        </div>
-      <% } %>
+<!-- Advanced Binaural panel -->
+<div id="advanced-binaural-panel" class="control-panel">
+  <h3>Advanced Binaural Patterns</h3>
+  <div class="advanced-binaural-info">
+    <p>This advanced feature allows more complex brainwave entrainment patterns that change over time.</p>
+    <div class="science-reference">
+      <i class="fas fa-flask"></i> Based on recent neuroscience research on frequency-following response.
+      <a href="#" id="science-link" class="info-link">Learn more</a>
+    </div>
+  </div>
+  
+  <div class="binaural-toggle">
+    <input type="checkbox" id="advanced-binaural-enable" <%= systemControls.advancedBinauralEnabled ? 'checked' : '' %>>
+    <label for="advanced-binaural-enable">Enable Advanced Patterns</label>
+  </div>
+  
+  <div class="binaural-controls">
+    <div class="binaural-control-group">
+      <label for="pattern-select">Pattern Type:</label>
+      <select id="pattern-select" class="binaural-select">
+        <option value="descent" <%= (systemControls.binauralPattern === 'descent') ? 'selected' : '' %>>Descent (Alpha to Theta to Delta)</option>
+        <option value="ascent" <%= (systemControls.binauralPattern === 'ascent') ? 'selected' : '' %>>Ascent (Delta to Theta to Alpha)</option>
+        <option value="focus" <%= (systemControls.binauralPattern === 'focus') ? 'selected' : '' %>>Focus Cycle (Alpha-Beta-Alpha)</option>
+        <option value="trance" <%= (systemControls.binauralPattern === 'trance') ? 'selected' : '' %>>Deep Trance (Alpha-Theta Loop)</option>
+        <option value="custom" <%= (systemControls.binauralPattern === 'custom') ? 'selected' : '' %>>Custom Pattern</option>
+      </select>
+    </div>
+    
+    <div id="pattern-description" class="pattern-description">
+      Descent pattern gradually moves from alert Alpha waves down through Theta into deep Delta, creating a natural descent into trance.
+    </div>
+    
+    <div id="custom-pattern-container" class="binaural-control-group" style="<%= (systemControls.binauralPattern === 'custom') ? '' : 'display: none;' %>">
+      <label>Custom Pattern Sequence:</label>
+      <div class="pattern-segments">
+        <!-- Custom segments added by JS -->
+      </div>
+      <button id="add-segment" class="secondary-btn">Add Segment</button>
+    </div>
+    
+    <div class="binaural-control-group">
+      <label for="pattern-duration">Total Duration:</label>
+      <div class="slider-container">
+        <input type="range" id="pattern-duration" min="5" max="120" value="<%= systemControls.patternDuration || 20 %>" step="5" class="binaural-slider">
+        <span id="pattern-duration-value"><%= systemControls.patternDuration || 20 %> minutes</span>
+      </div>
+    </div>
+    
+    <div class="binaural-control-group">
+      <label for="transition-time">Transition Time:</label>
+      <div class="slider-container">
+        <input type="range" id="transition-time" min="10" max="120" value="<%= systemControls.transitionTime || 30 %>" step="10" class="binaural-slider">
+        <span id="transition-time-value"><%= systemControls.transitionTime || 30 %> seconds</span>
+      </div>
+    </div>
+    
+    <div class="binaural-visualization">
+      <canvas id="pattern-visualization" width="400" height="200"></canvas>
+    </div>
+  </div>
+  
+  <div class="binaural-actions">
+    <button id="play-advanced-binaural" class="secondary-btn">Play Pattern</button>
+    <button id="stop-advanced-binaural" class="secondary-btn" disabled>Stop</button>
+    <button id="save-advanced-binaural" class="save-btn">Save Settings</button>
+  </div>
+</div>
+<% } %>
 
     <% } else { %>
       <div class="locked-features-message">
@@ -408,8 +389,7 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
 
   <!-- </div>- XP progress bar -->
   <% if (userXp !== undefined) { %>
-    <div class="xp-progress-container">
-      <div class="xp-progress-label" id="xp-progress-label">
+    <div class="xp-progress-container">      <div class="xp-progress-label" id="xp-progress-label">
         <% if (userLevel < xpRequirements.length) { %>
           Level <%= userLevel %> • <%= userXp %> XP / <%= nextLevelXP %> XP
         <% } else { %>
@@ -418,9 +398,9 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
       </div>
       <div class="xp-progress-bar">
         <% if (userLevel < xpRequirements.length) { %>
-          <div class="xp-progress-fill" id="xp-progress-fill" style="width: <%= Math.min(100, userXp / Math.max(1, nextLevelXP) * 100) %>%"></div>
+          <div class="xp-progress-fill" id="xp-progress-fill" style="width: <%= Math.min(100, (userXp / Math.max(1, nextLevelXP)) * 100) %>%;"></div>
         <% } else { %>
-          <div class="xp-progress-fill" id="xp-progress-fill" style="width: 100%"></div>
+          <div class="xp-progress-fill" id="xp-progress-fill" style="width: 100%;"></div>
         <% } %>
       </div>
     </div>
@@ -459,38 +439,6 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
       });
     });
     
-    // Set initial volume and speed from localStorage
-    const volumeSlider = document.getElementById('loop-volume');
-    const volumeValue = document.getElementById('volume-value');
-    if (volumeSlider && volumeValue) {
-      const storedVolume = localStorage.getItem('bambiAudioVolume') || '0.8';
-      const volume = parseFloat(storedVolume);
-      volumeSlider.value = volume * 10;
-      volumeValue.textContent = Math.round(volume * 100) + '%';
-    }
-    
-    const speedSlider = document.getElementById('loop-speed');
-    const speedValue = document.getElementById('speed-value');
-    if (speedSlider && speedValue) {
-      const storedSpeed = localStorage.getItem('bambiAudioSpeed') || '5';
-      speedSlider.value = storedSpeed;
-      updateSpeedLabel(storedSpeed, speedValue);
-    }
-    
-    // Helper function for speed label
-    function updateSpeedLabel(value, element) {
-      if (!element) return;
-      
-      const speedVal = parseInt(value);
-      if (speedVal === 5) {
-        element.textContent = 'Normal';
-      } else if (speedVal < 5) {
-        element.textContent = 'Slower ' + (5 - speedVal) + 'x';
-      } else {
-        element.textContent = 'Faster ' + (speedVal - 5) + 'x';
-      }
-    }
-    
     // Load the last tab from localStorage on page load
     const lastTab = localStorage.getItem('bambiLastTab');
     if (lastTab) {
@@ -498,304 +446,70 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
       if (tabButton && !tabButton.classList.contains('disabled')) {
         tabButton.click();
       } else if (controlButtons.length > 0) {
-        // If last tab not found, activate first available tab
         controlButtons[0].click();
       }
     } else if (controlButtons.length > 0) {
-      // No saved tab, activate first available tab
       controlButtons[0].click();
     }
     
-    // Consolidated trigger initialization - prevent multiple loads
+    // Initialize triggers
     let triggersInitialized = false;
     const initTriggers = () => {
       if (triggersInitialized) return;
-      
-      const triggerList = document.getElementById('trigger-list');
-      if (!triggerList) return;
-      
-      // Use a flag to prevent multiple initializations
       triggersInitialized = true;
       
       if (window.bambiAudio && window.bambiAudio.refreshTriggers) {
         window.bambiAudio.refreshTriggers();
       }
       
-      if (triggerList.children.length === 0 && typeof loadTriggerData === 'function') {
+      const triggerList = document.getElementById('trigger-list');
+      if (triggerList && triggerList.children.length === 0 && typeof loadTriggerData === 'function') {
         loadTriggerData();
       }
-      
-      document.dispatchEvent(new CustomEvent('trigger-controls-loaded'));
     };
     
-    // Try to initialize immediately
     if (document.getElementById('trigger-list')) {
-      setTimeout(initTriggers, 100); // Short delay to ensure DOM is ready
+      setTimeout(initTriggers, 100);
     }
     
-    // Also watch for changes in case the triggers are loaded dynamically
-    const triggerList = document.getElementById('trigger-list');
-    if (triggerList) {
-      const observer = new MutationObserver(() => {
-        if (!triggersInitialized && triggerList.children.length > 0) {
-          initTriggers();
-          observer.disconnect();
+    // Socket communication
+    if (typeof socket !== 'undefined' || typeof window.socket !== 'undefined') {
+      const sock = socket || window.socket;
+      
+      sock.on('worker:settings:response', function(data) {
+        if (data && data.success) {
+          showNotification(data.section + ' settings saved');
         }
       });
-      
-      observer.observe(triggerList, { childList: true, subtree: true });
-      
-      // Final safety timeout - try once more after 2 seconds
-      setTimeout(() => {
-        if (!triggersInitialized) {
-          initTriggers();
-          observer.disconnect();
-        }
-      }, 2000);
     }
     
-    // STANDARDIZED TWO-WAY COMMUNICATION PIPELINE
-    
-    // Check if socket is available
-    if (typeof socket === 'undefined' && typeof window.socket !== 'undefined') {
-      socket = window.socket;
+    // Simple notification
+    function showNotification(message) {
+      const notification = document.createElement('div');
+      notification.textContent = message;
+      notification.style.cssText = 'position:fixed;top:20px;right:20px;background:#4CAF50;color:white;padding:10px;border-radius:5px;z-index:9999;';
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 2000);
     }
     
-    if (typeof socket === 'undefined') {
-      console.error('Socket.io not initialized');
-    } else {
-      // Listen for settings response from worker
-      socket.on('worker:settings:response', function(data) {
-        if (!data) return;
-        
-        // Update UI based on worker response
-        if (data.success) {
-          // Flash settings saved notification
-          showSettingsNotification(data.section);
-        } else {
-          showSettingsError(data.error || 'Unknown error');
-        }
-        
-        // Display debug info if provided
-        if (data.debug && console.debug) {
-          console.debug('Worker debug:', data.debug);
-        }
-      });
+    // Global settings function
+    window.bambiSendSettings = function(section, settings) {
+      const sock = socket || window.socket;
+      if (!sock || !sock.connected) return false;
       
-      // Listen for worker-initiated updates
-      socket.on('worker:update', function(data) {
-        if (!data || !data.type) return;
-        
-        switch (data.type) {
-          case 'triggers':
-            updateTriggerStatus(data.triggers);
-            break;
-          case 'collar':
-            updateCollarStatus(data.active, data.message);
-            break;
-          case 'system':
-            if (data.settings && window.bambiSystem) {
-              window.bambiSystem.updateSettings(data.settings);
-            }
-            break;
-        }
-      });
-
-      // From profile-system-controls.ejs
-      socket.emit('worker:settings:update', payload);
-    }
-    
-    // Function to send settings to worker
-    function sendSettingsToWorker(section, settings) {
-      if (!socket || !socket.connected) {
-        console.error('Cannot send settings: socket not connected');
-        return false;
-      }
-      
-      // Add timestamp and version
-      const payload = {
+      sock.emit('worker:settings:update', {
         section: section,
         settings: settings,
-        timestamp: Date.now(),
-        clientVersion: '1.0'
-      };
-      
-      // Add username if available
-      const username = document.body.getAttribute('data-username');
-      if (username) {
-        payload.username = username;
-      }
-      
-      socket.emit('worker:settings:update', payload);
+        username: document.body.getAttribute('data-username'),
+        timestamp: Date.now()
+      });
       return true;
-    }
-    
-    // Simple notification helper
-    function showSettingsNotification(section) {
-      const notificationId = 'settings-notification';
-      let notification = document.getElementById(notificationId);
-      
-      if (!notification) {
-        notification = document.createElement('div');
-        notification.id = notificationId;
-        notification.className = 'settings-notification';
-        document.body.appendChild(notification);
-      }
-      
-      notification.textContent = `${section} settings saved`;
-      notification.classList.add('show');
-      
-      setTimeout(() => {
-        notification.classList.remove('show');
-      }, 2000);
-    }
-    
-    function showSettingsError(message) {
-      const errorId = 'settings-error';
-      let errorEl = document.getElementById(errorId);
-      
-      if (!errorEl) {
-        errorEl = document.createElement('div');
-        errorEl.id = errorId;
-        errorEl.className = 'settings-error';
-        document.body.appendChild(errorEl);
-      }
-      
-      errorEl.textContent = message;
-      errorEl.classList.add('show');
-      
-      setTimeout(() => {
-        errorEl.classList.remove('show');
-      }, 3000);
-    }
-    
-    // Helper to update trigger status
-    function updateTriggerStatus(triggers) {
-      if (!Array.isArray(triggers) || !window.bambiAudio) return;
-      
-      // Store in localStorage for persistence
-      localStorage.setItem('bambiActiveTriggers', JSON.stringify(triggers));
-      
-      if (typeof window.bambiAudio.refreshTriggers === 'function') {
-        window.bambiAudio.refreshTriggers();
-      }
-      
-      // Update UI checkboxes if they exist
-      triggers.forEach(trigger => {
-        const checkbox = document.querySelector(`.trigger-toggle-item input[data-trigger="${trigger}"]`);
-        if (checkbox) checkbox.checked = true;
-      });
-    }
-    
-    // Helper to update collar status
-    function updateCollarStatus(active, message) {
-      const collarEnable = document.getElementById('collar-enable');
-      const textareaCollar = document.getElementById('textarea-collar');
-      
-      if (collarEnable) collarEnable.checked = !!active;
-      if (textareaCollar && message) textareaCollar.value = message;
-      
-      // Update collar display if it exists
-      const collarContainer = document.getElementById('collar-container');
-      if (collarContainer) {
-        collarContainer.style.display = active ? 'block' : 'none';
-      }
-    }
-    
-    // Make the sendSettings function available globally
-    window.bambiSendSettings = sendSettingsToWorker;
-    
-    // Add event listeners to save buttons
-    document.querySelectorAll('.save-btn').forEach(button => {
-      button.addEventListener('click', function() {
-        const panelId = this.closest('.control-panel').id;
-        let section, settings;
-        
-        switch (panelId) {
-          case 'collar-panel':
-            section = 'collar';
-            settings = {
-              enabled: document.getElementById('collar-enable').checked,
-              text: document.getElementById('textarea-collar').value
-            };
-            break;
-            
-          case 'spirals-panel':
-            section = 'spirals';
-            settings = {
-              enabled: document.getElementById('spirals-enable').checked,
-              spiral1Width: parseFloat(document.getElementById('spiral1-width').value),
-              spiral2Width: parseFloat(document.getElementById('spiral2-width').value),
-              spiral1Speed: parseInt(document.getElementById('spiral1-speed').value),
-              spiral2Speed: parseInt(document.getElementById('spiral2-speed').value)
-            };
-            break;
-            
-          case 'hypnosis-panel':
-            section = 'hypnosis';
-            settings = {
-              enabled: document.getElementById('hypnosis-enable').checked,
-              streaming: document.getElementById('streaming-enable').checked
-            };
-            break;
-            
-          case 'brainwave-panel':
-            section = 'brainwave';
-            settings = {
-              enabled: document.getElementById('brainwave-enable').checked,
-              mode: document.getElementById('brainwave-mode').value,
-              carrierFrequency: parseInt(document.getElementById('carrier-frequency').value),
-              volume: parseInt(document.getElementById('brainwave-volume').value)
-            };
-            
-            if (settings.mode === 'custom') {
-              settings.customFrequency = parseFloat(document.getElementById('custom-frequency').value);
-            }
-            break;
-            
-          case 'advanced-binaural-panel':
-            section = 'advancedBinaural';
-            settings = {
-              enabled: document.getElementById('advanced-binaural-enable').checked,
-              pattern: document.getElementById('pattern-select').value,
-              duration: parseInt(document.getElementById('pattern-duration').value),
-              transitionTime: parseInt(document.getElementById('transition-time').value)
-            };
-            
-            if (settings.pattern === 'custom') {
-              settings.segments = [];
-              document.querySelectorAll('.pattern-segment').forEach(segment => {
-                const wave = segment.querySelector('.segment-wave').value;
-                const duration = parseInt(segment.querySelector('.segment-duration').value);
-                if (wave && duration) {
-                  settings.segments.push({ wave, duration });
-                }
-              });
-            }
-            break;
-        }
-        
-        if (section && settings) {
-          sendSettingsToWorker(section, settings);
-        }
-      });
-    });
-    
-    // Support for trigger toggle events
-    document.addEventListener('triggers:changed', function(e) {
-      if (!e.detail || !Array.isArray(e.detail.activeTriggers)) return;
-      sendSettingsToWorker('triggers', { activeTriggers: e.detail.activeTriggers });
-    });
+    };
   });
 </script>
 
 <!-- Load modular system control scripts -->
 <script src="/js/controls/utils.js"></script>
 <script src="/js/controls/system.js"></script>
-<script src="/js/text2speech.js"></script> <!-- Add text2speech.js -->
-<script src="/js/triggers.js"></script> <!-- Add the main triggers.js file -->
-<script src="/js/controls/trigger.js"></script> <!-- Keep the existing trigger.js -->
-<script src="/js/controls/collar.js"></script>
-<script src="/js/controls/spiral.js"></script>
-<script src="/js/controls/brainwave.js"></script>
+<script src="/js/text2speech.js"></script>
 <script src="/js/controls/advanced-binaural.js"></script>
