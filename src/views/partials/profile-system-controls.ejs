@@ -411,10 +411,9 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
 
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    // Match XP requirements with the EJS values
     window.xpRequirements = [1000, 2500, 4500, 7000, 12000, 36000, 112000, 332000];
     
-    // Tab navigation system
+    // Tab navigation
     const controlButtons = document.querySelectorAll('.control-btn:not(.disabled)');
     
     controlButtons.forEach(button => {
@@ -422,24 +421,20 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
         const targetId = this.getAttribute('data-target');
         if (!targetId) return;
         
-        // Toggle active states
         controlButtons.forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.control-panel').forEach(panel => {
           panel.classList.remove('active');
         });
         
         this.classList.add('active');
-        
-        // Show target panel
         const targetPanel = document.getElementById(targetId);
         if (targetPanel) targetPanel.classList.add('active');
         
-        // Save last active tab
         localStorage.setItem('bambiLastTab', targetId);
       });
     });
     
-    // Load the last tab from localStorage on page load
+    // Load last tab
     const lastTab = localStorage.getItem('bambiLastTab');
     if (lastTab) {
       const tabButton = document.querySelector(`.control-btn[data-target="${lastTab}"]`);
@@ -452,20 +447,54 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
       controlButtons[0].click();
     }
     
+    // Audio controls
+    const volumeSlider = document.getElementById('loop-volume');
+    const volumeValue = document.getElementById('volume-value');
+    if (volumeSlider && volumeValue) {
+      const storedVolume = localStorage.getItem('bambiAudioVolume') || '0.8';
+      const volume = parseFloat(storedVolume);
+      volumeSlider.value = volume * 10;
+      volumeValue.textContent = Math.round(volume * 100) + '%';
+    }
+    
+    const speedSlider = document.getElementById('loop-speed');
+    const speedValue = document.getElementById('speed-value');
+    if (speedSlider && speedValue) {
+      const storedSpeed = localStorage.getItem('bambiAudioSpeed') || '5';
+      speedSlider.value = storedSpeed;
+      updateSpeedLabel(storedSpeed, speedValue);
+    }
+    
+    function updateSpeedLabel(value, element) {
+      if (!element) return;
+      const speedVal = parseInt(value);
+      if (speedVal === 5) {
+        element.textContent = 'Normal';
+      } else if (speedVal < 5) {
+        element.textContent = 'Slower ' + (5 - speedVal) + 'x';
+      } else {
+        element.textContent = 'Faster ' + (speedVal - 5) + 'x';
+      }
+    }
+    
     // Initialize triggers
     let triggersInitialized = false;
     const initTriggers = () => {
       if (triggersInitialized) return;
+      const triggerList = document.getElementById('trigger-list');
+      if (!triggerList) return;
+      
       triggersInitialized = true;
       
       if (window.bambiAudio && window.bambiAudio.refreshTriggers) {
         window.bambiAudio.refreshTriggers();
       }
       
-      const triggerList = document.getElementById('trigger-list');
-      if (triggerList && triggerList.children.length === 0 && typeof loadTriggerData === 'function') {
+      if (triggerList.children.length === 0 && typeof loadTriggerData === 'function') {
         loadTriggerData();
       }
+      
+      document.dispatchEvent(new CustomEvent('trigger-controls-loaded'));
     };
     
     if (document.getElementById('trigger-list')) {
@@ -473,43 +502,154 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
     }
     
     // Socket communication
-    if (typeof socket !== 'undefined' || typeof window.socket !== 'undefined') {
-      const sock = socket || window.socket;
-      
-      sock.on('worker:settings:response', function(data) {
+    if (typeof socket === 'undefined' && typeof window.socket !== 'undefined') {
+      socket = window.socket;
+    }
+    
+    if (typeof socket !== 'undefined') {
+      socket.on('worker:settings:response', function(data) {
         if (data && data.success) {
-          showNotification(data.section + ' settings saved');
+          showSettingsNotification(data.section);
+        } else if (data) {
+          showSettingsError(data.error || 'Unknown error');
+        }
+      });
+      
+      socket.on('worker:update', function(data) {
+        if (!data || !data.type) return;
+        switch (data.type) {
+          case 'triggers':
+            updateTriggerStatus(data.triggers);
+            break;
+          case 'collar':
+            updateCollarStatus(data.active, data.message);
+            break;
         }
       });
     }
     
-    // Simple notification
-    function showNotification(message) {
-      const notification = document.createElement('div');
-      notification.textContent = message;
-      notification.style.cssText = 'position:fixed;top:20px;right:20px;background:#4CAF50;color:white;padding:10px;border-radius:5px;z-index:9999;';
-      document.body.appendChild(notification);
-      setTimeout(() => notification.remove(), 2000);
-    }
-    
-    // Global settings function
-    window.bambiSendSettings = function(section, settings) {
-      const sock = socket || window.socket;
-      if (!sock || !sock.connected) return false;
+    // Settings helpers
+    function sendSettingsToWorker(section, settings) {
+      if (!socket || !socket.connected) return false;
       
-      sock.emit('worker:settings:update', {
+      const payload = {
         section: section,
         settings: settings,
-        username: document.body.getAttribute('data-username'),
-        timestamp: Date.now()
-      });
+        timestamp: Date.now(),
+        username: document.body.getAttribute('data-username')
+      };
+      
+      socket.emit('worker:settings:update', payload);
       return true;
-    };
+    }
+    
+    function showSettingsNotification(section) {
+      let notification = document.getElementById('settings-notification');
+      if (!notification) {
+        notification = document.createElement('div');
+        notification.id = 'settings-notification';
+        notification.className = 'settings-notification';
+        document.body.appendChild(notification);
+      }
+      
+      notification.textContent = `${section} settings saved`;
+      notification.classList.add('show');
+      setTimeout(() => notification.classList.remove('show'), 2000);
+    }
+    
+    function showSettingsError(message) {
+      let errorEl = document.getElementById('settings-error');
+      if (!errorEl) {
+        errorEl = document.createElement('div');
+        errorEl.id = 'settings-error';
+        errorEl.className = 'settings-error';
+        document.body.appendChild(errorEl);
+      }
+      
+      errorEl.textContent = message;
+      errorEl.classList.add('show');
+      setTimeout(() => errorEl.classList.remove('show'), 3000);
+    }
+    
+    function updateTriggerStatus(triggers) {
+      if (!Array.isArray(triggers)) return;
+      localStorage.setItem('bambiActiveTriggers', JSON.stringify(triggers));
+      if (window.bambiAudio && window.bambiAudio.refreshTriggers) {
+        window.bambiAudio.refreshTriggers();
+      }
+    }
+    
+    function updateCollarStatus(active, message) {
+      const collarEnable = document.getElementById('collar-enable');
+      const textareaCollar = document.getElementById('textarea-collar');
+      if (collarEnable) collarEnable.checked = !!active;
+      if (textareaCollar && message) textareaCollar.value = message;
+    }
+    
+    window.bambiSendSettings = sendSettingsToWorker;
+    
+    // Save button handlers
+    document.querySelectorAll('.save-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const panelId = this.closest('.control-panel').id;
+        let section, settings;
+        
+        switch (panelId) {
+          case 'collar-panel':
+            section = 'collar';
+            settings = {
+              enabled: document.getElementById('collar-enable').checked,
+              text: document.getElementById('textarea-collar').value
+            };
+            break;
+            
+          case 'spirals-panel':
+            section = 'spirals';
+            settings = {
+              enabled: document.getElementById('spirals-enable').checked,
+              spiral1Width: parseFloat(document.getElementById('spiral1-width').value),
+              spiral2Width: parseFloat(document.getElementById('spiral2-width').value),
+              spiral1Speed: parseInt(document.getElementById('spiral1-speed').value),
+              spiral2Speed: parseInt(document.getElementById('spiral2-speed').value)
+            };
+            break;
+            
+          case 'brainwave-panel':
+            section = 'brainwave';
+            settings = {
+              enabled: document.getElementById('brainwave-enable').checked,
+              mode: document.getElementById('brainwave-mode').value,
+              carrierFrequency: parseInt(document.getElementById('carrier-frequency').value),
+              volume: parseInt(document.getElementById('brainwave-volume').value)
+            };
+            if (settings.mode === 'custom') {
+              settings.customFrequency = parseFloat(document.getElementById('custom-frequency').value);
+            }
+            break;
+        }
+        
+        if (section && settings) {
+          sendSettingsToWorker(section, settings);
+        }
+      });
+    });
+    
+    // Trigger events
+    document.addEventListener('triggers:changed', function(e) {
+      if (e.detail && Array.isArray(e.detail.activeTriggers)) {
+        sendSettingsToWorker('triggers', { activeTriggers: e.detail.activeTriggers });
+      }
+    });
   });
 </script>
 
-<!-- Load modular system control scripts -->
+<!-- Load scripts -->
 <script src="/js/controls/utils.js"></script>
 <script src="/js/controls/system.js"></script>
 <script src="/js/text2speech.js"></script>
+<script src="/js/triggers.js"></script>
+<script src="/js/controls/trigger.js"></script>
+<script src="/js/controls/collar.js"></script>
+<script src="/js/controls/spiral.js"></script>
+<script src="/js/controls/brainwave.js"></script>
 <script src="/js/controls/advanced-binaural.js"></script>
