@@ -765,7 +765,7 @@ async function handleMessage(userPrompt, socketId, username) {
     // Get model ID with error handling
     let modelId;
     try {
-      modelId = await selectLoadedModels('l3-sthenomaidblackroot-8b-v1');
+      modelId = await selectLoadedModels('l3-sthenomaidblackroot-8b-v1@q2_k');
       if (!modelId) {
         throw new Error('No models loaded');
       }
