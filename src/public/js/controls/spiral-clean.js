@@ -1,4 +1,4 @@
-// Spiral controls
+// Clean Spiral Controls Implementation
 document.addEventListener('DOMContentLoaded', function() {
   // Core elements
   const saveBtn = document.getElementById('save-spirals');
@@ -35,8 +35,11 @@ document.addEventListener('DOMContentLoaded', function() {
   function setupListeners() {
     // Enable toggle
     enableToggle.addEventListener('change', function() {
-      if (this.checked) showSpiral();
-      else hideSpiral();
+      if (this.checked) {
+        showSpiral();
+      } else {
+        hideSpiral();
+      }
     });
     
     // Sliders
@@ -72,19 +75,11 @@ document.addEventListener('DOMContentLoaded', function() {
       spiral1Speed = settings.spiral1Speed;
       spiral2Speed = settings.spiral2Speed;
       
-      // Update value displays
-      const spiral1WidthEl = document.getElementById('spiral1-width-value');
-      const spiral2WidthEl = document.getElementById('spiral2-width-value');
-      const spiral1SpeedEl = document.getElementById('spiral1-speed-value');
-      const spiral2SpeedEl = document.getElementById('spiral2-speed-value');
-      
-      if (spiral1WidthEl) spiral1WidthEl.textContent = spiral1Width;
-      if (spiral2WidthEl) spiral2WidthEl.textContent = spiral2Width;
-      if (spiral1SpeedEl) spiral1SpeedEl.textContent = spiral1Speed;
-      if (spiral2SpeedEl) spiral2SpeedEl.textContent = spiral2Speed;
+      updateValues();
     }
   }
-    // Update current values from sliders
+  
+  // Update current values from sliders
   function updateValues() {
     spiral1Width = parseFloat(width1Slider?.value || 5.0);
     spiral2Width = parseFloat(width2Slider?.value || 3.0);
@@ -102,7 +97,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (spiral1SpeedEl) spiral1SpeedEl.textContent = spiral1Speed;
     if (spiral2SpeedEl) spiral2SpeedEl.textContent = spiral2Speed;
   }
-    // Save current settings
+  
+  // Save current settings
   function saveSettings() {
     const settings = {
       enabled: enableToggle.checked,
@@ -138,9 +134,12 @@ document.addEventListener('DOMContentLoaded', function() {
   // Hide spirals
   function hideSpiral() {
     const eyeCursor = document.getElementById('eyeCursor');
-    if (eyeCursor) eyeCursor.style.display = 'none';
+    if (eyeCursor) {
+      eyeCursor.style.display = 'none';
+    }
   }
-    // Ensure eye cursor element exists
+  
+  // Ensure eye cursor element exists
   function ensureEyeCursor() {
     if (!document.getElementById('eyeCursor')) {
       const cursor = document.createElement('div');
@@ -165,7 +164,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     p5Instance = new p5(function(p) {
       let width, height;
-        p.setup = function() {
+      
+      p.setup = function() {
         const container = document.getElementById('eyeCursor');
         if (!container) return;
         
@@ -196,19 +196,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const b = p.map(p.cos(p.frameCount / spiral2Speed), -1, 1, 1, 1.5);
         
         p.rotate(p.frameCount / 5);
-          // Draw spirals with Teal and Barbie Pink colors
+        
+        // Draw spirals with Teal and Barbie Pink colors
         drawSpiral(p, a, 1, [0, 128, 128], spiral1Width); // Teal color
         drawSpiral(p, b, 0.3, [255, 20, 147], spiral2Width); // Barbie Pink color
       };
       
-      function drawSpiral(p, step, ang, color, width) {
+      function drawSpiral(p, step, ang, color, baseWidth) {
         p.fill(color[0], color[1], color[2]);
         p.stroke(color[0], color[1], color[2]);
         
         let r1 = 0;
         let r2 = 2;
-        let spiralWidth = width;
-        let dw = spiralWidth / 350;
+        let spiralWidth = baseWidth;
+        const dw = spiralWidth / 350; // Width reduction per step
         
         p.beginShape(p.TRIANGLE_STRIP);
         for (let i = 0; i < 450; i++) {
@@ -228,14 +229,16 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-    // Update spiral parameters
+  
+  // Update spiral parameters
   function updateSpiral() {
     // Update global spiral parameters if they exist
     if (window.updateSpiralParams) {
       window.updateSpiralParams(spiral1Width, spiral2Width, spiral1Speed, spiral2Speed);
     }
   }
-    // Show message
+  
+  // Show message
   function showMessage(text) {
     const msg = document.createElement('div');
     msg.className = 'success-message';
