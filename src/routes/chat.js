@@ -1,5 +1,5 @@
 import express from 'express';
-import ChatMessage from '../models/ChatMessage.js';
+import sessionService from '../services/sessionService.js';
 import Logger from '../utils/logger.js';
 import footerConfig from '../config/footer.config.js';
 import config from '../config/config.js';
@@ -18,11 +18,10 @@ router.get('/', async (req, res) => {
     const username = req.cookies?.bambiname 
       ? decodeURIComponent(req.cookies.bambiname) 
       : 'anonBambi';
-    
-    // Get recent chat messages for the chat history
+      // Get recent chat messages for the chat history
     let chatMessages = [];
     try {
-      chatMessages = await ChatMessage.getRecentMessages(50);
+      chatMessages = await sessionService.ChatMessage.getRecentMessages(50);
       logger.info(`Retrieved ${chatMessages.length} messages for chat history`);
     } catch (error) {
       logger.error(`Error fetching chat messages: ${error.message}`);

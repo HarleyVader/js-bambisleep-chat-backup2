@@ -70,9 +70,7 @@ export async function getChatMessageModel() {
   return getModel('ChatMessage', 'chat');
 }
 
-export async function getEnhancedChatMessageModel() {
-  return getModel('EnhancedChatMessage', 'chat');
-}
+// Removed: getEnhancedChatMessageModel - consolidated into sessionService
 
 export async function getAudioInteractionModel() {
   return getModel('AudioInteraction', 'chat');
@@ -91,7 +89,7 @@ export default {
   getModel,
   getProfileModel,
   getChatMessageModel,
-  getEnhancedChatMessageModel,
+  // getEnhancedChatMessageModel, // Removed - consolidated into sessionService
   getAudioInteractionModel,
   getUserInteractionModel,
   getAigfInteractionModel

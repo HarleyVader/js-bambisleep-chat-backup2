@@ -20,6 +20,7 @@ import urlValidator from './utils/urlValidator.js';
 import audioTriggers from './utils/audioTriggers.js';
 import userMentions from './utils/userMentions.js';
 import aigfLogger from './utils/aigfLogger.js';
+import sessionService from './services/sessionService.js';
 
 // Import workers
 import spiralsWorker from './workers/spirals.js';
@@ -56,21 +57,9 @@ async function registerModels() {
       // SessionHistoryModule.default already has the model created in the file
       mongoose.models.SessionHistory = SessionHistoryModule.default;
       logger.info('SessionHistory model registered');
-    }
-
-    // Import ChatMessage model - same approach
-    const ChatMessageModule = await import('./models/ChatMessage.js');
-    if (!mongoose.models.ChatMessage) {
-      mongoose.models.ChatMessage = ChatMessageModule.default;
-      logger.info('ChatMessage model registered');
-    }
-    
-    // Import enhanced models
-    const EnhancedChatMessageModule = await import('./models/EnhancedChatMessage.js');
-    if (!mongoose.models.EnhancedChatMessage) {
-      mongoose.models.EnhancedChatMessage = EnhancedChatMessageModule.default;
-      logger.info('EnhancedChatMessage model registered');
-    }
+    }    // Initialize session service chat model
+    await sessionService.initSessionService();
+    logger.info('SessionService chat model registered');
     
     const AudioInteractionModule = await import('./models/AudioInteraction.js');
     if (!mongoose.models.AudioInteraction) {
@@ -986,11 +975,16 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
 
         // Add socket to global store
         socketStore.set(socket.id, { socket, worker: lmstudio, files: [] });
-        logger.info(`Client connected: ${socket.id} sockets: ${socketStore.size}`);
-
-        // Enhanced chat message handling
+        logger.info(`Client connected: ${socket.id} sockets: ${socketStore.size}`);        // Enhanced chat message handling
         socket.on('chat message', async (msg) => {
           try {
+            // Validate message format
+            if (!msg || !msg.data || typeof msg.data !== 'string') {
+              logger.warning('Received invalid message format');
+              socket.emit('error', { message: 'Invalid message format' });
+              return;
+            }
+
             const timestamp = new Date().toISOString();
 
             // Create message object with consistent structure
@@ -1001,12 +995,9 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
             };
 
             // Broadcast message to all connected clients first for responsiveness
-            io.emit('chat message', messageData);
-
-            // Process message for enhanced features (URLs, mentions, triggers)
+            io.emit('chat message', messageData);            // Process message for enhanced features (URLs, mentions, triggers)
             try {
-              // Import necessary models
-              const EnhancedChatMessage = await import('./models/EnhancedChatMessage.js').then(module => module.default);
+              // Use sessionService for message handling
               const AudioInteraction = await import('./models/AudioInteraction.js').then(module => module.default);
               const UserInteraction = await import('./models/UserInteraction.js').then(module => module.default);
               
@@ -1021,8 +1012,8 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
                 logger.error('Error loading triggers:', triggerError);
               }
               
-              // Save enhanced message to database
-              const savedMessage = await EnhancedChatMessage.saveMessage(messageData);
+              // Save enhanced message to database using sessionService
+              const savedMessage = await sessionService.ChatMessage.saveMessage(messageData);
               logger.debug(`Enhanced chat message saved to database: ${savedMessage._id}`);
               
               // Check for audio triggers
@@ -1086,10 +1077,9 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
                   // Run validation in background
                   (async () => {
                     const validation = await urlValidator.validateUrl(urlObj.url);
-                    
-                    // Update URL status in database
+                      // Update URL status in database using sessionService
                     await urlValidator.updateUrlStatus(
-                      EnhancedChatMessage,
+                      sessionService.ChatMessage,
                       savedMessage._id,
                       urlObj.url,
                       validation.isClean
@@ -1110,16 +1100,17 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
               }
 
               // Give XP for chat interactions
-              xpSystem.awardXP(socket, 1, 'chat');
-            } catch (dbError) {
+              xpSystem.awardXP(socket, 1, 'chat');            } catch (dbError) {
               // Log database error but don't disrupt the user experience
               logger.error(`Failed to save enhanced chat message: ${dbError.message}`, {
                 username: messageData.username,
                 messageLength: messageData.data?.length || 0
               });
+              socket.emit('error', { message: 'Failed to save message' });
             }
           } catch (error) {
             logger.error('Error in chat message handler:', error);
+            socket.emit('error', { message: 'Failed to process message' });
           }
         });
 

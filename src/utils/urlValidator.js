@@ -123,14 +123,14 @@ export async function validateUrl(url) {
 /**
  * Updates the URL validation status in the database
  * 
- * @param {object} EnhancedChatMessage - The EnhancedChatMessage model
+ * @param {object} ChatMessageModel - The ChatMessage model from sessionService
  * @param {string} messageId - The ID of the message containing the URL
  * @param {string} url - The URL to update
  * @param {boolean} isClean - Whether the URL is safe
  */
-export async function updateUrlStatus(EnhancedChatMessage, messageId, url, isClean) {
+export async function updateUrlStatus(ChatMessageModel, messageId, url, isClean) {
   try {
-    await EnhancedChatMessage.updateOne(
+    await ChatMessageModel.updateOne(
       { _id: messageId, 'urls.url': url },
       { 
         $set: { 
