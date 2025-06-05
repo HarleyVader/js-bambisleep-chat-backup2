@@ -1,4 +1,10 @@
-<%- include('partials/header', { title }); %>
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head') %>
+<title><%= title || 'Chat' %> | BambiSleep</title>
+
+<body>
+  <%- include('partials/nav', { path: '/chat' }) %>
 
 <div class="container">
   <div class="row">

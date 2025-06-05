@@ -2,12 +2,12 @@
 
 services:
   mongodb:
-    image: mongodb/mongodb-community-server:7.0
+    image: mongo:7.0
     container_name: bambisleep-mongodb
     restart: always
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=
+      - MONGO_INITDB_ROOT_PASSWORD=bambiAdminPass123
       # GitHub authentication configuration
       - GITHUB_CLIENT_ID=
       - GITHUB_CLIENT_SECRET=
@@ -15,16 +15,16 @@ services:
       - GITHUB_AUTH_TYPE=oauth
       - GITHUB_AUTH_MECHANISM=PLAIN
     ports:
-      - '27017:27017'
+      - '27018:27017'
     volumes:
       - mongodb-data:/data/db
       - ./mongo-init:/docker-entrypoint-initdb.d
       - ./mongo-config:/etc/mongo
     networks:
       - bambisleep-network
-    command: ['--auth', '--bind_ip_all', '--config', '/etc/mongo/mongod.conf']
+    command: ['--auth', '--bind_ip_all']
     healthcheck:
-      test: echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27017/admin --quiet
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/admin --quiet
       interval: 10s
       timeout: 10s
       retries: 5

@@ -2,9 +2,8 @@
 <html lang="en">
 <%- include('../views/partials/head.ejs') %>
   <title>BambiSleep.Chat AIGF</title>
-
   <body data-username="<%= locals.username || '' %>">
-    <%- include('../views/partials/nav.ejs') %>
+    <%- include('../views/partials/nav.ejs', { path: '/' }) %>
       <div id="chat-container">
         <!-- Add modal for username prompt -->
         <div id="username-modal" class="modal">

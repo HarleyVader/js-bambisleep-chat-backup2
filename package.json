@@ -27,14 +27,16 @@
     "url": "git+https://github.com/HarleyVader/js-bambisleep-chat.git"
   },
   "license": "Apache-2.0",
-  "author": "melkanea",  
+  "author": "melkanea",
   "type": "module",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "start:gc": "node --expose-gc src/server.js",
     "dev": "nodemon src/server.js",
-    "dev:gc": "nodemon --expose-gc src/server.js"
+    "dev:gc": "nodemon --expose-gc src/server.js",
+    "debug": "node --inspect src/server.js",
+    "debug:break": "node --inspect-brk src/server.js"
   },
   "dependencies": {
     "axios": "^1.8.4",
@@ -50,9 +52,11 @@
     "express-fileupload": "^1.5.1",
     "express-session": "^1.17.3",
     "helmet": "^8.1.0",
+    "highlight.js": "^11.11.1",
+    "marked": "^15.0.12",
     "mongodb": "6.15",
     "mongoose": "^8.13.2",
-    "node-fetch": "^2.6.7",
+    "node-fetch": "^2.7.0",
     "socket.io": "^4.8.1",
     "uuid": "^11.1.0"
   },

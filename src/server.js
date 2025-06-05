@@ -369,6 +369,10 @@ async function initializeApp() {
     const app = express();
     const server = http.createServer(app);
 
+    // Set up view engine
+    app.set('view engine', 'ejs');
+    app.set('views', path.join(__dirname, 'views'));
+
     // Initialize Socket.io with configured timeouts
     const io = new SocketIOServer(server, {
       pingTimeout: config.SOCKET_PING_TIMEOUT || 86400000, // 1 day in milliseconds
@@ -520,23 +524,37 @@ function setupMiddleware(app) {
  * 
  * @param {Express} app - Express application instance
  */
-function setupRoutes(app) {    // Register main routes  
+async function setupRoutes(app) {
   // Routes that don't strictly require database access
   const basicRoutes = [
     { path: '/', handler: indexRoute, dbRequired: false },
     { path: '/psychodelic-trigger-mania', handler: psychodelicTriggerManiaRouter, dbRequired: false },
     { path: '/help', handler: helpRoute, dbRequired: false },
     { path: chatBasePath, handler: chatRouter, dbRequired: true }
-  ];
-
+  ];  
+  // Import and setup docs router
+  const docsRouter = await import('./routes/docs.js');
+  app.use('/docs', dbFeatureCheck(false), docsRouter.default);
+  
   // Setup routes with appropriate database checks
-  basicRoutes.forEach(route => {
-    app.use(route.path, dbFeatureCheck(route.dbRequired), route.handler);
-  });
+  if (Array.isArray(basicRoutes)) {
+    basicRoutes.forEach(route => {
+      if (route && route.path && route.handler) {
+        app.use(route.path, dbFeatureCheck(route.dbRequired), route.handler);
+      }
+    });
+  }
 
-  dbRoutes.forEach(route => {
-    app.use(route.path, dbFeatureCheck(true), route.handler);
-  });
+  if (Array.isArray(dbRoutes)) {
+    dbRoutes.forEach(route => {
+      if (route && typeof route === 'object' && route.path && route.handler) {
+        app.use(route.path, dbFeatureCheck(true), route.handler);
+      } else if (route && typeof route === 'string') {
+        // For string-only routes, they might be handled elsewhere
+        logger.debug(`String route path found: ${route}`);
+      }
+    });
+  }
 }
 
 /**

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - BambiSleepChat Documentation</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/docs.css">
+  <meta name="description" content="<%= description %>">
+</head>
+<body class="docs-page">
+  <header class="header">
+    <div class="container">
+      <h1>BambiSleepChat Documentation</h1>
+      <p class="subtitle">GitHub Organizations API Server</p>
+    </div>
+  </header>
+  
+  <nav class="nav">
+    <div class="container">
+      <ul class="nav-list">
+        <li><a href="/" class="nav-link">Dashboard</a></li>
+        <li><a href="/api/status" class="nav-link">API Status</a></li>
+        <li><a href="/docs" class="nav-link active">Documentation</a></li>
+      </ul>
+    </div>
+  </nav>
+  
+  <main class="main-content">
+    <div class="container docs-container">
+      <aside class="docs-sidebar">
+        <h3>Documentation Files</h3>
+        <ul class="docs-list">
+          <% files.forEach(function(file) { %>
+            <li><a href="<%= file.path %>" class="doc-link"><%= file.title %></a></li>
+          <% }); %>
+        </ul>
+      </aside>
+      
+      <section class="docs-content">
+        <h2>Documentation</h2>
+        <p>Select a document from the list to view its contents.</p>
+        
+        <div class="docs-cards">
+          <% files.forEach(function(file) { %>
+            <div class="doc-card">
+              <h3><a href="<%= file.path %>"><%= file.title %></a></h3>
+              <p class="doc-path"><%= file.name %></p>
+              <a href="<%= file.path %>" class="doc-button">View Document</a>
+            </div>
+          <% }); %>
+        </div>
+      </section>
+    </div>
+  </main>
+  
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; <%= new Date().getFullYear() %> BambiSleepChat - GitHub Organizations API Server</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -250,6 +250,68 @@ export async function connectProfilesDB(retries = 1, force = false) {
 }
 
 /**
+ * Alias for connectToChatDatabase for server.js compatibility
+ */
+export async function connectChatDB(retries = 1, force = false) {
+  try {
+    if (chatConnection && !force) {
+      return { success: true, connection: chatConnection };
+    }
+    
+    let lastError = null;
+    for (let i = 0; i < retries; i++) {
+      try {
+        const connection = await connectToChatDatabase();
+        return { success: true, connection };
+      } catch (error) {
+        lastError = error;
+        logger.warning(`Chat connection attempt ${i + 1}/${retries} failed: ${error.message}`);
+        if (i < retries - 1) {
+          // Wait a bit before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
+    
+    return { success: false, error: lastError?.message || 'Failed to connect to chat database' };
+  } catch (error) {
+    logger.error(`Failed to connect to chat database: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Alias for connectToAigfLogsDatabase for server.js compatibility
+ */
+export async function connectAigfLogsDB(retries = 1, force = false) {
+  try {
+    if (aigfLogsConnection && !force) {
+      return { success: true, connection: aigfLogsConnection };
+    }
+    
+    let lastError = null;
+    for (let i = 0; i < retries; i++) {
+      try {
+        const connection = await connectToAigfLogsDatabase();
+        return { success: true, connection };
+      } catch (error) {
+        lastError = error;
+        logger.warning(`AIGF logs connection attempt ${i + 1}/${retries} failed: ${error.message}`);
+        if (i < retries - 1) {
+          // Wait a bit before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
+    
+    return { success: false, error: lastError?.message || 'Failed to connect to AIGF logs database' };
+  } catch (error) {
+    logger.error(`Failed to connect to AIGF logs database: ${error.message}`);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Connect to all databases with retries
  */
 export async function connectAllDatabases(retries = 1) {
@@ -519,6 +581,8 @@ export default {
   disconnectFromDatabases,
   connectDB,
   connectProfilesDB,
+  connectChatDB,
+  connectAigfLogsDB,
   connectAllDatabases,
   disconnectDB,
   checkDBHealth,

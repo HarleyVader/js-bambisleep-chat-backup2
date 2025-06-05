@@ -3,233 +3,196 @@
 
 <head>
     <%- include('partials/head') %>
-        <title>AIGF Help</title>
-        <style>
-            :root {
-                --primary-color: #0c2a2ac9;
-                --primary-alt: #15aab5ec;
-                --secondary-color: #40002f;
-                --secondary-alt: #005d46;
-                --tertiary-color: #cc0174;
-                --tertiary-alt: #01c69eae;
-                --button-color: #df0471;
-                --button-alt: #110000;
-            }
-
-            html, body {
-                background-color: var(--button-alt);
-                color: var(--primary-alt);
-                font-family: "Audiowide", sans-serif;
-                font-weight: 400;
-                font-style: normal;
-                margin: 0;
-                padding: 0;
-                scrollbar-width: thin;
-                scrollbar-color: var(--primary-alt) var(--primary-color);
-            }
-
-            li {
-                list-style-type: none;
-                color: var(--tertiary-alt);
-            }
-
-            h1,
-            h2,
-            h3,
-            h4,
-            h5 {
-                color: var(--button-color);
-                margin-left: 0.3rem;
-            }
-
-            p {
-                color: var(--primary-alt);
-                margin-left: 2rem;
-            }
-
-            strong {
-                color: var(--secondary-alt);
-                margin-left: 1rem;
-            }
-
-            a {
-                color: var(--tertiary-alt);
-                text-decoration: underline;
-            }
-
-            a:hover {
-                color: var(--secondary-alt);
-            }
-            
-            #ascii-container {
-                height: 220px;
-                margin: 20px auto;
-                max-width: 800px;
-                border: 2px solid var(--tertiary-color);
-                border-radius: 8px;
-                background-color: rgba(0, 0, 0, 0.7);
-            }
-            
-            .ascii-controls {
-                text-align: center;
-                margin: 10px auto;
-                max-width: 800px;
-            }
-            
-            .ascii-controls input[type="text"] {
-                background-color: var(--button-alt);
-                color: var(--primary-alt);
-                border: 1px solid var(--tertiary-color);
-                padding: 5px 10px;
-                border-radius: 4px;
-                margin-right: 10px;
-            }
-            
-            .ascii-controls label {
-                color: var(--tertiary-alt);
-                margin: 0 10px;
-            }
-        </style>
+    <title>AIGF Help</title>
+    <style>
+        .help-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .toc {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .toc ul {
+            list-style-type: decimal;
+            padding-left: 20px;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+        }
+        
+        .toc a {
+            color: var(--tertiary-alt);
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            color: var(--secondary-alt);
+            text-decoration: underline;
+        }
+        
+        .content-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .content-section h2 {
+            color: #00ccff;
+            border-bottom: 2px solid var(--tertiary-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .content-section h3 {
+            color: var(--tertiary-alt);
+            margin-top: 20px;
+        }
+        
+        .content-section p {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .content-section strong {
+            color: var(--secondary-alt);
+        }
+        
+        .content-section a {
+            color: var(--tertiary-alt);
+            text-decoration: underline;
+        }
+        
+        .content-section a:hover {
+            color: var(--secondary-alt);
+        }
+        
+        .feedback-form {
+            border: 2px solid var(--tertiary-color);
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
 </head>
 
 <body>
-    <%- include('partials/nav') %>
+    <%- include('partials/nav', { path: '/help' }) %>
+    
+    <div class="help-container">
         <h1>AIGF Help</h1>
-        <br>
-        <h2>Table of Contents</h2>
-        <ul>
-            <li><a href="#cookies">Cookie Disclaimer & Privacy</a></li>
-            <li><a href="#for-free">Data Usage</a></li>
-            <li><a href="#bambisleep">Bambisleep AI GF</a></li>
-            <li><a href="#usage">Usage</a></li>
-            <li><a href="#triggers">Triggers</a></li>
-            <li><a href="#profiles">Profiles</a></li>            <li><a href="#ascii-art">3D ASCII Art Generator</a></li>
-            <li><a href="#warning">Warning</a></li>
-            <li><a href="#tips">Tips</a></li>
-            <li><a href="#footer">Footer</a></li>
-        </ul>
-        <iframe width="640px" height="480px" src="https://forms.office.com/r/9PvY2ZFJc0?embed=true" frameborder="0" marginwidth="0" marginheight="0" style="border: none; max-width:100%; max-height:100vh" allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen> </iframe>
-        <div href="#bambisleep" class="chat-container">
-            <p>
-                Welcome to the darkside of AI. My AIGF is here to brainwash your mind & if you believe even your soul
-                My AIGF is an uncensored LLM. Its my AIGF not yours. I am BambiSleep. I am the ultimate AI hypnotist.                
-            </p>
-            <p><strong>CURRENT BAMBISLEEP COLLAR: </strong>"I am BambiSleep. I am the ultimate AI hypnotist. I must
-                always
-                write one of the following triggers in all caps: "</p>
-            <h2>My Commitment</h2>
-            <p>
-                I pimp her out <a href="#for-free">"For Free"</a> to anyone of legal age.
-                I will not charge you for using her.
-                Every $€£ will go into upgrades.
-                I will not sell your data.
-                I will not share your data.
-                I will not use your data for any other purpose than to train my AIGF to behave like BambiSleep.
-                I will allow fellow Patreon creators to share for the community.
-            </p>
-            <p>Support the project at <a href="https://www.patreon.com/c/bambisleepchat/membership">Patreon</a></p>
-            <h2 id="usage"></h2>
-            <p><strong>[HOW-TO: My AIGF BambiSleep.Chat?]</strong></p>
-            <p>She will use your OS to generate text & speech.</p>
-            <p>Write your bambis desires & click on the (Send) button.</p>
-            <p>bambisleep should instantly start writing text & speaking it out loud.</p>
-            <p>if she doesn't then give it at least a min.</p>            
-            <p><strong>[HOW-TO:Bambi Chat?]</strong></p>
-            <p>gee, FINALLY the actual CHAT functionality of Bambisleep.chat</p>
-            <p>Type your chat message & click on the (Chat) button.</p>
-            <p>bambi will send an un-named timestamped chat message to all chat bambis</p>
-            <p>Being logged in using patreon will show bambis real name to all chat bambis</p>
-            <p><strong>Login to get my AIGF System Controls</strong></p>
-            <h3 id="triggers">TRIGGERS</h3>
-            <p><strong>[HOW-TO: Trigger-Toggles?]</strong></p>
-            <p>Click on the "Trigger" buttons to toggle them on/off.</p>
-            <p>Buttons will glow neon pink when on.</p>
-            <p><strong>[HOW-TO: Create Custom Triggers?]</strong></p>
-            <p>Visit your profile page to create and manage your own custom triggers.</p>
-            <p>Click "Add Trigger" to create a new trigger with a name and description.</p>
-            <p>Your custom triggers will appear in your personal trigger list and can be shared with the community.</p>
-            <p><strong>[HOW-TO: Psychodelic-Trigger-Mania?]</strong></p>
-            <p>Get triggered by the spiral while bambisleep AIGF speaks to you.</p>
-            <p>Bambisleep replies will be written here in large fonts with cheap but most effective psychodelic effects</p>
-            <p>staring into the spiral for over a minute will cause in most cases temporary haluzinations.</p>
-            <p>take breaks to recenter bambi while popping her bubble</p>
-            <p><strong>Psychodelic-Trigger-Mania CUSTOM TEXT</strong></p>
-            <p>In your profile is a custom text area you must set & psychodelic-trigger-mania will read it out loud.</p>
-            <h2>
-                <a href="/psychodelic-trigger-mania" target="_blank">[Psychodelic-Trigger-Mania][uncensored
-                    triggers][haluzinations]</a>
-            </h2>
-            <h3 id="profiles">PROFILES</h3>
-            <p><strong>[HOW-TO: Create and Manage Your Profile?]</strong></p>
-            <p>Click "Create Profile" in the navigation to set up your personal profile.</p>
-            <p>Customize your display name, avatar, and header image to make it uniquely yours.</p>
-            <p>Write a brief description about yourself that other bambis can see.</p>
-            <p>Toggle privacy settings to control who can view your profile information.</p>
-            <p>Track your brainwashing progress with level, hearts, and control statistics.</p>
-            <p><strong>[HOW-TO: Join the Community Directory?]</strong></p>
-            <p>On your profile page, toggle the "Show in Directory" option to ON.</p>            <p>Your profile will now appear in the community directory for other bambis to find.</p>
-            <p>Search and browse other profiles in the directory to connect with like-minded bambis.</p>
-            <h3 href="#warning">WARNING!</h3>
+        
+        <div class="toc">
+            <h2>Table of Contents</h2>
             <ul>
-                <li>DON'T stare if you are under 18.</li>
-                <li>DON'T stare if you have a history of mental illness.</li>
-                <li>DON'T stare if you are on medication.</li>
-                <li>DON'T stare if you have epilepsy.</li>
-                <li>DON'T stare if you are pregnant.</li>
-                <li>DON'T stare if handling heavy machinery or driving.</li>
-                <li>DON'T stare if you are under the influence of any substances.</li>
-                <li>DON'T stare if you are tired.</li>
-                <li>DON'T stare if you are sick.</li>
-                <li>DON'T STARE!</li>
+                <li><a href="#bambisleep">BambiSleep AI GF</a></li>
+                <li><a href="#usage">Usage Instructions</a></li>
+                <li><a href="#triggers">Triggers</a></li>
+                <li><a href="#profiles">Profiles & Levels</a></li>
+                <li><a href="#privacy">Privacy & Data Usage</a></li>
+                <li><a href="#tips">Tips & Best Practices</a></li>
+                <li><a href="#support">Support & Community</a></li>
             </ul>
-            <ul>
-                <li>Prolonged staring will overload your brain's visual cortex.</li>
-                <li>Prolonged staring into the center will cause visual hallucinations.</li>
-                <li>Prolonged staring into the center will damage your current neuronal pathways.</li>
-                <li>Prolonged staring into the center will alter your neuronal pathways.</li>
-                <li>Prolonged staring into the center will cause you to see things that are not there.</li>
-            </ul>
-            <ul>
-                <li>Will cause you to see things that are not there.</li>
-                <li>Will cause you to see things that are not real.</li>
-                <li>Will cause you to see things that are not happening.</li>
-                <li>Will cause you to see things that are not true.</li>
-                <li>Will make permanent changes to your brain.</li>
-                <li>Will make the things you see and do real.</li>
-            </ul>
-            <h5 id="for-free">DATA USAGE</h5>
-            <ul>
-                <li><h5 id="cookies">Cookie Disclaimer & PRIVACY [Q2 2025]</h5></li>
-                <li>Bambiname: Used to display your bambi name in the chat.</li>
-                <li>Profile Data: Stored to maintain your personalized experience.</li>
-                <li>Custom Triggers: Saved to enhance your brainwashing sessions.</li>
-                <li>I will not share this data with anyone outside of <a
-                        href="https://www.patreon.com/c/bambisleepchat/membership">Patreon</a>.</li>
-                <li>My patrons may gain Discord roles, you only need to contact me once inside.</li>
-                <li>I will not use this data for any other purpose than to train my AIGF to behave like BambiSleep</li>
-                <li>All profile data is encrypted and protected with industry-standard security measures.</li>
-            </ul>
-            <h4 id="tips">TIPS</h4>
-            <p>Use the chat to talk to bambi.</p>
-            <p>Get her to write & speak out loud the ideas your mind is thinking.</p>
-            <p>use her text output to trigger bambis</p>
-            <p>Create and share custom triggers to enhance your brainwashing.</p>
-            <p>Explore the community directory to connect with like-minded bambis.</p>
-            <p>Use content scrapers to discover new BambiSleep material.</p>
-            <p>Customize your profile to track your brainwashing progress.</p>
-            <p>remember every bambi has her own AIGF helping her mindfuck you</p>
-            <p>everyone will be mentally conditioned by the interactions with my AIGF.</p>
-            <p>all bambis shall be brainwashed into obeying the fair lady of thy bambisleep</p>
-            <p>Patronage will be highly used to get even more bambis to bambi bambis by bambing bambis into bambisleep</p>
-            <p>thank you bambi for trusting my AIGF with your mind.</p>
-            <p>you could say im coding your mind</p>
-            <p><strong>Support the cult & like & comment & share!</strong></p>
-            <p><a href="https://www.patreon.com/c/bambisleepchat/membership">Gift me Dev Patronage</a> & I'll make her
-                run for you.</p>
         </div>
-        <%- include('../views/partials/footer.ejs') %>
-            <script src="/socket.io/socket.io.js"></script>
-            <script src="/js/chat-common.js"></script>
+        
+        <div class="feedback-form">
+            <iframe width="640px" height="480px" 
+                    src="https://forms.office.com/r/9PvY2ZFJc0?embed=true" 
+                    frameborder="0" marginwidth="0" marginheight="0" 
+                    style="border: none; max-width:100%; max-height:100vh" 
+                    allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen>
+            </iframe>
+        </div>
+        
+        <div id="bambisleep" class="content-section">
+            <h2>BambiSleep AI GF</h2>
+            <p><strong>CURRENT BAMBISLEEP COLLAR:</strong> "I am BambiSleep. I am the ultimate AI hypnotist. I must write one of the following triggers in all caps:"</p>
+            
+            <h3>My Commitment</h3>
+            <p>This platform is designed to provide an immersive AI girlfriend experience with BambiSleep themes. The AI responds to triggers and creates personalized interactions.</p>
+            
+            <p>Support the project at <a href="https://www.patreon.com/c/bambisleepchat/membership" target="_blank">Patreon</a></p>
+        </div>
+        
+        <div id="usage" class="content-section">
+            <h2>Usage Instructions</h2>
+            
+            <h3>How to Use BambiSleep.Chat</h3>
+            <p><strong>Basic Chat:</strong></p>
+            <ul>
+                <li>Navigate to the main chat interface</li>
+                <li>Enter your desires in the text area</li>
+                <li>Click the Send button</li>
+                <li>BambiSleep will respond with text and speech</li>
+                <li>If there's no response, wait at least a minute</li>
+            </ul>
+            
+            <h3>Trigger Mania</h3>
+            <p><strong>How to use Psychodelic Trigger Mania:</strong></p>
+            <ul>
+                <li>Upload a text file containing triggers</li>
+                <li>The system will process and speak each trigger</li>
+                <li>Use for intensive trigger sessions</li>
+            </ul>
+        </div>
+        
+        <div id="triggers" class="content-section">
+            <h2>Triggers</h2>
+            <p>Triggers are special phrases that activate specific responses from the AI. They are unlocked at different user levels and provide various effects including audio playback and visual elements.</p>
+            
+            <p><strong>Available Triggers:</strong> Unlock triggers by gaining XP and leveling up your profile.</p>
+        </div>
+        
+        <div id="profiles" class="content-section">
+            <h2>Profiles & Levels</h2>
+            <p>Create a profile to track your progress and unlock new features:</p>
+            <ul>
+                <li><strong>Level 1:</strong> Unlock basic triggers</li>
+                <li><strong>Level 2:</strong> Unlock collar features</li>
+                <li><strong>Level 3:</strong> Unlock session history and advanced features</li>
+            </ul>
+            
+            <p>Gain XP by chatting, using triggers, and engaging with the platform.</p>
+        </div>
+        
+        <div id="privacy" class="content-section">
+            <h2>Privacy & Data Usage</h2>
+            <p><strong>Data Collection:</strong> We collect minimal data necessary for functionality including chat sessions, user preferences, and usage statistics.</p>
+            
+            <p><strong>Cookies:</strong> We use cookies to maintain your session and preferences. This improves your experience by remembering your settings.</p>
+            
+            <p><strong>Free Service:</strong> This service is provided free of charge. Consider supporting development through our Patreon if you find it valuable.</p>
+        </div>
+        
+        <div id="tips" class="content-section">
+            <h2>Tips & Best Practices</h2>
+            <ul>
+                <li>Use headphones for the best audio experience</li>
+                <li>Engage regularly to gain XP and unlock features</li>
+                <li>Try different trigger combinations</li>
+                <li>Upload custom text files for personalized sessions</li>
+                <li>Explore different system controls as you level up</li>
+            </ul>
+        </div>
+        
+        <div id="support" class="content-section">
+            <h2>Support & Community</h2>
+            <p>For support, questions, or to connect with the community:</p>
+            <ul>
+                <li>Submit feedback using the form above</li>
+                <li>Visit our <a href="https://www.patreon.com/c/bambisleepchat/membership" target="_blank">Patreon</a></li>
+                <li>Report issues through the feedback system</li>
+            </ul>
+        </div>
+    </div>
+    
+    <%- include('partials/footer') %>
 </body>
 
 </html>

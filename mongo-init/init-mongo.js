@@ -4,11 +4,11 @@ db = db.getSiblingDB('admin');
 // Create application user with access to all three databases
 db.createUser({
   user: "bambisleep",
-  pwd: passwordPrompt(),  // This will prompt for password during initialization
+  pwd: "bambiAppPass456",  // Fixed password for application user
   roles: [
     { role: "readWrite", db: "profilesDB" },
     { role: "readWrite", db: "chatDB" },
-    { role: "aigfLogsDB" }
+    { role: "readWrite", db: "aigfLogsDB" }
   ]
 });
 
