@@ -15,6 +15,15 @@ import fileUpload from 'express-fileupload';
 import mongoose from 'mongoose';
 import { Worker } from 'worker_threads';
 
+// Import custom utils
+import urlValidator from './utils/urlValidator.js';
+import audioTriggers from './utils/audioTriggers.js';
+import userMentions from './utils/userMentions.js';
+import aigfLogger from './utils/aigfLogger.js';
+
+// Import workers
+import spiralsWorker from './workers/spirals.js';
+
 // Import configuration
 import config from './config/config.js';
 import footerConfig from './config/footer.config.js';
@@ -55,6 +64,35 @@ async function registerModels() {
       mongoose.models.ChatMessage = ChatMessageModule.default;
       logger.info('ChatMessage model registered');
     }
+    
+    // Import enhanced models
+    const EnhancedChatMessageModule = await import('./models/EnhancedChatMessage.js');
+    if (!mongoose.models.EnhancedChatMessage) {
+      mongoose.models.EnhancedChatMessage = EnhancedChatMessageModule.default;
+      logger.info('EnhancedChatMessage model registered');
+    }
+    
+    const AudioInteractionModule = await import('./models/AudioInteraction.js');
+    if (!mongoose.models.AudioInteraction) {
+      mongoose.models.AudioInteraction = AudioInteractionModule.default;
+      logger.info('AudioInteraction model registered');
+    }
+    
+    const UserInteractionModule = await import('./models/UserInteraction.js');
+    if (!mongoose.models.UserInteraction) {
+      mongoose.models.UserInteraction = UserInteractionModule.default;
+      logger.info('UserInteraction model registered');
+    }
+    
+    const AigfInteractionModule = await import('./models/AigfInteraction.js');
+    if (!mongoose.models.AigfInteraction) {
+      mongoose.models.AigfInteraction = AigfInteractionModule.default;
+      logger.info('AigfInteraction model registered');
+    }
+    
+    // Set global flag indicating models are registered
+    modelsRegistered = true;
+    logger.success('All models registered successfully');
   } catch (error) {
     logger.error(`Model registration error: ${error.message}`);
   }
@@ -356,55 +394,51 @@ async function initializeApp() {
     // Load filtered words for content moderation
     const filteredWords = JSON.parse(await fsPromises.readFile(
       path.join(__dirname, 'filteredWords.json'), 'utf8'
-    ));    // Verify DB connection before proceeding with robust health check
+    ));
+    
+    // Verify DB connection before proceeding with robust health check
     const db = await import('./config/db.js');
-    const { isDatabaseConnectionHealthy, connectDB, ensureModelsRegistered } = db.default;
+    const dbInitResults = await db.default.connectAllDatabases(3);
 
-    const isHealthy = await isDatabaseConnectionHealthy('main');
-    if (!isHealthy || mongoose.connection.readyState !== 1) {
-      logger.warning('Database not connected during app initialization, trying to reconnect...');
-      const dbConnected = await connectDB(2, true); // Force reconnection
-
-      if (!dbConnected) {
-        logger.warning('Could not establish database connection, some features may not work properly');
-      } else {
-        // Even if connection appears successful, verify it works with a real operation
-        try {
-          await ensureModelsRegistered();
-          await registerModels(); // Add this line to register our models
-          logger.info('Initializing scheduled tasks');
-          // Additional database health verification
-          const isReallyHealthy = await isDatabaseConnectionHealthy('main');
-          if (!isReallyHealthy) {
-            logger.warning('Database connection appears unreliable, some features may not work properly');
-          }
-        } catch (dbError) {
-          logger.error(`Database initialization error: ${dbError.message}`);
-          logger.warning('Database models could not be properly registered');
-        }
-      }
+    if (!dbInitResults.main || !dbInitResults.profiles || !dbInitResults.chat || !dbInitResults.aigfLogs) {
+      logger.warning('Some database connections failed, server running in limited mode');
+      logger.warning(`Connection status: main=${dbInitResults.main}, profiles=${dbInitResults.profiles}, chat=${dbInitResults.chat}, aigfLogs=${dbInitResults.aigfLogs}`);
     } else {
-      // Database is healthy, register models
-      await registerModels();
+      logger.success('All database connections established successfully');
     }
 
-    // Set up view engine
-    app.set('view engine', 'ejs');
-    app.set('views', path.join(__dirname, 'views'));
+    // Register models after DB connection
+    await registerModels();
 
-    // Configure middleware
+    // Add a route to check database status
+    dbRoutes.push('/api/db-status');
+    
+    // Define an API route to check DB health
+    app.get('/api/db-status', async (req, res) => {
+      try {
+        const dbHealthCheck = await db.default.checkAllDatabasesHealth();
+        res.json({
+          healthy: dbHealthCheck.main.status === 'healthy' && 
+                   dbHealthCheck.profiles.status === 'healthy' &&
+                   dbHealthCheck.chat.status === 'healthy' &&
+                   dbHealthCheck.aigfLogs.status === 'healthy',
+          details: dbHealthCheck
+        });
+      } catch (error) {
+        res.status(500).json({
+          healthy: false,
+          error: error.message
+        });
+      }
+    });
+
+    // Set up middleware
     setupMiddleware(app);
 
-    // Make config available to templates
-    app.locals.footer = footerConfig;
-
-    // Set up routes and APIs
+    // Set up routes
     setupRoutes(app);
 
-    // Add this line to fix the TTS API endpoint
-    setupTTSRoutes(app);
-
-    // Include client-side memory monitoring script
+    // Add route for memory monitoring script
     app.get('/js/memory-monitoring.js', (req, res) => {
       res.type('text/javascript').send(memoryMonitor.getClientScript());
     });
@@ -415,14 +449,23 @@ async function initializeApp() {
 
     // Set up error handlers
     setupErrorHandlers(app);
-
+    
     // Initialize scheduled tasks
     scheduledTasks.initialize();
     global.scheduledTasks = scheduledTasks;
 
+    // Initialize the spirals worker for advanced hypnotic spiral controls
+    try {
+      logger.info('Initializing spirals worker...');
+      spiralsWorker.initialize(server);
+      logger.info('Spirals worker initialized successfully');
+    } catch (error) {
+      logger.error('Failed to initialize spirals worker:', error);
+    }
+
     return { app, server, io, socketStore };
   } catch (error) {
-    logger.error('Error in app initialization:', error);
+    logger.error('Error in initializeApp:', error);
     throw error;
   }
 }
@@ -748,7 +791,24 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
           // Send response to client
           io.to(msg.socketId).emit("response", responseData);
           
-          // More code...
+          // Log AIGF interaction - get models first
+          try {
+            const AigfInteraction = await import('./models/AigfInteraction.js').then(module => module.default);
+            const startTime = msg.startTime || Date.now() - 1000; // Fallback if no start time
+            const processingDuration = Date.now() - startTime;
+            
+            await aigfLogger.logAigfInteraction(
+              AigfInteraction,
+              msg.username || 'anonymous',
+              'chat',
+              msg.prompt || 'Unknown input',
+              responseData,
+              processingDuration,
+              msg.socketId
+            );
+          } catch (logError) {
+            logger.error(`Failed to log AIGF interaction: ${logError.message}`);
+          }
         } else if (msg.type === 'error') {
           // Handle error messages from worker
           logger.error(`Worker error for ${msg.socketId}: ${msg.error}`);
@@ -759,6 +819,22 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
             : `Error: ${msg.error}`;
             
           io.to(msg.socketId).emit("error", { message: errorMessage });
+          
+          // Log AIGF error
+          try {
+            const AigfInteraction = await import('./models/AigfInteraction.js').then(module => module.default);
+            
+            await aigfLogger.logAigfError(
+              AigfInteraction,
+              msg.username || 'anonymous',
+              'chat',
+              msg.prompt || 'Unknown input',
+              new Error(msg.error),
+              msg.socketId
+            );
+          } catch (logError) {
+            logger.error(`Failed to log AIGF error: ${logError.message}`);
+          }
         } else if (msg.type === 'worker:settings:response') {
           // Forward settings response to client
           if (msg.socketId) {
@@ -769,8 +845,12 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
           if (msg.socketId) {
             io.to(msg.socketId).emit('xp:update', msg.data);
           }
+        } else if (msg.type === 'detected-triggers') {
+          // Forward detected triggers to client
+          if (msg.socketId && msg.triggers) {
+            io.to(msg.socketId).emit('detected-triggers', msg.triggers);
+          }
         }
-        // More code...
       } catch (error) {
         logger.error('Error in lmstudio message handler:', error);
       }
@@ -823,7 +903,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
     const xpSystem = {
       requirements: [1000, 2500, 4500, 7000, 12000, 36000, 112000, 332000],
 
-      // Rest of xp system code...
+      // Calculate level based on XP
       calculateLevel(xp) {
         let level = 0;
         while (level < this.requirements.length && xp >= this.requirements[level]) {
@@ -832,6 +912,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
         return level;
       },
 
+      // Award XP to a user
       awardXP(socket, amount, reason = 'interaction') {
         if (!socket.bambiData) return;
 
@@ -907,14 +988,14 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
         socketStore.set(socket.id, { socket, worker: lmstudio, files: [] });
         logger.info(`Client connected: ${socket.id} sockets: ${socketStore.size}`);
 
-        // Chat message handlingAdd commentMore actions
+        // Enhanced chat message handling
         socket.on('chat message', async (msg) => {
           try {
             const timestamp = new Date().toISOString();
 
             // Create message object with consistent structure
             const messageData = {
-              username: socket.bambiUsername || 'anonbambi',
+              username: socket.bambiUsername || 'anonymous',
               data: msg.data,
               timestamp: timestamp
             };
@@ -922,33 +1003,146 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
             // Broadcast message to all connected clients first for responsiveness
             io.emit('chat message', messageData);
 
-            // Then save to database asynchronously
+            // Process message for enhanced features (URLs, mentions, triggers)
             try {
-              // Ensure ChatMessage model is available
-              const ChatMessage = mongoose.models.ChatMessage || (await import('./models/ChatMessage.js')).default;
-
-              // Save message to database
-              const savedMessage = await ChatMessage.saveMessage(messageData);
-              logger.debug(`Chat message saved to database: ${savedMessage._id}`);
+              // Import necessary models
+              const EnhancedChatMessage = await import('./models/EnhancedChatMessage.js').then(module => module.default);
+              const AudioInteraction = await import('./models/AudioInteraction.js').then(module => module.default);
+              const UserInteraction = await import('./models/UserInteraction.js').then(module => module.default);
+              
+              // Load triggers for audio detection
+              let triggers = [];
+              try {
+                const fs = await import('fs/promises');
+                const triggersPath = path.resolve(path.dirname(__dirname), 'config', 'triggers.json');
+                const triggerData = await fs.readFile(triggersPath, 'utf8');
+                triggers = JSON.parse(triggerData).triggers || [];
+              } catch (triggerError) {
+                logger.error('Error loading triggers:', triggerError);
+              }
+              
+              // Save enhanced message to database
+              const savedMessage = await EnhancedChatMessage.saveMessage(messageData);
+              logger.debug(`Enhanced chat message saved to database: ${savedMessage._id}`);
+              
+              // Check for audio triggers
+              const detectedTriggers = audioTriggers.detectAudioTriggers(msg.data, triggers);
+              if (detectedTriggers.length > 0) {
+                // Emit triggers to all clients
+                io.emit('audio triggers', {
+                  username: socket.bambiUsername,
+                  triggers: detectedTriggers
+                });
+                
+                // Log audio interactions
+                for (const trigger of detectedTriggers) {
+                  await audioTriggers.logAudioInteraction(
+                    AudioInteraction,
+                    socket.bambiUsername,
+                    trigger.name,
+                    'chat',
+                    null, // No specific target
+                    savedMessage._id
+                  );
+                }
+              }
+              
+              // Process user mentions
+              const mentions = userMentions.detectUserMentions(msg.data);
+              if (mentions.length > 0) {
+                // Notify mentioned users
+                for (const mention of mentions) {
+                  // Find sockets for the mentioned user
+                  const mentionedSockets = [];
+                  for (const [id, data] of socketStore.entries()) {
+                    if (data.socket?.bambiUsername?.toLowerCase() === mention.username.toLowerCase()) {
+                      mentionedSockets.push(data.socket);
+                    }
+                  }
+                  
+                  // Send notification to mentioned users
+                  for (const mentionedSocket of mentionedSockets) {
+                    mentionedSocket.emit('mention', {
+                      from: socket.bambiUsername,
+                      message: msg.data,
+                      timestamp: timestamp
+                    });
+                  }
+                  
+                  // Log user mention interaction
+                  await userMentions.logUserMention(
+                    UserInteraction,
+                    socket.bambiUsername,
+                    mention.username,
+                    savedMessage._id
+                  );
+                }
+              }
+              
+              // Process URLs for security validation
+              if (savedMessage.urls && savedMessage.urls.length > 0) {
+                // Perform async URL validation for each URL
+                for (const urlObj of savedMessage.urls) {
+                  // Run validation in background
+                  (async () => {
+                    const validation = await urlValidator.validateUrl(urlObj.url);
+                    
+                    // Update URL status in database
+                    await urlValidator.updateUrlStatus(
+                      EnhancedChatMessage,
+                      savedMessage._id,
+                      urlObj.url,
+                      validation.isClean
+                    );
+                    
+                    // If URL is unsafe, notify users
+                    if (!validation.isClean) {
+                      io.emit('unsafe url', {
+                        messageId: savedMessage._id,
+                        url: urlObj.url,
+                        reason: validation.reason
+                      });
+                    }
+                  })().catch(error => {
+                    logger.error(`URL validation error: ${error.message}`);
+                  });
+                }
+              }
 
               // Give XP for chat interactions
               xpSystem.awardXP(socket, 1, 'chat');
             } catch (dbError) {
               // Log database error but don't disrupt the user experience
-              logger.error(`Failed to save chat message: ${dbError.message}`, {
+              logger.error(`Failed to save enhanced chat message: ${dbError.message}`, {
                 username: messageData.username,
                 messageLength: messageData.data?.length || 0
               });
             }
-            // Chat message handler code...
           } catch (error) {
             logger.error('Error in chat message handler:', error);
           }
         });
+
         // Username setting
         socket.on('set username', (username) => {
           try {
-            // Username setting code...
+            // Store old username for reference
+            const oldUsername = socket.bambiUsername;
+            
+            // Update username
+            socket.bambiUsername = username;
+            
+            // Update socket store
+            const socketData = socketStore.get(socket.id);
+            if (socketData) {
+              socketData.username = username;
+              socketStore.set(socket.id, socketData);
+            }
+            
+            // Notify client
+            socket.emit('username set', { username });
+            
+            logger.info(`Username set: ${oldUsername} -> ${username}`);
           } catch (error) {
             logger.error('Error in set username handler:', error);
           }
@@ -957,25 +1151,120 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
         // Get profile data
         socket.on('get-profile-data', async (data, callback) => {
           try {
-            // Profile data handler code...
+            if (!callback || typeof callback !== 'function') return;
+            
+            const username = data?.username || socket.bambiUsername;
+            
+            if (!username || username === 'anonBambi') {
+              return callback({ success: false, error: 'No username provided' });
+            }
+            
+            const profile = await getProfileData(username);
+            
+            if (profile) {
+              callback({ success: true, profile });
+            } else {
+              callback({ success: false, error: 'Profile not found' });
+            }
           } catch (error) {
             logger.error('Error getting profile data:', error);
             callback({ success: false, error: 'Failed to load profile data' });
           }
         });
 
-        // Message handler
+        // Message handler for AIGF
         socket.on("message", (message) => {
           try {
+            // Track when the request started for performance monitoring
+            const startTime = Date.now();
+            
             lmstudio.postMessage({
               type: "message",
               prompt: message,
               socketId: socket.id,
-              username: socket.bambiUsername
+              username: socket.bambiUsername,
+              startTime: startTime
             });
           } catch (error) {
             logger.error('Error in message handler:', error);
             socket.emit('error', { message: 'Failed to process your message' });
+            
+            // Log the error
+            (async () => {
+              try {
+                const AigfInteraction = await import('./models/AigfInteraction.js').then(module => module.default);
+                
+                await aigfLogger.logAigfError(
+                  AigfInteraction,
+                  socket.bambiUsername || 'anonymous',
+                  'chat',
+                  message,
+                  error,
+                  socket.id
+                );
+              } catch (logError) {
+                logger.error(`Failed to log AIGF error: ${logError.message}`);
+              }
+            })();
+          }
+        });
+
+        // Handle audio play in chat
+        socket.on('play audio', async (data) => {
+          try {
+            const audioFile = data.audioFile;
+            const targetUsername = data.targetUsername; // Optional
+            
+            if (!audioFile) {
+              return socket.emit('error', { message: 'No audio file specified' });
+            }
+            
+            // Broadcast to target or everyone
+            if (targetUsername) {
+              // Find socket for target user
+              let targetSocket = null;
+              for (const [id, data] of socketStore.entries()) {
+                if (data.socket?.bambiUsername === targetUsername) {
+                  targetSocket = data.socket;
+                  break;
+                }
+              }
+              
+              // Send to target if found
+              if (targetSocket) {
+                targetSocket.emit('play audio', {
+                  audioFile,
+                  sourceUsername: socket.bambiUsername
+                });
+              }
+            } else {
+              // Broadcast to everyone
+              io.emit('play audio', {
+                audioFile,
+                sourceUsername: socket.bambiUsername
+              });
+            }
+            
+            // Log audio interaction
+            try {
+              const AudioInteraction = await import('./models/AudioInteraction.js').then(module => module.default);
+              
+              await audioTriggers.logAudioInteraction(
+                AudioInteraction,
+                socket.bambiUsername,
+                audioFile,
+                'direct',
+                targetUsername
+              );
+            } catch (logError) {
+              logger.error(`Failed to log audio interaction: ${logError.message}`);
+            }
+            
+            // Award XP
+            xpSystem.awardXP(socket, 1, 'audio');
+          } catch (error) {
+            logger.error('Error in play audio handler:', error);
+            socket.emit('error', { message: 'Failed to play audio' });
           }
         });
 
@@ -1009,6 +1298,23 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
 
             // Award XP for collar usage
             xpSystem.awardXP(socket, 2, 'collar');
+            
+            // Log AIGF interaction for collar
+            try {
+              const AigfInteraction = await import('./models/AigfInteraction.js').then(module => module.default);
+              
+              await aigfLogger.logAigfInteraction(
+                AigfInteraction,
+                socket.bambiUsername || 'anonymous',
+                'collar',
+                collarData.data,
+                'Collar text set',
+                0,
+                socket.id
+              );
+            } catch (logError) {
+              logger.error(`Failed to log collar interaction: ${logError.message}`);
+            }
           } catch (error) {
             logger.error('Error in collar handler:', error);
           }
@@ -1024,7 +1330,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
             if (socketData) {
               socketStore.delete(socket.id);
             }
-
+            
             logger.info(`Client disconnected: ${socket.id} sockets: ${socketStore.size}`);
           } catch (error) {
             logger.error('Error in disconnect handler:', error);
@@ -1046,7 +1352,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
 
             // Log settings update
             logger.debug(`Settings update for ${data.section} from ${socket.id}`);
-
+            
             // Store username with socket if provided
             if (data.username && !socket.username) {
               socket.username = data.username;

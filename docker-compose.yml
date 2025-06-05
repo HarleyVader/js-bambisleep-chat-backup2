@@ -1,0 +1,39 @@
+﻿version: '3.8'
+
+services:
+  mongodb:
+    image: mongodb/mongodb-community-server:7.0
+    container_name: bambisleep-mongodb
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=
+      # GitHub authentication configuration
+      - GITHUB_CLIENT_ID=
+      - GITHUB_CLIENT_SECRET=
+      - GITHUB_USERNAME=
+      - GITHUB_AUTH_TYPE=oauth
+      - GITHUB_AUTH_MECHANISM=PLAIN
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb-data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d
+      - ./mongo-config:/etc/mongo
+    networks:
+      - bambisleep-network
+    command: ['--auth', '--bind_ip_all', '--config', '/etc/mongo/mongod.conf']
+    healthcheck:
+      test: echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27017/admin --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+networks:
+  bambisleep-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+    name: bambisleep-mongodb-data

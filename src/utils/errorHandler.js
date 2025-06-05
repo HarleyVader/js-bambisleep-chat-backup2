@@ -2,32 +2,23 @@ import Logger from '../utils/logger.js';
 
 const logger = new Logger('ErrorHandler');
 
-/**
- * Formats error for consistent client-side display
- * @param {Error} error - The error object
- * @param {boolean} includeDetails - Whether to include detailed error info
- * @returns {Object} Formatted error response
- */
+// Format error for consistent client-side display
 export function formatError(error, includeDetails = false) {
   const isProduction = process.env.NODE_ENV === 'production';
   
-  // Base error object
   const errorResponse = {
     success: false,
     message: error.message || 'An unexpected error occurred'
   };
   
-  // Check for service unavailable specifically
   if (error.status === 503 || error.statusCode === 503) {
     errorResponse.isServiceUnavailable = true;
     errorResponse.retryAfter = error.retryAfter || 30;
   }
   
-  // Include stack trace and details only in development mode
   if (!isProduction && includeDetails) {
     errorResponse.details = error.stack;
     
-    // Include response data for API errors
     if (error.response) {
       errorResponse.responseData = error.response.data;
       errorResponse.status = error.response.status;

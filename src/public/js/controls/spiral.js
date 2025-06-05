@@ -187,10 +187,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const b = p.map(p.cos(p.frameCount / spiral2Speed), -1, 1, 1, 1.5);
         
         p.rotate(p.frameCount / 5);
-        
-        // Draw spirals
-        drawSpiral(p, a, 1, [199, 0, 199], spiral1Width);
-        drawSpiral(p, b, 0.3, [255, 130, 255], spiral2Width);
+          // Draw spirals with Teal and Barbie Pink colors
+        drawSpiral(p, a, 1, [0, 128, 128], spiral1Width); // Teal color
+        drawSpiral(p, b, 0.3, [255, 20, 147], spiral2Width); // Barbie Pink color
       };
       
       function drawSpiral(p, step, ang, color, width) {

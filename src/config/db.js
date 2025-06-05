@@ -7,6 +7,8 @@ const logger = new Logger('Database');
 // Track connection status
 let isConnected = false;
 let profilesConnection = null;
+let chatConnection = null;
+let aigfLogsConnection = null;
 let inFallbackModeState = false;
 let modelsRegistered = false;
 
@@ -83,6 +85,74 @@ export async function connectToProfilesDatabase() {
 }
 
 /**
+ * Connect to the chat MongoDB database
+ * @returns {Promise<mongoose.Connection>} The chat database connection
+ */
+export async function connectToChatDatabase() {
+  if (chatConnection) {
+    logger.info('Using existing chat database connection');
+    return chatConnection;
+  }
+
+  try {
+    // Create a separate connection for chat data
+    chatConnection = mongoose.createConnection(process.env.MONGODB_CHAT);
+    
+    logger.info('Connected to chat database');
+    
+    // Set up connection event handlers
+    chatConnection.on('error', (err) => {
+      logger.error(`Chat database connection error: ${err.message}`);
+      chatConnection = null;
+    });
+    
+    chatConnection.on('disconnected', () => {
+      logger.warning('Chat database disconnected');
+      chatConnection = null;
+    });
+    
+    return chatConnection;
+  } catch (error) {
+    logger.error(`Failed to connect to chat database: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
+ * Connect to the AIGF logs MongoDB database
+ * @returns {Promise<mongoose.Connection>} The AIGF logs database connection
+ */
+export async function connectToAigfLogsDatabase() {
+  if (aigfLogsConnection) {
+    logger.info('Using existing AIGF logs database connection');
+    return aigfLogsConnection;
+  }
+
+  try {
+    // Create a separate connection for AIGF logs
+    aigfLogsConnection = mongoose.createConnection(process.env.MONGODB_AIGF_LOGS);
+    
+    logger.info('Connected to AIGF logs database');
+    
+    // Set up connection event handlers
+    aigfLogsConnection.on('error', (err) => {
+      logger.error(`AIGF logs database connection error: ${err.message}`);
+      aigfLogsConnection = null;
+    });
+    
+    aigfLogsConnection.on('disconnected', () => {
+      logger.warning('AIGF logs database disconnected');
+      aigfLogsConnection = null;
+    });
+    
+    return aigfLogsConnection;
+  } catch (error) {
+    logger.error(`Failed to connect to AIGF logs database: ${error.message}`);
+    throw error;
+  }
+}
+
+/**
  * Disconnect from all databases
  */
 export async function disconnectFromDatabases() {
@@ -97,8 +167,20 @@ export async function disconnectFromDatabases() {
       logger.info('Disconnected from profiles database');
     }
     
+    if (chatConnection) {
+      await chatConnection.close();
+      logger.info('Disconnected from chat database');
+    }
+    
+    if (aigfLogsConnection) {
+      await aigfLogsConnection.close();
+      logger.info('Disconnected from AIGF logs database');
+    }
+    
     isConnected = false;
     profilesConnection = null;
+    chatConnection = null;
+    aigfLogsConnection = null;
   } catch (error) {
     logger.error(`Error during database disconnection: ${error.message}`);
     throw error;
@@ -168,15 +250,19 @@ export async function connectProfilesDB(retries = 1, force = false) {
 }
 
 /**
- * Connect to both databases with retries
+ * Connect to all databases with retries
  */
 export async function connectAllDatabases(retries = 1) {
   const mainResult = await connectDB(retries);
   const profilesResult = await connectProfilesDB(retries);
+  const chatResult = await connectChatDB(retries);
+  const aigfLogsResult = await connectAigfLogsDB(retries);
   
   return {
     main: mainResult.success,
-    profiles: profilesResult.success
+    profiles: profilesResult.success,
+    chat: chatResult.success,
+    aigfLogs: aigfLogsResult.success
   };
 }
 
@@ -218,6 +304,8 @@ export async function checkAllDatabasesHealth() {
   try {
     const mainStatus = mongoose.connection.readyState === 1 ? 'healthy' : 'unhealthy';
     const profilesStatus = profilesConnection && profilesConnection.readyState === 1 ? 'healthy' : 'unhealthy';
+    const chatStatus = chatConnection && chatConnection.readyState === 1 ? 'healthy' : 'unhealthy';
+    const aigfLogsStatus = aigfLogsConnection && aigfLogsConnection.readyState === 1 ? 'healthy' : 'unhealthy';
     
     return {
       main: { 
@@ -227,13 +315,23 @@ export async function checkAllDatabasesHealth() {
       profiles: { 
         status: profilesStatus,
         database: profilesConnection?.db?.databaseName || 'unknown'
+      },
+      chat: { 
+        status: chatStatus,
+        database: chatConnection?.db?.databaseName || 'unknown'
+      },
+      aigfLogs: { 
+        status: aigfLogsStatus,
+        database: aigfLogsConnection?.db?.databaseName || 'unknown'
       }
     };
   } catch (error) {
     logger.error(`Error checking all databases health: ${error.message}`);
     return {
       main: { status: 'error', error: error.message },
-      profiles: { status: 'error', error: error.message }
+      profiles: { status: 'error', error: error.message },
+      chat: { status: 'error', error: error.message },
+      aigfLogs: { status: 'error', error: error.message }
     };
   }
 }
@@ -247,9 +345,15 @@ export async function isDatabaseConnectionHealthy(type = 'main') {
       return mongoose.connection.readyState === 1;
     } else if (type === 'profiles') {
       return profilesConnection && profilesConnection.readyState === 1;
+    } else if (type === 'chat') {
+      return chatConnection && chatConnection.readyState === 1;
+    } else if (type === 'aigfLogs') {
+      return aigfLogsConnection && aigfLogsConnection.readyState === 1;
     } else if (type === 'all') {
       return mongoose.connection.readyState === 1 && 
-             profilesConnection && profilesConnection.readyState === 1;
+             profilesConnection && profilesConnection.readyState === 1 &&
+             chatConnection && chatConnection.readyState === 1 &&
+             aigfLogsConnection && aigfLogsConnection.readyState === 1;
     }
     return false;
   } catch (error) {
@@ -263,7 +367,9 @@ export async function isDatabaseConnectionHealthy(type = 'main') {
  */
 export function hasConnection() {
   return mongoose.connection.readyState === 1 || 
-         (profilesConnection && profilesConnection.readyState === 1);
+         (profilesConnection && profilesConnection.readyState === 1) ||
+         (chatConnection && chatConnection.readyState === 1) ||
+         (aigfLogsConnection && aigfLogsConnection.readyState === 1);
 }
 
 /**
@@ -345,6 +451,10 @@ export function getModel(modelName, connectionType = 'main') {
   try {
     if (connectionType === 'profiles' && profilesConnection) {
       return profilesConnection.model(modelName);
+    } else if (connectionType === 'chat' && chatConnection) {
+      return chatConnection.model(modelName);
+    } else if (connectionType === 'aigfLogs' && aigfLogsConnection) {
+      return aigfLogsConnection.model(modelName);
     }
     return mongoose.model(modelName);
   } catch (error) {
@@ -353,9 +463,59 @@ export function getModel(modelName, connectionType = 'main') {
   }
 }
 
+/**
+ * Get the main database connection
+ * @returns {mongoose.Connection|null} The database connection or null if not connected
+ */
+export function getConnection() {
+  if (!isConnected) {
+    logger.warning('Main database connection not available');
+    return null;
+  }
+  return mongoose.connection;
+}
+
+/**
+ * Get the profiles database connection
+ * @returns {mongoose.Connection|null} The profiles database connection or null if not connected
+ */
+export function getProfilesConnection() {
+  if (!profilesConnection) {
+    logger.warning('Profiles database connection not available');
+    return null;
+  }
+  return profilesConnection;
+}
+
+/**
+ * Get the chat database connection
+ * @returns {mongoose.Connection|null} The chat database connection or null if not connected
+ */
+export function getChatConnection() {
+  if (!chatConnection) {
+    logger.warning('Chat database connection not available');
+    return null;
+  }
+  return chatConnection;
+}
+
+/**
+ * Get the AIGF logs database connection
+ * @returns {mongoose.Connection|null} The AIGF logs database connection or null if not connected
+ */
+export function getAigfLogsConnection() {
+  if (!aigfLogsConnection) {
+    logger.warning('AIGF logs database connection not available');
+    return null;
+  }
+  return aigfLogsConnection;
+}
+
 export default {
   connectToDatabase,
   connectToProfilesDatabase,
+  connectToChatDatabase,
+  connectToAigfLogsDatabase,
   disconnectFromDatabases,
   connectDB,
   connectProfilesDB,
@@ -370,6 +530,8 @@ export default {
   ensureModelsRegistered,
   withDbConnection,
   getModel,
-  getConnection: () => mongoose.connection,
-  getProfilesConnection: () => profilesConnection
+  getConnection,
+  getProfilesConnection,
+  getChatConnection,
+  getAigfLogsConnection
 };

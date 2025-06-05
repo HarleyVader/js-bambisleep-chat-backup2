@@ -584,8 +584,77 @@
           <button id="save-spirals" class="secondary-btn">Save Settings</button>
         </div>
 
+        <!-- Add this right before the closing </body> tag -->
+        <div id="advanced-spirals-panel" class="control-panel">
+          <h3>Advanced Spiral Controls</h3>
+          
+          <div class="control-group">
+            <label class="toggle-switch">
+              <input type="checkbox" id="advanced-spirals-enable" checked>
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Enable Advanced Spirals</span>
+            </label>
+          </div>
+          
+          <div class="control-group">
+            <label for="spiral-color-mode">Color Mode:</label>
+            <select id="spiral-color-mode" class="control-select">
+              <option value="default">Default</option>
+              <option value="rainbow">Rainbow</option>
+              <option value="trans">Transgender Flag</option>
+            </select>
+          </div>
+          
+          <div class="control-group">
+            <label for="spiral-performance-mode">Performance Mode:</label>
+            <select id="spiral-performance-mode" class="control-select">
+              <option value="minimal">Minimal (60+ FPS)</option>
+              <option value="balanced" selected>Balanced</option>
+              <option value="quality">High Quality</option>
+            </select>
+          </div>
+          
+          <div class="control-group">
+            <label class="toggle-switch">
+              <input type="checkbox" id="spiral-invert-wave">
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Invert Wave Pattern</span>
+            </label>
+          </div>
+          
+          <div class="control-group">
+            <label for="rainbow-speed">Rainbow Speed: <span id="rainbow-speed-value">5</span></label>
+            <input type="range" id="rainbow-speed" min="1" max="20" step="1" value="5">
+          </div>
+            <div class="control-group">
+            <label for="spiral-opacity">Opacity: <span id="spiral-opacity-value">1.0</span></label>
+            <input type="range" id="spiral-opacity" min="0.1" max="1.0" step="0.1" value="1.0">
+          </div>
+          
+          <div class="control-group">
+            <label class="toggle-switch">
+              <input type="checkbox" id="show-fps">
+              <span class="toggle-slider"></span>
+              <span class="toggle-label">Show FPS Counter</span>
+            </label>
+          </div>
+          
+          <div class="animation-controls">
+            <h4>Animation Controls</h4>
+            <div class="button-group">
+              <button id="spiral-pulse-start" class="secondary-btn">Pulse</button>
+              <button id="spiral-rainbow-start" class="secondary-btn">Rainbow</button>
+              <button id="spiral-trans-start" class="secondary-btn">Trans Colors</button>
+              <button id="spiral-animation-stop" class="secondary-btn" disabled>Stop</button>
+            </div>
+          </div>
+          
+          <button id="save-advanced-spirals" class="secondary-btn">Save Settings</button>
+        </div>
+
         <!-- Add script to initialize system controls -->
         <script src="js/spiral-controls.js"></script>
+        <script src="js/controls/advanced-spiral.js"></script>
         <script src="/js/brainwave-controls.js"></script>
         <script src="js/system-controls.js"></script>
         <script>

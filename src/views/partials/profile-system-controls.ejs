@@ -50,6 +50,13 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
       <button class="control-btn disabled" title="Reach Level 4 to unlock">Spirals 🔒</button>
     <% } %>
     
+    <!-- Show advanced spirals feature if user level ≥ 4 -->
+    <% if (userLevel >= 4) { %>
+      <button id="advanced-spirals-btn" class="control-btn" data-target="advanced-spirals-panel">Advanced Spirals</button>
+    <% } else { %>
+      <button class="control-btn disabled" title="Reach Level 4 to unlock">Advanced Spirals 🔒</button>
+    <% } %>
+    
     <!-- Show hypnosis feature if user level ≥ 5 -->
     <% if (userLevel >= 5) { %>
       <button id="hypnosis-btn" class="control-btn" data-target="hypnosis-panel">Hypnosis</button>
