@@ -1,0 +1,250 @@
+/* Component: Forms
+ * Defines all form controls and input styles
+ */
+
+/* Form Control Basics */
+.form-control,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="time"],
+input[type="color"],
+select,
+textarea {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-color);
+    background-color: rgba(var(--primary-color-rgb), 0.5);
+    background-clip: padding-box;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    font-family: "Audiowide", sans-serif;
+}
+
+.form-control:focus,
+input:focus,
+select:focus,
+textarea:focus {
+    color: var(--text-color);
+    background-color: rgba(var(--primary-color-rgb), 0.7);
+    border-color: var(--tertiary-color);
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(var(--tertiary-color-rgb), 0.25);
+}
+
+.form-control::placeholder,
+input::placeholder,
+textarea::placeholder {
+    color: rgba(var(--text-color), 0.5);
+    opacity: 0.7;
+}
+
+/* Input Groups */
+.input-group {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    width: 100%;
+}
+
+.input-group > .form-control {
+    position: relative;
+    flex: 1 1 auto;
+    width: 1%;
+    margin-bottom: 0;
+}
+
+.input-group-append,
+.input-group-prepend {
+    display: flex;
+}
+
+.input-group-text {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--text-color);
+    text-align: center;
+    white-space: nowrap;
+    background-color: rgba(var(--primary-color-rgb), 0.3);
+    border: 1px solid var(--border-color);
+}
+
+.input-group > .input-group-append > .btn,
+.input-group > .input-group-append > .input-group-text,
+.input-group > .input-group-prepend > .btn,
+.input-group > .input-group-prepend > .input-group-text {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.input-group > .form-control:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* Form Group */
+.form-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.form-group label {
+    display: inline-block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: bold;
+    color: var(--nav-alt);
+}
+
+/* Checkbox and Radio Styling */
+.form-check {
+    position: relative;
+    display: block;
+    padding-left: 1.25rem;
+}
+
+.form-check-input {
+    position: absolute;
+    margin-top: 0.3rem;
+    margin-left: -1.25rem;
+}
+
+.form-check-label {
+    margin-bottom: 0;
+}
+
+/* Custom toggle switches */
+.toggle-input {
+    position: absolute;
+    opacity: 0;
+    height: 0;
+    width: 0;
+}
+
+.toggle-label {
+    position: relative;
+    display: inline-block;
+    padding-left: 50px;
+    cursor: pointer;
+    color: var(--text-color);
+    user-select: none;
+}
+
+.toggle-label:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 40px;
+    height: 20px;
+    border-radius: 10px;
+    background-color: rgba(var(--nav-color-rgb), 0.5);
+    transition: background-color 0.3s ease;
+}
+
+.toggle-label:after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: var(--nav-alt);
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.toggle-input:checked + .toggle-label:before {
+    background-color: var(--tertiary-color);
+}
+
+.toggle-input:checked + .toggle-label:after {
+    transform: translateX(20px);
+    background-color: white;
+}
+
+.toggle-input:focus + .toggle-label:before {
+    box-shadow: 0 0 0 2px rgba(var(--tertiary-color-rgb), 0.5);
+}
+
+/* Range Input (Sliders) */
+input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: rgba(var(--primary-color-rgb), 0.3);
+    outline: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--tertiary-color);
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--tertiary-color);
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    background: var(--nav-alt);
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+    background: var(--nav-alt);
+}
+
+/* Form validation */
+.is-valid {
+    border-color: var(--success) !important;
+}
+
+.is-invalid {
+    border-color: var(--error) !important;
+}
+
+.invalid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 80%;
+    color: var(--error);
+}
+
+.valid-feedback {
+    display: none;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 80%;
+    color: var(--success);
+}

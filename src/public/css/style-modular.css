@@ -1,0 +1,30 @@
+/* Main CSS Entry Point - Modular Architecture */
+@import url("https://fonts.googleapis.com/css2?family=Audiowide&display=swap");
+
+/* Core Foundation */
+@import "./core/variables.css";
+@import "./core/base.css";
+@import "./core/layout.css";
+@import "./core/animations.css";
+
+/* Component Modules */
+@import "./components/navigation.css";
+@import "./components/forms.css";
+@import "./components/buttons.css";
+@import "./components/cards.css";
+@import "./components/modals.css";
+@import "./components/notifications.css";
+@import "./components/progress.css";
+
+/* Page-specific styles */
+@import "./pages/chat.css";
+@import "./pages/index.css";
+@import "./pages/psychodelic.css";
+@import "./pages/docs.css";
+@import "./pages/error.css";
+@import "./pages/help.css";
+
+/* Utilities and compatibility */
+@import "./utilities.css";
+@import "./bootstrap-compat.css";
+@import "./controls.css";

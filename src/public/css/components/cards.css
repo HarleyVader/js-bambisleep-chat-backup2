@@ -1,0 +1,116 @@
+/* Component: Cards
+ * Styling for card UI elements throughout the application
+ */
+
+.card {
+    background-color: rgba(var(--primary-color-rgb), 0.7);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: var(--border-width) solid var(--border-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-header {
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    border-bottom: var(--border-separator);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h2, 
+.card-header h3, 
+.card-header h4 {
+    margin-bottom: 0;
+}
+
+.card-body {
+    padding: var(--spacing-sm) 0;
+}
+
+.card-footer {
+    padding-top: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    border-top: var(--border-separator);
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* Card Variants */
+.card-primary {
+    background-color: rgba(var(--primary-color-rgb), 0.8);
+    border-top: 3px solid var(--primary-alt);
+}
+
+.card-secondary {
+    background-color: rgba(var(--secondary-color-rgb), 0.8);
+    border-top: 3px solid var(--secondary-alt);
+}
+
+.card-tertiary {
+    background-color: rgba(var(--tertiary-color-rgb), 0.2);
+    border-top: 3px solid var(--tertiary-color);
+}
+
+.card-success {
+    background-color: rgba(1, 198, 158, 0.1);
+    border-top: 3px solid var(--success);
+}
+
+.card-warning {
+    background-color: rgba(255, 170, 0, 0.1);
+    border-top: 3px solid var(--warning);
+}
+
+.card-error {
+    background-color: rgba(255, 51, 51, 0.1);
+    border-top: 3px solid var(--error);
+}
+
+/* Card Groups */
+.card-group {
+    display: flex;
+    flex-wrap: wrap;
+    margin: calc(var(--spacing-md) * -1);
+}
+
+.card-group .card {
+    flex: 1 0 calc(33.333% - var(--spacing-md) * 2);
+    margin: var(--spacing-md);
+}
+
+/* Card Grid */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-group .card {
+        flex: 1 0 calc(50% - var(--spacing-md) * 2);
+    }
+}
+
+@media (max-width: 480px) {
+    .card-group .card {
+        flex: 1 0 100%;
+    }
+    
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
+}

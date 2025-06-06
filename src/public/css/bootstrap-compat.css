@@ -1,0 +1,96 @@
+/* Bootstrap 5 Compatibility Fixes */
+
+/* These styles help with compatibility when upgrading from an older Bootstrap version */
+
+/* Some general backwards compatibility fixes */
+html body .pull-right,
+.pull-right {
+  float: right;
+}
+
+html body .pull-left,
+.pull-left {
+  float: left;
+}
+
+/* Fix for older Bootstrap dropdowns */
+.dropdown-toggle::after {
+  display: inline-block;
+  margin-left: 0.255em;
+  vertical-align: 0.255em;
+  content: "";
+  border-top: 0.3em solid;
+  border-right: 0.3em solid transparent;
+  border-bottom: 0;
+  border-left: 0.3em solid transparent;
+}
+
+/* Fix for navbar spacing in older designs */
+.navbar-nav > li {
+  padding-left: var(--spacing-sm);
+  padding-right: var(--spacing-sm);
+}
+
+/* Scrollbar compatibility fix for modern browsers */
+@supports (scrollbar-width: thin) {
+  body {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-alt) var(--primary-color);
+  }
+}
+
+/* For older browsers use webkit scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--primary-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-alt);
+  border-radius: var(--border-radius);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--nav-alt);
+}
+
+/* Essential control button styling */
+.control-buttons .control-button {
+  width: auto;
+  height: auto;
+  box-sizing: border-box;
+  transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.control-buttons .control-button:hover,
+.control-buttons .control-button:active {
+  transform: none;
+  width: auto;
+  height: auto;
+  box-shadow: var(--shadow-md);
+}
+
+.control-btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #444;
+  color: #aaa;
+}
+
+/* Fix for older backdrop-filter usage */
+@supports ((-webkit-backdrop-filter: blur(10px)) or (backdrop-filter: blur(10px))) {
+  .navbar,
+  .modal,
+  .card,
+  .psychodelic-header,
+  .trigger-card,
+  .control-panel,
+  .warning-overlay {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+}

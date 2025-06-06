@@ -1,0 +1,199 @@
+/* Error Pages Specific Styles */
+.error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 120px);
+    text-align: center;
+    padding: var(--spacing-xl);
+}
+
+.error-content {
+    background: rgba(var(--primary-color-rgb), 0.9);
+    border: var(--border-width) solid var(--error);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xxl);
+    max-width: 600px;    width: 100%;
+    box-shadow: var(--shadow-lg);
+    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(15px);
+}
+
+.error-code {
+    font-size: 4rem;
+    color: var(--error);
+    font-weight: bold;
+    text-shadow: 0 0 20px rgba(255, 51, 51, 0.5);
+    margin-bottom: var(--spacing-lg);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.error-title {
+    font-size: 1.5rem;
+    color: var(--nav-alt);
+    margin-bottom: var(--spacing-lg);
+    text-shadow: 0 0 10px rgba(23, 219, 216, 0.5);
+}
+
+.error-message {
+    font-size: 1rem;
+    color: var(--secondary-text-color);
+    margin-bottom: var(--spacing-xl);
+    line-height: 1.6;
+}
+
+.error-details {
+    background: var(--error-bg);
+    border: var(--border-width) solid var(--error);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin: var(--spacing-lg) 0;
+    text-align: left;
+}
+
+.error-details h4 {
+    color: var(--error);
+    margin-bottom: var(--spacing-md);
+    font-size: 1rem;
+}
+
+.error-details p {
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.8rem;
+    color: var(--text-color);
+}
+
+.error-actions {
+    display: flex;
+    gap: var(--spacing-lg);
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: var(--spacing-xl);
+}
+
+.error-btn {
+    background: var(--button-color);
+    border: var(--border-width) solid var(--button-color);
+    border-radius: var(--border-radius);
+    color: white;
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-family: "Audiowide", cursive;
+    font-size: 0.9rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.error-btn:hover {
+    background: var(--button-alt);
+    border-color: var(--nav-alt);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-2px);
+}
+
+.error-btn.secondary {
+    background: transparent;
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.error-btn.secondary:hover {
+    background: rgba(var(--nav-color-rgb), 0.5);
+    color: var(--nav-alt);
+}
+
+/* Service Unavailable Specific */
+.service-unavailable {
+    border-color: var(--warning);
+}
+
+.service-unavailable .error-code {
+    color: var(--warning);
+    text-shadow: 0 0 20px rgba(255, 170, 0, 0.5);
+}
+
+.service-status {
+    background: rgba(var(--warning), 0.1);
+    border: var(--border-width) solid var(--warning);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    margin: var(--spacing-lg) 0;
+}
+
+.service-status h4 {
+    color: var(--warning);
+    margin-bottom: var(--spacing-md);
+    font-size: 1rem;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) 0;
+    border-bottom: 1px solid rgba(var(--warning), 0.2);
+    font-size: 0.8rem;
+}
+
+.status-item:last-child {
+    border-bottom: none;
+}
+
+.status-indicator {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius);
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.status-indicator.online {
+    background: var(--success);
+    color: white;
+}
+
+.status-indicator.offline {
+    background: var(--error);
+    color: white;
+}
+
+.status-indicator.degraded {
+    background: var(--warning);
+    color: black;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .error-container {
+        padding: var(--spacing-lg);
+    }
+    
+    .error-content {
+        padding: var(--spacing-xl);
+    }
+    
+    .error-code {
+        font-size: 3rem;
+    }
+    
+    .error-title {
+        font-size: 1.2rem;
+    }
+    
+    .error-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .error-btn {
+        width: 100%;
+        max-width: 200px;
+    }
+}

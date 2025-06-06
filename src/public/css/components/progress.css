@@ -1,0 +1,217 @@
+/* Component: Progress
+ * Styling for progress bars, spinners, loaders
+ */
+
+/* Progress Bars */
+.progress {
+    display: flex;
+    height: 8px;
+    overflow: hidden;
+    background-color: rgba(var(--nav-color-rgb), 0.3);
+    border-radius: var(--border-radius);
+    margin: var(--spacing-sm) 0;
+}
+
+.progress-bar {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: #fff;
+    text-align: center;
+    white-space: nowrap;
+    background-color: var(--tertiary-color);
+    transition: width 0.6s ease;
+}
+
+.progress-bar.success {
+    background-color: var(--success);
+}
+
+.progress-bar.warning {
+    background-color: var(--warning);
+}
+
+.progress-bar.danger {
+    background-color: var(--error);
+}
+
+/* XP Progress Bar Specific */
+.xp-progress-bar {
+    height: 6px;
+    width: 100%;
+    background-color: rgba(var(--nav-color-rgb), 0.3);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    margin-top: var(--spacing-xs);
+}
+
+.xp-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--tertiary-color) 0%, var(--tertiary-alt) 100%);
+    border-radius: var(--border-radius);
+    transition: width 0.5s ease-out;
+    box-shadow: 0 0 5px rgba(var(--tertiary-color-rgb), 0.5);
+}
+
+/* Animated progress elements */
+.progress-striped .progress-bar {
+    background-image: linear-gradient(
+        45deg, 
+        rgba(255, 255, 255, 0.15) 25%, 
+        transparent 25%, 
+        transparent 50%, 
+        rgba(255, 255, 255, 0.15) 50%, 
+        rgba(255, 255, 255, 0.15) 75%, 
+        transparent 75%, 
+        transparent
+    );
+    background-size: 1rem 1rem;
+}
+
+.progress-animated .progress-bar {
+    animation: progress-bar-stripes 1s linear infinite;
+}
+
+@keyframes progress-bar-stripes {
+    from { background-position: 1rem 0; }
+    to { background-position: 0 0; }
+}
+
+/* Spinners and Loaders */
+.spinner {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    vertical-align: text-bottom;
+    border: 0.25em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border 0.75s linear infinite;
+}
+
+.spinner-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.2em;
+}
+
+@keyframes spinner-border {
+    to { transform: rotate(360deg); }
+}
+
+/* Grow spinner */
+.spinner-grow {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    vertical-align: text-bottom;
+    background-color: currentColor;
+    border-radius: 50%;
+    opacity: 0;
+    animation: spinner-grow 0.75s linear infinite;
+}
+
+.spinner-grow-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+@keyframes spinner-grow {
+    0% { transform: scale(0); }
+    50% { opacity: 1; transform: none; }
+}
+
+/* Custom pulsing loader */
+.loader {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.loader div {
+    position: absolute;
+    border: 4px solid var(--tertiary-color);
+    opacity: 1;
+    border-radius: 50%;
+    animation: loader 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.loader div:nth-child(2) {
+    animation-delay: -0.5s;
+}
+
+@keyframes loader {
+    0% {
+        top: 36px;
+        left: 36px;
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        top: 0px;
+        left: 0px;
+        width: 72px;
+        height: 72px;
+        opacity: 0;
+    }
+}
+
+/* Loading text dots animation */
+.loading-text:after {
+    content: '.';
+    animation: loading-dots 1.5s infinite;
+}
+
+@keyframes loading-dots {
+    0% { content: '.'; }
+    33% { content: '..'; }
+    66% { content: '...'; }
+}
+
+/* Loading bar */
+.loading-bar {
+    height: 4px;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(var(--nav-color-rgb), 0.2);
+}
+
+.loading-bar:before {
+    display: block;
+    position: absolute;
+    content: "";
+    left: -200px;
+    width: 200px;
+    height: 4px;
+    background-color: var(--tertiary-color);
+    animation: loading 2s linear infinite;
+}
+
+@keyframes loading {
+    from { left: -200px; width: 30%; }
+    50% { width: 30%; }
+    70% { width: 70%; }
+    80% { left: 50%; }
+    95% { left: 120%; }
+    to { left: 100%; }
+}
+
+/* Custom loading spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
