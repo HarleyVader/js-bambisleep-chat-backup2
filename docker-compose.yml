@@ -2,12 +2,12 @@
 
 services:
   mongodb:
-    image: mongo:7.0
+    image: mongo:4.4
     container_name: bambisleep-mongodb
     restart: always
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=admin
-      - MONGO_INITDB_ROOT_PASSWORD=bambiAdminPass123
+      - MONGO_INITDB_ROOT_USERNAME=brandynette
+      - MONGO_INITDB_ROOT_PASSWORD=bambibrandybomboBarbieAdminPassgoodGirlSMakeMoreGoodGirls
       # GitHub authentication configuration
       - GITHUB_CLIENT_ID=
       - GITHUB_CLIENT_SECRET=

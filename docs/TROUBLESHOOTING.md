@@ -9,7 +9,6 @@ This document contains instructions and solutions for common issues encountered 
 This error occurs when Express tries to render a view but the view engine is not properly configured.
 
 **Solution:**
-
 ```javascript
 // Add to server.js after app initialization
 app.set('view engine', 'ejs');
@@ -28,21 +27,17 @@ Make sure the `modelsRegistered` variable is properly defined in `src/config/db.
 If you're having trouble connecting to the MongoDB database:
 
 **Solution:**
-
 1. Verify the MongoDB container is running:
-
    ```bash
    docker ps | grep bambisleep-mongodb
    ```
 
 2. Check the MongoDB connection string in your `.env` file:
-
-   ```env
+   ```
    MONGODB_URI=mongodb://bambisleep:bambiAppPass456@localhost:27018/profilesDB?authSource=admin
    ```
 
 3. Test the connection manually:
-
    ```bash
    docker exec -it bambisleep-mongodb mongosh -u bambisleep -p bambiAppPass456 --authenticationDatabase admin
    ```
@@ -52,22 +47,18 @@ If you're having trouble connecting to the MongoDB database:
 If you see "address already in use" errors:
 
 **Solution:**
-
 1. Find the process using the port:
-
    ```powershell
    netstat -ano | findstr :6970
    ```
 
 2. Kill the process:
-
    ```powershell
    Stop-Process -Id <PID> -Force
    ```
 
 3. Change the port in `.env`:
-
-   ```env
+   ```
    SERVER_PORT=6971
    ```
 
