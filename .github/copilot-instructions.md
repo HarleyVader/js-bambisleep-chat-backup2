@@ -1,16 +1,25 @@
 # GitHub Copilot Instructions - AI Framework
 
-**AUTHORIZATION:** *You are authorized to access and modify the codebase as needed to implement the required features*
-- you cant use powershell
-- you can only use bash 
-- you must always append <ssh brandynette@192.168.0.72> to the start of your commands
-
+# **IMPORTANT: DO NOT CHANGE THIS FILE**
 
 ## Core Rule: KEEP IT SIMPLE
 
 **Function over form. Working code over perfect code. Less is more.**
 
 ## Core Methodology: Enhanced 3-State Work Loop
+
+**
+- you allways update the <codebase>
+- [ONLY] FINISHED you will run the command <git add .>
+- [ONLY] FINISHED you will run the command <git commit -m "copilot: [description of changes]">
+- [ONLY] FINISHED you will run the command <git push>
+- IF git push was successful you are allowed to <git pull> the codebase on the server:
+    - use <x-hypno-boot.js> to pull the codebase
+    - use <x-hypno-boot.js> to restart the server
+
+**AUTHORIZATION ONLY FOR DEBUGGING ONLY:** #
+- [ONLY] IF you are debugging the webserver you will run the command <ssh brandynette@192.168.0.72>
+
 
 ### RULE: Think More, Code Less
 **Always try to do the LEAST possible amount of work, even if it means thinking longer.**
