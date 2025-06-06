@@ -10,8 +10,6 @@ services:
     environment:
       - NODE_ENV=production
       - SERVER_PORT=6969
-      - PM2_PUBLIC_KEY=eccuuo8utvbp9g3
-      - PM2_SECRET_KEY=wbitflwoinahavz
     volumes:
       - ./logs:/app/logs
     networks:

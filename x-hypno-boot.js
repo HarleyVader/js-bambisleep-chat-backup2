@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * BambiSleep Chat Boot Script for PM2
- * Entry point for PM2 process management with auto-deployment
+ * BambiSleep Chat Boot Script
+ * Entry point for application with auto-deployment
  */
 
 import { exec } from 'child_process';
@@ -111,11 +111,10 @@ async function deployAndStart() {
     } else {
       console.log('📦 No package.json changes detected, skipping npm install');
     }
-    
-    // Start the server
+      // Start the server
     console.log('🌟 Starting BambiSleep Chat server...');
     await import('./src/server.js');
-    console.log('✅ BambiSleep Chat server started successfully via PM2');
+    console.log('✅ BambiSleep Chat server started successfully');
     
   } catch (error) {
     console.error('💥 Deployment failed:', error.message);

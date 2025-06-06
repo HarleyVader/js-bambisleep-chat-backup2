@@ -161,11 +161,9 @@ For production environments requiring high availability:
    - Example Nginx configuration available in `config/nginx/`
 
 3. **Process Management**
-   - Use PM2 for Node.js process management:
-   ```bash
-   npm install -g pm2
-   pm2 start ecosystem.config.js
-   ```
+   - The application uses Docker containers for process management and auto-restart functionality
+   - For development, use `npm run dev` with nodemon for automatic restarts
+   - For production, the Docker container handles process management automatically
 
 ### Multi-Model Configuration
 
