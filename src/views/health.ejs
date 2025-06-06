@@ -498,9 +498,7 @@
 
     <script>
         let autoRefresh = true;
-        let refreshInterval;
-
-        // Navigation
+        let refreshInterval;        // Navigation
         document.querySelectorAll('.nav-item[data-view]').forEach(item => {
             item.addEventListener('click', () => {
                 const view = item.dataset.view;
@@ -509,6 +507,9 @@
                 // Update active state
                 document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
                 item.classList.add('active');
+                
+                // Save current tab to localStorage
+                localStorage.setItem('healthDashboardActiveTab', view);
             });
         });
 
@@ -522,6 +523,22 @@
             const section = document.getElementById(view + '-section');
             if (section) {
                 section.style.display = 'block';
+            }
+        }
+
+        // Restore saved tab on page load
+        function restoreSavedTab() {
+            const savedTab = localStorage.getItem('healthDashboardActiveTab');
+            if (savedTab) {
+                // Remove active from all nav items
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                
+                // Set active on saved tab
+                const savedNavItem = document.querySelector(`[data-view="${savedTab}"]`);
+                if (savedNavItem) {
+                    savedNavItem.classList.add('active');
+                    switchView(savedTab);
+                }
             }
         }
 
@@ -542,20 +559,13 @@
                     indicator.classList.remove('updating');
                     indicator.textContent = 'Update Failed';
                 });
-        }
-
-        function updateHealthData(health) {
+        }        function updateHealthData(health) {
             // Update timestamp
             document.getElementById('lastUpdate').textContent = health.system.timestamp;
             document.getElementById('responseTime').textContent = health.responseTime + 'ms';
             
-            // You could update all dynamic content here
-            // For now, we'll just reload the page to get fresh data
-            setTimeout(() => {
-                if (autoRefresh) {
-                    location.reload();
-                }
-            }, 100);
+            // Instead of reloading, just update the timestamp and other dynamic data
+            // This preserves the current tab state
         }
 
         function toggleAutoRefresh() {
@@ -593,12 +603,13 @@
                     console.error('Failed to export data:', error);
                     alert('Failed to export data');
                 });
-        }
-
-        // Start auto-refresh
+        }        // Start auto-refresh
         if (autoRefresh) {
             startAutoRefresh();
         }
+
+        // Restore saved tab on page load
+        restoreSavedTab();
 
         // Handle page visibility for performance
         document.addEventListener('visibilitychange', () => {
