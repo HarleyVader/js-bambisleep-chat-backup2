@@ -1,6 +1,30 @@
 ﻿version: '3.8'
 
 services:
+  app:
+    build: .
+    container_name: bambisleep-chat-app
+    restart: always
+    ports:
+      - '6969:6969'
+    environment:
+      - NODE_ENV=production
+      - SERVER_PORT=6969
+      - PM2_PUBLIC_KEY=eccuuo8utvbp9g3
+      - PM2_SECRET_KEY=wbitflwoinahavz
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - bambisleep-network
+    depends_on:
+      - mongodb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6969/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
   mongodb:
     image: mongo:4.4
     container_name: bambisleep-mongodb

@@ -35,6 +35,7 @@ import indexRoute from './routes/index.js';
 import psychodelicTriggerManiaRouter from './routes/psychodelic-trigger-mania.js';
 import helpRoute from './routes/help.js';
 import chatRouter, { basePath as chatBasePath } from './routes/chat.js';
+import healthRoute from './routes/health.js';
 
 import Logger from './utils/logger.js';
 import errorHandler from './utils/errorHandler.js';
@@ -522,14 +523,14 @@ function setupMiddleware(app) {
  * 
  * @param {Express} app - Express application instance
  */
-async function setupRoutes(app) {
-  // Routes that don't strictly require database access
+async function setupRoutes(app) {  // Routes that don't strictly require database access
   const basicRoutes = [
     { path: '/', handler: indexRoute, dbRequired: false },
     { path: '/psychodelic-trigger-mania', handler: psychodelicTriggerManiaRouter, dbRequired: false },
     { path: '/help', handler: helpRoute, dbRequired: false },
+    { path: '/health', handler: healthRoute, dbRequired: false },
     { path: chatBasePath, handler: chatRouter, dbRequired: true }
-  ];  
+  ];
   // Import and setup docs router
   const docsRouter = await import('./routes/docs.js');
   app.use('/docs', dbFeatureCheck(false), docsRouter.default);

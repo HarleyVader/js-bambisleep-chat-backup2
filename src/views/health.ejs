@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #00ff00;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Left Navigation */
+        .sidebar {
+            width: 250px;
+            background: #1a1a1a;
+            border-right: 1px solid #333;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 {
+            color: #00ffff;
+            margin-bottom: 10px;
+            font-size: 14px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+
+        .nav-item {
+            padding: 8px 10px;
+            margin: 2px 0;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .nav-item:hover {
+            background: #333;
+        }
+
+        .nav-item.active {
+            background: #00ff00;
+            color: #000;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .header {
+            background: #1a1a1a;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+
+        .header h1 {
+            color: #00ffff;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .header .timestamp {
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* System Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 15px;
+        }
+
+        .stat-box h3 {
+            color: #00ffff;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-line {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+
+        .stat-value {
+            color: #ffff00;
+        }
+
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.cpu {
+            background: linear-gradient(90deg, #00ff00, #ffff00, #ff0000);
+        }
+
+        .progress-fill.memory {
+            background: linear-gradient(90deg, #0080ff, #00ffff, #ff8000);
+        }
+
+        /* User Table */
+        .user-table {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #333;
+            padding: 10px;
+            color: #00ffff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 100px 120px 80px 100px 100px 100px 100px;
+            gap: 10px;
+            padding: 8px 10px;
+            border-bottom: 1px solid #333;
+            font-size: 11px;
+            align-items: center;
+        }
+
+        .table-row:nth-child(even) {
+            background: #0a0a0a;
+        }
+
+        .table-row:hover {
+            background: #2a2a2a;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .status-dot.online {
+            background: #00ff00;
+        }
+
+        .status-dot.offline {
+            background: #666;
+        }
+
+        .user-id {
+            color: #ffff00;
+            font-weight: bold;
+        }
+
+        .socket-id {
+            color: #ff00ff;
+            font-family: monospace;
+        }
+
+        .trigger {
+            color: #ff8000;
+        }
+
+        /* Database Status */
+        .db-status {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .db-connection {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 11px;
+            border: 1px solid;
+        }
+
+        .db-connection.connected {
+            background: #004400;
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .db-connection.disconnected {
+            background: #440000;
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        /* Auto-refresh indicator */
+        .refresh-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #333;
+            color: #00ff00;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 11px;
+            border: 1px solid #00ff00;
+        }
+
+        .refresh-indicator.updating {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+            }
+            
+            .table-row {
+                grid-template-columns: 1fr;
+                gap: 5px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="refresh-indicator" id="refreshIndicator">
+        Auto-refresh: ON
+    </div>
+
+    <div class="container">
+        <!-- Left Navigation -->
+        <div class="sidebar">
+            <h3>Navigation</h3>
+            <div class="nav-item active" data-view="overview">📊 System Overview</div>
+            <div class="nav-item" data-view="users">👥 Connected Users</div>
+            <div class="nav-item" data-view="database">🗄️ Database Status</div>
+            <div class="nav-item" data-view="workers">⚙️ Worker Status</div>
+            <div class="nav-item" data-view="logs">📋 System Logs</div>
+
+            <h3 style="margin-top: 20px;">Quick Actions</h3>
+            <div class="nav-item" onclick="refreshData()">🔄 Refresh Now</div>
+            <div class="nav-item" onclick="toggleAutoRefresh()">⏱️ Toggle Auto-refresh</div>
+            <div class="nav-item" onclick="exportData()">💾 Export Data</div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1>🖥️ BambiSleep System Health Monitor</h1>
+                <div class="timestamp">Last Updated: <span id="lastUpdate"><%= health.system.timestamp %></span></div>
+                <div class="timestamp">Response Time: <span id="responseTime"><%= health.responseTime %>ms</span></div>
+            </div>
+
+            <!-- Overview Section -->
+            <div id="overview-section" class="view-section">
+                <div class="stats-grid">
+                    <!-- System Info -->
+                    <div class="stat-box">
+                        <h3>💻 System Information</h3>
+                        <div class="stat-line">
+                            <span>Hostname:</span>
+                            <span class="stat-value"><%= health.system.hostname %></span>
+                        </div>
+                        <div class="stat-line">
+                            <span>Platform:</span>
+                            <span class="stat-value"><%= health.system.platform %></span>
+                        </div>
+                        <div class="stat-line">
+                            <span>Architecture:</span>
+                            <span class="stat-value"><%= health.system.arch %></span>
+                        </div>
+                        <div class="stat-line">
+                            <span>Uptime:</span>
+                            <span class="stat-value"><%= health.system.uptime %></span>
+                        </div>
+                        <div class="stat-line">
+                            <span>CPU Cores:</span>
+                            <span class="stat-value"><%= health.system.cpuCount %></span>
+                        </div>
+                    </div>
+
+                    <!-- Memory Usage -->
+                    <div class="stat-box">
+                        <h3>🧠 Memory Usage</h3>
+                        <div class="stat-line">
+                            <span>Total:</span>
+                            <span class="stat-value"><%= health.system.memory.total %> MB</span>
+                        </div>
+                        <div class="stat-line">
+                            <span>Used:</span>
+                            <span class="stat-value"><%= health.system.memory.used %> MB</span>
+                        </div>
+                        <div class="stat-line">
+                            <span>Free:</span>
+                            <span class="stat-value"><%= health.system.memory.free %> MB</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill memory" style="width: <%= health.system.memory.percentage %>%"></div>
+                        </div>
+                        <div class="stat-line">
+                            <span>Usage:</span>
+                            <span class="stat-value"><%= health.system.memory.percentage %>%</span>
+                        </div>
+                    </div>
+
+                    <!-- CPU Usage -->
+                    <div class="stat-box">
+                        <h3>⚡ CPU Usage</h3>
+                        <div class="stat-line">
+                            <span>Load (1m):</span>
+                            <span class="stat-value"><%= health.system.cpu.load1.toFixed(2) %></span>
+                        </div>
+                        <div class="stat-line">
+                            <span>Load (5m):</span>
+                            <span class="stat-value"><%= health.system.cpu.load5.toFixed(2) %></span>
+                        </div>
+                        <div class="stat-line">
+                            <span>Load (15m):</span>
+                            <span class="stat-value"><%= health.system.cpu.load15.toFixed(2) %></span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill cpu" style="width: <%= health.system.cpu.percentage %>%"></div>
+                        </div>
+                        <div class="stat-line">
+                            <span>Usage:</span>
+                            <span class="stat-value"><%= health.system.cpu.percentage %>%</span>
+                        </div>
+                    </div>
+
+                    <!-- User Stats -->
+                    <div class="stat-box">
+                        <h3>👥 User Statistics</h3>
+                        <div class="stat-line">
+                            <span>Total Users:</span>
+                            <span class="stat-value"><%= health.users.total %></span>
+                        </div>
+                        <div class="stat-line">
+                            <span>Connected:</span>
+                            <span class="stat-value"><%= health.users.connected %></span>
+                        </div>
+                        <div class="stat-line">
+                            <span>Offline:</span>
+                            <span class="stat-value"><%= health.users.offline %></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="users-section" class="view-section" style="display: none;">
+                <div class="user-table">
+                    <div class="table-header">Connected Users & Sessions</div>
+                    <div class="table-row" style="background: #333; font-weight: bold;">
+                        <div>Status</div>
+                        <div>Username</div>
+                        <div>Bambi ID</div>
+                        <div>Socket ID</div>
+                        <div>Location</div>
+                        <div>Last Trigger</div>
+                        <div>Connected Time</div>
+                    </div>
+                    <% health.users.list.forEach(user => { %>
+                    <div class="table-row">
+                        <div>
+                            <span class="status-dot <%= user.socketId === 'offline' ? 'offline' : 'online' %>"></span>
+                            <%= user.socketId === 'offline' ? 'Offline' : 'Online' %>
+                        </div>
+                        <div class="user-id"><%= user.username %></div>
+                        <div><%= user.bambiId %></div>
+                        <div class="socket-id"><%= user.socketId %></div>
+                        <div><%= user.location %></div>
+                        <div class="trigger"><%= user.lastTrigger %></div>
+                        <div><%= user.connectedTime %></div>
+                    </div>
+                    <% }); %>
+                </div>
+            </div>
+
+            <!-- Database Section -->
+            <div id="database-section" class="view-section" style="display: none;">
+                <div class="stat-box">
+                    <h3>🗄️ Database Connections</h3>
+                    <div class="db-status">
+                        <div class="db-connection <%= health.database.connections?.main ? 'connected' : 'disconnected' %>">
+                            Main DB: <%= health.database.connections?.main ? 'Connected' : 'Disconnected' %>
+                        </div>
+                        <div class="db-connection <%= health.database.connections?.profiles ? 'connected' : 'disconnected' %>">
+                            Profiles DB: <%= health.database.connections?.profiles ? 'Connected' : 'Disconnected' %>
+                        </div>
+                        <div class="db-connection <%= health.database.connections?.chat ? 'connected' : 'disconnected' %>">
+                            Chat DB: <%= health.database.connections?.chat ? 'Connected' : 'Disconnected' %>
+                        </div>
+                        <div class="db-connection <%= health.database.connections?.aigfLogs ? 'connected' : 'disconnected' %>">
+                            AIGF Logs DB: <%= health.database.connections?.aigfLogs ? 'Connected' : 'Disconnected' %>
+                        </div>
+                    </div>
+                    <div class="stat-line" style="margin-top: 15px;">
+                        <span>Overall Status:</span>
+                        <span class="stat-value"><%= health.database.status %></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workers Section -->
+            <div id="workers-section" class="view-section" style="display: none;">
+                <div class="stat-box">
+                    <h3>⚙️ Worker Status</h3>
+                    <div class="stat-line">
+                        <span>Total Workers:</span>
+                        <span class="stat-value"><%= health.workers.total %></span>
+                    </div>
+                    <div class="stat-line">
+                        <span>Running:</span>
+                        <span class="stat-value"><%= health.workers.running %></span>
+                    </div>
+                    <% health.workers.workers.forEach(worker => { %>
+                    <div class="stat-line">
+                        <span><%= worker.name %> Worker:</span>
+                        <span class="stat-value"><%= worker.status %></span>
+                    </div>
+                    <% }); %>
+                </div>
+            </div>
+
+            <!-- Logs Section -->
+            <div id="logs-section" class="view-section" style="display: none;">
+                <div class="stat-box">
+                    <h3>📋 System Logs</h3>
+                    <div style="color: #666; font-size: 12px;">
+                        <p>Real-time system logs would appear here...</p>
+                        <p>This would show recent server activity, errors, and important events.</p>
+                        <p style="margin-top: 10px;">Features to implement:</p>
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li>Connection events</li>
+                            <li>Worker status changes</li>
+                            <li>Database connection issues</li>
+                            <li>Error logs</li>
+                            <li>Performance warnings</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let autoRefresh = true;
+        let refreshInterval;
+
+        // Navigation
+        document.querySelectorAll('.nav-item[data-view]').forEach(item => {
+            item.addEventListener('click', () => {
+                const view = item.dataset.view;
+                switchView(view);
+                
+                // Update active state
+                document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+
+        function switchView(view) {
+            // Hide all sections
+            document.querySelectorAll('.view-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show selected section
+            const section = document.getElementById(view + '-section');
+            if (section) {
+                section.style.display = 'block';
+            }
+        }
+
+        function refreshData() {
+            const indicator = document.getElementById('refreshIndicator');
+            indicator.classList.add('updating');
+            indicator.textContent = 'Updating...';
+            
+            fetch('/health/api')
+                .then(response => response.json())
+                .then(data => {
+                    updateHealthData(data);
+                    indicator.classList.remove('updating');
+                    indicator.textContent = autoRefresh ? 'Auto-refresh: ON' : 'Auto-refresh: OFF';
+                })
+                .catch(error => {
+                    console.error('Failed to refresh data:', error);
+                    indicator.classList.remove('updating');
+                    indicator.textContent = 'Update Failed';
+                });
+        }
+
+        function updateHealthData(health) {
+            // Update timestamp
+            document.getElementById('lastUpdate').textContent = health.system.timestamp;
+            document.getElementById('responseTime').textContent = health.responseTime + 'ms';
+            
+            // You could update all dynamic content here
+            // For now, we'll just reload the page to get fresh data
+            setTimeout(() => {
+                if (autoRefresh) {
+                    location.reload();
+                }
+            }, 100);
+        }
+
+        function toggleAutoRefresh() {
+            autoRefresh = !autoRefresh;
+            const indicator = document.getElementById('refreshIndicator');
+            
+            if (autoRefresh) {
+                indicator.textContent = 'Auto-refresh: ON';
+                startAutoRefresh();
+            } else {
+                indicator.textContent = 'Auto-refresh: OFF';
+                clearInterval(refreshInterval);
+            }
+        }
+
+        function startAutoRefresh() {
+            refreshInterval = setInterval(refreshData, 5000); // Refresh every 5 seconds
+        }
+
+        function exportData() {
+            fetch('/health/api')
+                .then(response => response.json())
+                .then(data => {
+                    const blob = new Blob([JSON.stringify(data, null, 2)], {
+                        type: 'application/json'
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `health-data-${new Date().toISOString().slice(0, 19)}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                })
+                .catch(error => {
+                    console.error('Failed to export data:', error);
+                    alert('Failed to export data');
+                });
+        }
+
+        // Start auto-refresh
+        if (autoRefresh) {
+            startAutoRefresh();
+        }
+
+        // Handle page visibility for performance
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                clearInterval(refreshInterval);
+            } else if (autoRefresh) {
+                startAutoRefresh();
+            }
+        });
+    </script>
+</body>
+</html>

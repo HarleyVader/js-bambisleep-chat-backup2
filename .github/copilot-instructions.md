@@ -1,5 +1,11 @@
 # GitHub Copilot Instructions - AI Framework
 
+**AUTHORIZATION:** *You are authorized to access and modify the codebase as needed to implement the required features*
+- you cant use powershell
+- you can only use bash 
+- you must always append <ssh brandynette@192.168.0.72> to the start of your commands
+
+
 ## Core Rule: KEEP IT SIMPLE
 
 **Function over form. Working code over perfect code. Less is more.**
@@ -33,7 +39,6 @@
 - Check percentage of completion every itertation
 - If not 100% complete, go back to **Third IMAGINE Round:**
 
-
 ### 3. DEPLOY (Test Until Working, Then STOP)
 - Test the minimum viable solution
 - Fix ONLY what's broken
@@ -45,6 +50,5 @@
 ### 4. FINALIZE (Review & Confirm)
 - Review the solution
 - Confirm it meets the requirements
-
 
 **CRITICAL: When task is complete, STOP. Don't add features, don't improve, don't optimize.**
