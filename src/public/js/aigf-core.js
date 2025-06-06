@@ -264,8 +264,11 @@ function handleAudioPlay() {
     applyUppercaseStyle();
 }
 
-audio.addEventListener('ended', handleAudioEnded);
-audio.addEventListener('play', handleAudioPlay);
+// Add null check before adding event listeners
+if (audio) {
+    audio.addEventListener('ended', handleAudioEnded);
+    audio.addEventListener('play', handleAudioPlay);
+}
 
 // Clean up event listeners when appropriate
 function cleanup() {
