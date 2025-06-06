@@ -78,9 +78,7 @@ async function registerModels() {
       mongoose.models.AigfInteraction = AigfInteractionModule.default;
       logger.info('AigfInteraction model registered');
     }
-    
-    // Set global flag indicating models are registered
-    modelsRegistered = true;
+      // Models have been registered
     logger.success('All models registered successfully');
   } catch (error) {
     logger.error(`Model registration error: ${error.message}`);

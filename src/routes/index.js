@@ -58,13 +58,13 @@ export async function loadAllRoutes(app) {
     
     // Register the homepage routes
     app.use('/', router);
-    
-    // Handle 404 routes - move this to the end after all routes are registered
+      // Handle 404 routes - move this to the end after all routes are registered
     app.use((req, res, next) => {
       res.status(404).render('error', {
         message: 'Page not found',
         error: { status: 404 },
-        title: 'Error - Page Not Found'
+        title: 'Error - Page Not Found',
+        footer: footerConfig
       });
     });
     
@@ -148,6 +148,7 @@ router.get('/', async (req, res) => {
       profile,
       username,
       footerLinks,
+      footer: footerConfig, // Add full footer config
       chatMessages,
       triggers,
       title: 'BambiSleep.Chat - Hypnotic AI Chat'
@@ -160,6 +161,7 @@ router.get('/', async (req, res) => {
       profile: null, 
       username: '',
       footerLinks: config?.FOOTER_LINKS || footerConfig?.links || [],
+      footer: footerConfig, // Add full footer config here too
       chatMessages: [],
       triggers: [],
       title: 'BambiSleep.Chat - Hypnotic AI Chat'

@@ -5,6 +5,7 @@ import { marked } from 'marked';
 import hljs from 'highlight.js';
 import { fileURLToPath } from 'url';
 import fetch from 'node-fetch';
+import footerConfig from '../config/footer.config.js';
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -371,20 +372,20 @@ router.get('/', async (req, res) => {
       if (b === 'General') return 1;
       return a.localeCompare(b);
     });
-    
-    res.render('docs/docs-index', {
+      res.render('docs/docs-index', {
       title: 'Documentation',
       description: 'Browse all documentation files',
       files: markdownFiles,
       groupedFiles,
-      categories
+      categories,
+      footer: footerConfig
     });
   } catch (error) {
-    console.error('Error listing documentation:', error.message);
-    res.status(500).render('error', {
+    console.error('Error listing documentation:', error.message);    res.status(500).render('error', {
       title: 'Error',
       error: 'Could not load documentation list',
-      message: error.message
+      message: error.message,
+      footer: footerConfig
     });
   }
 });
@@ -426,8 +427,7 @@ router.get('/:name', async (req, res) => {
     const currentIndex = allSortedFiles.findIndex(file => file.name === doc.fileName);
     const prevDoc = currentIndex > 0 ? allSortedFiles[currentIndex - 1] : null;
     const nextDoc = currentIndex < allSortedFiles.length - 1 ? allSortedFiles[currentIndex + 1] : null;
-    
-    res.render('docs/docs-view', {
+      res.render('docs/docs-view', {
       title: doc.title,
       description: doc.description,
       content: doc.content,
@@ -443,23 +443,24 @@ router.get('/:name', async (req, res) => {
       lastUpdated: doc.lastUpdated,
       prevDoc,
       nextDoc,
-      anchors: doc.anchors
+      anchors: doc.anchors,
+      footer: footerConfig
     });
   } catch (error) {
     console.error('Error reading documentation:', error.message);
     
-    if (error.code === 'ENOENT') {
-      return res.status(404).render('error', {
+    if (error.code === 'ENOENT') {      return res.status(404).render('error', {
         title: 'Documentation Not Found',
         error: `The document "${req.params.name}" was not found`,
-        message: 'Please check the URL or return to the documentation index'
+        message: 'Please check the URL or return to the documentation index',
+        footer: footerConfig
       });
     }
-    
-    res.status(500).render('error', {
+      res.status(500).render('error', {
       title: 'Error',
       error: 'Could not load documentation',
-      message: error.message
+      message: error.message,
+      footer: footerConfig
     });
   }
 });

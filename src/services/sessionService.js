@@ -534,25 +534,25 @@ export function createChatRouter() {
           { name: "GOOD GIRL", description: "reinforces obedience and submission", category: "core" }
         ];
       }
-      
-      // Render the chat view with necessary data
+        // Render the chat view with necessary data
       res.render('chat', {
         title: 'BambiSleep Chat',
         profile,
         username,
         footerLinks,
+        footer: footerConfig,
         chatMessages,
         triggers
       });
     } catch (error) {
       logger.error('Error rendering chat page:', error);
-      
-      // Fallback with minimal data
+        // Fallback with minimal data
       res.render('chat', {
         title: 'BambiSleep Chat',
         profile: null,
         username: '',
         footerLinks: config?.FOOTER_LINKS || footerConfig?.links || [],
+        footer: footerConfig,
         chatMessages: [],
         triggers: []
       });
