@@ -1,12 +1,16 @@
-const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
-const path = require('path');
-const fs = require('fs');
+import express from 'express';
+import { createServer } from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
+const server = createServer(app);
+const io = new SocketIOServer(server);
 
 const PORT = process.env.CIRCUIT_BREAKER_PORT || 6970;
 const STATUS_FILE = path.join(__dirname, '..', 'maintenance-status.json');
@@ -69,7 +73,17 @@ app.get('/api/maintenance/status', (req, res) => {
     res.json(maintenanceState);
 });
 
-// Main maintenance page
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        service: 'circuit-breaker',
+        uptime: process.uptime(),
+        connections: io.engine.clientsCount
+    });
+});
+
+// Main maintenance page (must be last)
 app.get('*', (req, res) => {
     // Update countdown based on elapsed time
     const elapsed = Math.floor((Date.now() - maintenanceState.startTime) / 1000);

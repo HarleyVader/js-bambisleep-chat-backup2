@@ -232,6 +232,8 @@ For more detailed information about specific features:
 - [📕 User Guide](docs/USER-GUIDE.md)
 - [📗 Installation Guide](docs/INSTALLATION.md)
 - [📙 MongoDB Setup](src/utils/MONGODB-SETUP.md)
+- [🔧 Circuit Breaker Service](docs/CIRCUIT-BREAKER.md)
+- [🚀 Production Setup](PRODUCTION-SETUP.md)
 
 ## 🗂️ Folder Structure
 
