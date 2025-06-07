@@ -41,8 +41,8 @@ import bnncsRoutes from './routes/bnncs.js';
 import Logger from './utils/logger.js';
 import errorHandler from './utils/errorHandler.js';
 
-// Import Bambi Neural Network Control System
-import bambiControlNetwork from './services/bambiControlNetwork.js';
+// Import Bambi Distributed Industrial Control System (BDICS)
+import bambiIndustrialControlSystem from './services/bambiControlNetwork.js';
 
 // Fix the registerModels function to properly export the models
 async function registerModels() {
@@ -461,20 +461,42 @@ async function initializeApp() {
 
     // Initialize BNNCS (Bambi Neural Network Control System)
     logger.info('🧠 Starting Bambi Neural Network Control System...');
-    
-    // Set up BNNCS event handlers
-    bambiControlNetwork.on('automationAction', (action) => {
+      // Set up BDICS (Bambi Distributed Industrial Control System) event handlers
+    bambiIndustrialControlSystem.on('automationAction', (action) => {
       if (action.type === 'CASCADE_TRIGGER' && action.targetTriggers) {
         // Emit cascade triggers to all connected clients
         setTimeout(() => {
           io.emit('automation trigger', {
             triggers: action.targetTriggers,
-            source: 'BNNCS_AUTOMATION',
+            source: 'BDICS_AUTOMATION',
             type: 'CASCADE'
           });
-          logger.info(`🔄 BNNCS automation: Cascading triggers ${action.targetTriggers.join(', ')}`);
+          logger.info(`🔄 BDICS automation: Cascading triggers ${action.targetTriggers.join(', ')}`);
         }, action.delay || 0);
       }
+    });
+
+    // Industrial control event handlers
+    bambiIndustrialControlSystem.on('alarmEscalation', (data) => {
+      logger.warning(`🚨 SCADA Alarm escalated to workstation ${data.workstationId}: ${data.alarm?.description || 'Unknown alarm'}`);
+      // Could emit to specific SCADA clients if implemented
+    });
+
+    bambiIndustrialControlSystem.on('scadaUpdate', (data) => {
+      logger.debug(`🖥️ SCADA update for workstation ${data.workstationId}`);
+      // Could emit SCADA data to specific clients if implemented
+    });
+
+    bambiIndustrialControlSystem.on('siteRegistered', (site) => {
+      logger.info(`🏭 Remote industrial site registered: ${site.name} (${site.protocol})`);
+    });
+
+    bambiIndustrialControlSystem.on('nodeRegistered', (node) => {
+      logger.debug(`🔗 Industrial node registered: ${node.type} (${node.id})`);
+    });
+
+    bambiIndustrialControlSystem.on('nodeDisconnected', (node) => {
+      logger.debug(`🔌 Industrial node disconnected: ${node.type} (${node.id})`);
     });
 
     return { app, server, io, socketStore };
@@ -1141,10 +1163,8 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
 
         // Add socket to global store
         socketStore.set(socket.id, { socket, worker: lmstudio, files: [] });
-        logger.info(`Client connected: ${socket.id} sockets: ${socketStore.size}`);
-
-        // Register socket in BNNCS
-        bambiControlNetwork.registerControlNode(socket.id, 'USER', {
+        logger.info(`Client connected: ${socket.id} sockets: ${socketStore.size}`);        // Register socket in BDICS (Bambi Distributed Industrial Control System)
+        bambiIndustrialControlSystem.registerControlNode(socket.id, 'USER', {
           username: socket.bambiUsername || 'anonymous',
           connectTime: Date.now()
         });
@@ -1274,7 +1294,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
               }
 
               // Process chat message through BNNCS
-              bambiControlNetwork.processControlSignal('CHAT_MESSAGE', {
+              bambiIndustrialControlSystem.processControlSignal('CHAT_MESSAGE', {
                 message: msg.data,
                 username: socket.bambiUsername,
                 hasUrls: savedMessage.urls && savedMessage.urls.length > 0,
@@ -1282,7 +1302,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
               }, socket.id);
 
               // Update node activity
-              bambiControlNetwork.updateNodeActivity(socket.id);
+              bambiIndustrialControlSystem.updateNodeActivity(socket.id);
 
               // Give XP for chat interactions
               xpSystem.awardXP(socket, 1, 'chat');            } catch (dbError) {
@@ -1449,7 +1469,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
           logger.info('Received triggers:', data);
 
           // Process trigger through BNNCS
-          bambiControlNetwork.processControlSignal('TRIGGER_ACTIVATION', {
+          bambiIndustrialControlSystem.processControlSignal('TRIGGER_ACTIVATION', {
             triggerNames: data.triggerNames,
             triggerDetails: data.triggerDetails,
             username: socket.bambiUsername
@@ -1510,7 +1530,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
             logger.info('Client disconnected:', socket.id, 'Reason:', reason);
 
             // Unregister from BNNCS
-            bambiControlNetwork.unregisterControlNode(socket.id);
+            bambiIndustrialControlSystem.unregisterControlNode(socket.id);
 
             // Get socket data and clean up
             const socketData = socketStore.get(socket.id);
@@ -1737,6 +1757,11 @@ function shutdown(signal) {
 
   // Try to close server and database
   try {
+    // Shutdown BDICS Industrial Control System first for safe industrial shutdown
+    if (bambiIndustrialControlSystem) {
+      bambiIndustrialControlSystem.shutdown();
+    }
+
     if (global.httpServer) {
       global.httpServer.close();
     }
