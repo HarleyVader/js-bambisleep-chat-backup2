@@ -156,9 +156,8 @@ For production environments requiring high availability:
    For detailed instructions on setting up MongoDB replication, refer to the [MongoDB Setup Guide - Advanced Topics](MONGODB-SETUP.md#replication) section.
 
 2. **Load Balancing**
-   - Set up Nginx or HAProxy as a load balancer
+   - Set up load balancer as needed for high traffic
    - Configure sticky sessions for WebSocket support
-   - Example Nginx configuration available in `config/nginx/`
 
 3. **Process Management**
    - The application uses Docker containers for process management and auto-restart functionality
