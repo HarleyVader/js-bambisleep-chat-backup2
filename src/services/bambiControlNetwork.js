@@ -36,8 +36,7 @@ class BambiControlNetwork extends EventEmitter {
     };
     
     this.initialized = false;
-  }
-  /**
+  }  /**
    * Initialize the control network
    */
   async initialize() {
@@ -49,7 +48,51 @@ class BambiControlNetwork extends EventEmitter {
     logger.info('🌀 Initializing Bambi Control Network');
     this.initialized = true;
     this.initTime = Date.now();
+    
+    // Set up system event listeners
+    this.setupSystemEventListeners();
+    
     logger.info('✅ Bambi Control Network initialized');
+  }
+
+  /**
+   * Set up system event listeners for reboot and maintenance operations
+   */
+  setupSystemEventListeners() {
+    this.on('systemEvent', (event) => {
+      logger.info(`🔔 System Event: ${event.type} - ${event.message}`);
+      
+      // Update metrics based on event type
+      switch (event.type) {
+        case 'REBOOT_INITIATED':
+        case 'GIT_PULL_COMPLETE':
+        case 'NPM_INSTALL_COMPLETE':
+        case 'SERVER_RESTART_INITIATED':
+          this.metrics.signalsProcessed++;
+          break;
+        case 'REBOOT_FAILED':
+          this.metrics.errorsEncountered++;
+          break;
+      }
+      
+      // Broadcast to all connected control nodes
+      this.broadcastSystemEvent(event);
+    });
+  }
+
+  /**
+   * Broadcast system events to all connected control nodes
+   */
+  broadcastSystemEvent(event) {
+    const connectedNodes = this.getConnectedNodes();
+    logger.debug(`📡 Broadcasting system event to ${connectedNodes.length} nodes: ${event.type}`);
+    
+    connectedNodes.forEach(node => {
+      // Emit to specific node types that care about system events
+      if (node.type === 'WORKER' || node.metadata?.systemMonitor) {
+        this.emit('nodeSystemEvent', { nodeId: node.id, event });
+      }
+    });
   }
 
   /**

@@ -7,6 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
 import axios from 'axios';
+import { spawn } from 'child_process';
 
 // Import modules
 import { Server as SocketIOServer } from 'socket.io';
@@ -351,6 +352,130 @@ function disableMaintenanceMode() {
 global.enableMaintenanceMode = enableMaintenanceMode;
 global.disableMaintenanceMode = disableMaintenanceMode;
 
+/**
+ * Reboot server with git pull, npm install, and restart
+ * Integrates with Bambi Control Network for status reporting
+ */
+async function rebootServer(duration = 600) {
+  logger.info('🔄 Initiating server reboot sequence...');
+  
+  try {
+    // Enable maintenance mode
+    enableMaintenanceMode(duration);
+    
+    // Report to control network
+    if (bambiControlNetwork && bambiControlNetwork.initialized) {
+      bambiControlNetwork.emit('systemEvent', {
+        type: 'REBOOT_INITIATED',
+        message: 'Server reboot sequence started',
+        timestamp: Date.now()
+      });
+    }
+
+    // Step 1: Git pull
+    logger.info('📥 Step 1/3: Pulling latest changes...');
+    await executeCommand('git', ['pull']);
+    
+    if (bambiControlNetwork && bambiControlNetwork.initialized) {
+      bambiControlNetwork.emit('systemEvent', {
+        type: 'GIT_PULL_COMPLETE',
+        message: 'Git pull completed successfully',
+        timestamp: Date.now()
+      });
+    }
+
+    // Step 2: NPM install
+    logger.info('📦 Step 2/3: Installing dependencies...');
+    await executeCommand('npm', ['install']);
+    
+    if (bambiControlNetwork && bambiControlNetwork.initialized) {
+      bambiControlNetwork.emit('systemEvent', {
+        type: 'NPM_INSTALL_COMPLETE',
+        message: 'NPM install completed successfully',
+        timestamp: Date.now()
+      });
+    }
+
+    // Step 3: Restart server
+    logger.info('🚀 Step 3/3: Restarting server...');
+    if (bambiControlNetwork && bambiControlNetwork.initialized) {
+      bambiControlNetwork.emit('systemEvent', {
+        type: 'SERVER_RESTART_INITIATED',
+        message: 'Server restart initiated',
+        timestamp: Date.now()
+      });
+    }
+
+    // Schedule the actual restart
+    setTimeout(() => {
+      logger.info('🔄 Executing server restart...');
+      process.exit(0); // Exit gracefully, process manager should restart
+    }, 2000);
+
+    return true;
+  } catch (error) {
+    logger.error(`Reboot failed: ${error.message}`);
+    
+    if (bambiControlNetwork && bambiControlNetwork.initialized) {
+      bambiControlNetwork.emit('systemEvent', {
+        type: 'REBOOT_FAILED',
+        message: `Server reboot failed: ${error.message}`,
+        error: error.message,
+        timestamp: Date.now()
+      });
+    }
+    
+    // Disable maintenance mode on failure
+    disableMaintenanceMode();
+    throw error;
+  }
+}
+
+/**
+ * Execute a command and return a promise
+ */
+function executeCommand(command, args = []) {
+  return new Promise((resolve, reject) => {
+    logger.info(`Executing: ${command} ${args.join(' ')}`);
+    
+    const process = spawn(command, args, {
+      stdio: 'pipe',
+      shell: true
+    });
+
+    let stdout = '';
+    let stderr = '';
+
+    process.stdout.on('data', (data) => {
+      stdout += data.toString();
+      logger.debug(`${command} stdout: ${data.toString().trim()}`);
+    });
+
+    process.stderr.on('data', (data) => {
+      stderr += data.toString();
+      logger.debug(`${command} stderr: ${data.toString().trim()}`);
+    });
+
+    process.on('close', (code) => {
+      if (code === 0) {
+        logger.info(`${command} completed successfully`);
+        resolve({ stdout, stderr, code });
+      } else {
+        logger.error(`${command} failed with code ${code}`);
+        reject(new Error(`${command} failed with code ${code}: ${stderr}`));
+      }
+    });
+
+    process.on('error', (error) => {
+      logger.error(`Failed to execute ${command}: ${error.message}`);
+      reject(error);
+    });
+  });
+}
+
+// Expose reboot function globally
+global.rebootServer = rebootServer;
+
 // Initialize environment and paths
 dotenv.config();
 const __filename = fileURLToPath(import.meta.url);
@@ -408,8 +533,7 @@ async function initializeApp() {
 
     // Add a route to check database status
     dbRoutes.push('/api/db-status');
-    
-    // Define an API route to check DB health
+      // Define an API route to check DB health
     app.get('/api/db-status', async (req, res) => {
       try {
         const dbHealthCheck = await db.default.checkAllDatabasesHealth();
@@ -426,7 +550,34 @@ async function initializeApp() {
           error: error.message
         });
       }
-    });    // Set up middleware
+    });
+
+    // Add API route for server reboot
+    app.post('/api/reboot', async (req, res) => {
+      try {
+        const { duration = 600 } = req.body;
+        
+        logger.info('🔄 Reboot requested via API');
+        
+        // Start reboot process (don't await as it will restart the server)
+        rebootServer(duration).catch(error => {
+          logger.error('Reboot process failed:', error);
+        });
+        
+        res.json({
+          success: true,
+          message: 'Server reboot initiated',
+          maintenanceDuration: duration,
+          timestamp: Date.now()
+        });
+      } catch (error) {
+        logger.error('Reboot API error:', error);
+        res.status(500).json({
+          success: false,
+          error: error.message
+        });
+      }
+    });// Set up middleware
     setupMiddleware(app);
 
     // Set up routes

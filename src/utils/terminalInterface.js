@@ -126,12 +126,12 @@ class TerminalInterface {
   }
   /**
    * Get help text for commands
-   */
-  getHelpText() {
+   */  getHelpText() {
     return `{yellow-fg}🚀 BambiSleep Commands:{/yellow-fg}
 {cyan-fg}g{/cyan-fg} - {white-fg}Git pull{/white-fg} latest changes
 {cyan-fg}n{/cyan-fg} - {white-fg}NPM install{/white-fg} dependencies  
 {cyan-fg}r{/cyan-fg} - {white-fg}Restart{/white-fg} server
+{cyan-fg}b{/cyan-fg} - {white-fg}Reboot{/white-fg} server (git pull + npm install + restart)
 {cyan-fg}c{/cyan-fg} - {white-fg}Clear{/white-fg} logs
 {cyan-fg}s{/cyan-fg} - {white-fg}Status{/white-fg} info
 {cyan-fg}q{/cyan-fg} - {white-fg}Quit{/white-fg} interface
@@ -161,11 +161,14 @@ class TerminalInterface {
     // NPM install
     this.screen.key(['n'], () => {
       this.executeCommand('npm install', 'NPM Install');
-    });
-
-    // Restart server
+    });    // Restart server
     this.screen.key(['r'], () => {
       this.restartServer();
+    });
+
+    // Reboot server (git pull + npm install + restart)
+    this.screen.key(['b'], () => {
+      this.rebootServer();
     });
 
     // Clear logs
@@ -283,8 +286,7 @@ class TerminalInterface {
       this.addLog('error', `${description} failed: ${error.message}`);
       this.updateStatus(`{red-fg}Error:{/red-fg} ${description} failed`);
     }
-  }
-  /**
+  }  /**
    * Restart the server
    */
   async restartServer() {
@@ -308,6 +310,40 @@ class TerminalInterface {
     } catch (error) {
       this.addLog('error', `❌ Server restart failed: ${error.message}`);
       this.updateStatus('{red-fg}Error:{/red-fg} Server restart failed');
+    }
+  }
+
+  /**
+   * Reboot the server using the new reboot functionality
+   */
+  async rebootServer() {
+    this.updateStatus('{yellow-fg}Rebooting server...{/yellow-fg}');
+    this.addLog('info', '🔄 Initiating server reboot with maintenance mode');
+    
+    try {
+      // Check if rebootServer function is available globally
+      if (typeof global.rebootServer === 'function') {
+        this.addLog('info', '🛠️ Using integrated reboot functionality');
+        await global.rebootServer(300); // 5 minutes maintenance
+        this.addLog('success', '✅ Server reboot initiated successfully');
+        this.updateStatus('{green-fg}Reboot Started{/green-fg} - Maintenance mode active');
+      } else {
+        // Fallback to manual sequence
+        this.addLog('warn', '⚠️ Integrated reboot not available, using manual sequence');
+        this.addLog('info', '📥 Step 1/3: Pulling latest changes...');
+        await this.executeCommand('git pull', 'Git Pull');
+        
+        this.addLog('info', '📦 Step 2/3: Installing dependencies...');
+        await this.executeCommand('npm install', 'NPM Install');
+        
+        this.addLog('info', '🚀 Step 3/3: Restarting server...');
+        this.addLog('success', '✅ Manual reboot sequence completed');
+        this.updateStatus('{green-fg}Ready{/green-fg} - Manual reboot completed');
+      }
+      
+    } catch (error) {
+      this.addLog('error', `❌ Server reboot failed: ${error.message}`);
+      this.updateStatus('{red-fg}Error:{/red-fg} Server reboot failed');
     }
   }
 
