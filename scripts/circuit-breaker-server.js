@@ -4,6 +4,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { spawn, exec } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -268,19 +269,59 @@ app.get('/help*', (req, res) => {
 
 // Health check endpoint with admin controls
 app.get('/health', (req, res) => {
+    const startTime = Date.now();
+    
     // Check if this is the admin control panel request
-    if (req.headers.accept && req.headers.accept.includes('text/html')) {
-        // Return the enhanced health dashboard with admin controls
-        res.render('health', {
-            title: 'Circuit Breaker Health Monitor',
-            health: {
-                status: 'Circuit Breaker Active',
+    if (req.headers.accept && req.headers.accept.includes('text/html')) {        // Create comprehensive health data compatible with health.ejs template
+        const healthData = {
+            system: {
+                hostname: os.hostname(),
+                platform: os.platform(),
+                arch: os.arch(),
+                uptime: formatUptime(os.uptime()),
+                totalMemory: os.totalmem(),
+                freeMemory: os.freemem(),
+                cpuCount: os.cpus().length,
+                timestamp: new Date().toISOString(),
+                memory: {
+                    total: Math.round(os.totalmem() / 1024 / 1024),
+                    free: Math.round(os.freemem() / 1024 / 1024),
+                    used: Math.round((os.totalmem() - os.freemem()) / 1024 / 1024),
+                    percentage: Math.round(((os.totalmem() - os.freemem()) / os.totalmem()) * 100)
+                },
+                cpu: {
+                    load1: os.loadavg()[0],
+                    load5: os.loadavg()[1],
+                    load15: os.loadavg()[2],
+                    percentage: Math.min(Math.round((os.loadavg()[0] / os.cpus().length) * 100), 100)
+                }
+            },
+            users: [],
+            database: {
+                status: 'Circuit Breaker Mode',
+                connected: false,
+                message: 'Database bypassed during maintenance'
+            },
+            workers: {
+                lmstudio: { status: 'disabled', message: 'Disabled during maintenance' },
+                spirals: { status: 'disabled', message: 'Disabled during maintenance' }
+            },
+            responseTime: Date.now() - startTime,
+            // Circuit breaker specific data
+            circuitBreaker: {
+                status: 'active',
                 service: 'circuit-breaker',
                 uptime: process.uptime(),
                 connections: io.engine.clientsCount,
                 adminState: adminState,
                 maintenanceState: maintenanceState
-            },
+            }
+        };
+        
+        // Return the enhanced health dashboard with admin controls
+        res.render('health', {
+            title: 'Circuit Breaker Health Monitor',
+            health: healthData,
             footer: { links: [] },
             req: req
         });
@@ -296,6 +337,22 @@ app.get('/health', (req, res) => {
         });
     }
 });
+
+// Helper function to format uptime
+function formatUptime(uptimeSeconds) {
+    const days = Math.floor(uptimeSeconds / 86400);
+    const hours = Math.floor((uptimeSeconds % 86400) / 3600);
+    const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+    const seconds = Math.floor(uptimeSeconds % 60);
+    
+    let formatted = '';
+    if (days > 0) formatted += `${days}d `;
+    if (hours > 0) formatted += `${hours}h `;
+    if (minutes > 0) formatted += `${minutes}m `;
+    formatted += `${seconds}s`;
+    
+    return formatted.trim();
+}
 
 // Main maintenance page (must be last)
 app.get('*', (req, res) => {
