@@ -42,39 +42,71 @@ After creating your profile:
 
 ## Core Features
 
+**Feature Availability Status:**
+
+<div class="health-card">
+  <h4><span class="checkmark-indicator checked">Core Features</span></h4>
+  <div class="health-metrics">
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Active</span>
+      </div>
+      <div class="metric-label">Global Chat</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Active</span>
+      </div>
+      <div class="metric-label">Audio Synthesis</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Active</span>
+      </div>
+      <div class="metric-label">Trigger System</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Active</span>
+      </div>
+      <div class="metric-label">Custom Collar</div>
+    </div>
+  </div>
+</div>
+
 ### Global Chat
 
-- Real-time communication with other users
-- Type `/global` before your message to send to everyone
-- Message formatting options available (bold, italic, etc.)
-- Emoji support and special commands
+- <span class="checkmark-indicator checked">Real-time communication with other users</span>
+- <span class="checkmark-indicator checked">Type `/global` before your message to send to everyone</span>
+- <span class="checkmark-indicator checked">Message formatting options available (bold, italic, etc.)</span>
+- <span class="checkmark-indicator checked">Emoji support and special commands</span>
 
 ### Audio Synthesis
 
-- Text-to-speech for AI responses
-- Multiple voice options available
-- Audio controls: pause, play, volume adjustment
-- Background ambience options
+- <span class="checkmark-indicator checked">Text-to-speech for AI responses</span>
+- <span class="checkmark-indicator checked">Multiple voice options available</span>
+- <span class="checkmark-indicator checked">Audio controls: pause, play, volume adjustment</span>
+- <span class="checkmark-indicator checked">Background ambience options</span>
 
 ### Bambi Name Persistence
 
-- Your chosen name is remembered across sessions
-- Profile customization options for your Bambi identity
-- Name-based personalization in AI responses
+- <span class="checkmark-indicator checked">Your chosen name is remembered across sessions</span>
+- <span class="checkmark-indicator checked">Profile customization options for your Bambi identity</span>
+- <span class="checkmark-indicator checked">Name-based personalization in AI responses</span>
 
 ### Trigger System
 
-- Access built-in hypnotic triggers
-- Enable visual effects with the spiral button
-- Create custom triggers through your profile
-- Manage trigger activation settings
+- <span class="checkmark-indicator checked">Access built-in hypnotic triggers</span>
+- <span class="checkmark-indicator checked">Enable visual effects with the spiral button</span>
+- <span class="checkmark-indicator checked">Create custom triggers through your profile</span>
+- <span class="checkmark-indicator checked">Manage trigger activation settings</span>
 
 ### Custom Collar
 
-- Personalize your system messages
-- Set preferred interaction style
-- Create custom prompts for your AI companion
-- Save multiple collar configurations
+- <span class="checkmark-indicator checked">Personalize your system messages</span>
+- <span class="checkmark-indicator checked">Set preferred interaction style</span>
+- <span class="checkmark-indicator checked">Create custom prompts for your AI companion</span>
+- <span class="checkmark-indicator checked">Save multiple collar configurations</span>
 
 ## Profile System
 

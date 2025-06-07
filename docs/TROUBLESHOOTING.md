@@ -4,9 +4,41 @@ This document contains instructions and solutions for common issues encountered 
 
 ## Common Issues and Solutions
 
+**Issue Resolution Status:**
+
+<div class="health-card">
+  <h4><span class="checkmark-indicator checked">Common Issues Coverage</span></h4>
+  <div class="health-metrics">
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Resolved</span>
+      </div>
+      <div class="metric-label">View Engine Configuration</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Resolved</span>
+      </div>
+      <div class="metric-label">Database Registration</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Resolved</span>
+      </div>
+      <div class="metric-label">Database Connection</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Resolved</span>
+      </div>
+      <div class="metric-label">Port Conflicts</div>
+    </div>
+  </div>
+</div>
+
 ### 1. "No default engine was specified and no extension was provided"
 
-This error occurs when Express tries to render a view but the view engine is not properly configured.
+<span class="checkmark-indicator checked">This error occurs when Express tries to render a view but the view engine is not properly configured.</span>
 
 **Solution:**
 ```javascript
@@ -17,34 +49,34 @@ app.set('views', path.join(__dirname, 'views'));
 
 ### 2. "modelsRegistered is not defined"
 
-This error occurs in the database connection module.
+<span class="checkmark-indicator checked">This error occurs in the database connection module.</span>
 
 **Solution:**
-Make sure the `modelsRegistered` variable is properly defined in `src/config/db.js`.
+<span class="checkmark-indicator checked">Make sure the `modelsRegistered` variable is properly defined in `src/config/db.js`.</span>
 
 ### 3. Database Connection Issues
 
-If you're having trouble connecting to the MongoDB database:
+<span class="checkmark-indicator checked">If you're having trouble connecting to the MongoDB database:</span>
 
 **Solution:**
-1. Verify the MongoDB container is running:
+1. <span class="checkmark-indicator checked">Verify the MongoDB container is running:</span>
    ```bash
    docker ps | grep bambisleep-mongodb
    ```
 
-2. Check the MongoDB connection string in your `.env` file:
+2. <span class="checkmark-indicator checked">Check the MongoDB connection string in your `.env` file:</span>
    ```
    MONGODB_URI=mongodb://bambisleep:bambiAppPass456@localhost:27018/profilesDB?authSource=admin
    ```
 
-3. Test the connection manually:
+3. <span class="checkmark-indicator checked">Test the connection manually:</span>
    ```bash
    docker exec -it bambisleep-mongodb mongosh -u bambisleep -p bambiAppPass456 --authenticationDatabase admin
    ```
 
 ### 4. Port Already in Use
 
-If you see "address already in use" errors:
+<span class="checkmark-indicator checked">If you see "address already in use" errors:</span>
 
 **Solution:**
 1. Find the process using the port:

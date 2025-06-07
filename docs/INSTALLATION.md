@@ -12,35 +12,93 @@
 
 ## System Requirements
 
+**System Requirements Checklist:**
+
+<div class="health-card">
+  <h4><span class="checkmark-indicator checked">System Requirements</span></h4>
+  <div class="health-metrics">
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Required</span>
+      </div>
+      <div class="metric-label">Minimum Specifications</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Recommended</span>
+      </div>
+      <div class="metric-label">Optimal Specifications</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Required</span>
+      </div>
+      <div class="metric-label">Software Dependencies</div>
+    </div>
+  </div>
+</div>
+
 ### Minimum Requirements
-- **OS**: Linux (Ubuntu 22.04+), Windows 10+, or macOS 12+
-- **CPU**: 4+ cores, 2.5GHz+
-- **RAM**: 8GB (16GB recommended)
-- **Storage**: 10GB free space (SSD recommended)
-- **Network**: Stable internet connection
-- **Software**: Node.js 18.0.0+, MongoDB 6.0+
+- <span class="checkmark-indicator checked">**OS**: Linux (Ubuntu 22.04+), Windows 10+, or macOS 12+</span>
+- <span class="checkmark-indicator checked">**CPU**: 4+ cores, 2.5GHz+</span>
+- <span class="checkmark-indicator checked">**RAM**: 8GB (16GB recommended)</span>
+- <span class="checkmark-indicator checked">**Storage**: 10GB free space (SSD recommended)</span>
+- <span class="checkmark-indicator checked">**Network**: Stable internet connection</span>
+- <span class="checkmark-indicator checked">**Software**: Node.js 18.0.0+, MongoDB 6.0+</span>
 
 ### Recommended Specifications
-- **CPU**: 8+ cores, 3.0GHz+
-- **RAM**: 16GB or more
-- **Storage**: 50GB+ SSD
-- **Network**: 100Mbps+ connection
-- **GPU**: Optional for TTS acceleration (NVIDIA with CUDA support)
+- <span class="checkmark-indicator checked">**CPU**: 8+ cores, 3.0GHz+</span>
+- <span class="checkmark-indicator checked">**RAM**: 16GB or more</span>
+- <span class="checkmark-indicator checked">**Storage**: 50GB+ SSD</span>
+- <span class="checkmark-indicator checked">**Network**: 100Mbps+ connection</span>
+- <span class="checkmark-indicator checked">**GPU**: Optional for TTS acceleration (NVIDIA with CUDA support)</span>
 
 ### Software Dependencies
-- Node.js 18.0.0+
-- MongoDB 6.0+
-- Docker (for containerized deployment)
-- Git
+- <span class="checkmark-indicator checked">Node.js 18.0.0+</span>
+- <span class="checkmark-indicator checked">MongoDB 6.0+</span>
+- <span class="checkmark-indicator checked">Docker (for containerized deployment)</span>
+- <span class="checkmark-indicator checked">Git</span>
 
 ## Installation Options
 
+**Installation Methods Status:**
+
+<div class="health-card">
+  <h4><span class="checkmark-indicator checked">Installation Options</span></h4>
+  <div class="health-metrics">
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Available</span>
+      </div>
+      <div class="metric-label">Standard Installation</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Available</span>
+      </div>
+      <div class="metric-label">Docker Installation</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Available</span>
+      </div>
+      <div class="metric-label">Development Setup</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Available</span>
+      </div>
+      <div class="metric-label">Production Deployment</div>
+    </div>
+  </div>
+</div>
+
 BambiSleep.Chat can be installed in several ways depending on your needs:
 
-1. **Standard Installation**: Direct installation on your system
-2. **Docker Installation**: Containerized setup for easy deployment
-3. **Development Setup**: For contributors and developers
-4. **Production Deployment**: For large-scale hosting
+1. <span class="checkmark-indicator checked">**Standard Installation**: Direct installation on your system</span>
+2. <span class="checkmark-indicator checked">**Docker Installation**: Containerized setup for easy deployment</span>
+3. <span class="checkmark-indicator checked">**Development Setup**: For contributors and developers</span>
+4. <span class="checkmark-indicator checked">**Production Deployment**: For large-scale hosting</span>
 
 ## Standard Installation
 
