@@ -18,7 +18,8 @@
  */
 
 import Logger from '../utils/logger.js';
-import EventEmitter from 'events';
+import { EventEmitter } from 'events';
+import BambiControlsSystem from '../controls/index.js';
 
 const logger = new Logger('BDICS');
 
@@ -48,7 +49,10 @@ class BambiDistributedIndustrialControlSystem extends EventEmitter {
       
       ...config
     };
+      // Get reference to the controls system singleton
+    this.controlsSystem = BambiControlsSystem;
     
+    // Legacy compatibility - these are now delegated to sub-managers
     this.controlNodes = new Map(); // Connected control nodes (users/workers)
     this.remoteSites = new Map(); // Remote industrial sites
     this.dcsControllers = new Map(); // Distributed control system controllers
@@ -88,29 +92,36 @@ class BambiDistributedIndustrialControlSystem extends EventEmitter {
       
       // Industrial System State
       industrialMode: 'PRODUCTION', // PRODUCTION, TESTING, MAINTENANCE, EMERGENCY
-      redundancyStatus: 'ACTIVE',
-      communicationStatus: 'NORMAL',
+      redundancyStatus: 'ACTIVE',      communicationStatus: 'NORMAL',
       processStatus: 'STABLE',
       safetySystemStatus: 'ARMED',
       lastMaintenanceWindow: null
     };
-    
-    this.initialize();
-  }  
+    // Initialization will be called manually to avoid circular dependencies
+  }
+
   /**
    * Initialize the distributed industrial control system
    */
-  initialize() {
+  async initialize() {
     logger.info('🏭 Initializing Bambi Distributed Industrial Control System v3.0.0 (BDICS)');
     logger.info(`📊 Industrial Config: ${this.config.maxRemoteSites} sites, ${this.config.redundancyLevel} redundancy, ${this.config.protocolVersions.length} protocols`);
+      // Initialize the modular controls system
+    await this.controlsSystem.initialize(this);
     
-    // Initialize industrial communication protocols
+    // Set up event forwarding from controls system
+    this.setupControlsSystemEvents();
+    
+    // Initialize legacy compatibility layers
+    this.initializeLegacyCompatibility();
+    
+    // Initialize industrial communication protocols (legacy compatibility)
     this.initializeIndustrialProtocols();
     
-    // Set up default automation rules
+    // Set up default automation rules (legacy compatibility)
     this.setupDefaultAutomationRules();
     
-    // Initialize DCS control loops
+    // Initialize DCS control loops (legacy compatibility)
     this.initializeDCSControlLoops();
     
     // Start system monitoring
@@ -119,10 +130,46 @@ class BambiDistributedIndustrialControlSystem extends EventEmitter {
     // Initialize metrics collection
     this.startMetricsCollection();
     
-    // Start SCADA supervision
+    // Start SCADA supervision (legacy compatibility)
     this.startSCADASupervision();
     
     logger.info('✅ BDICS v3.0.0 initialized - Industrial Control System ONLINE');
+  }
+
+  /**
+   * Set up event forwarding from the modular controls system
+   */
+  setupControlsSystemEvents() {
+    // Forward key events from controls system managers
+    this.controlsSystem.on('controlSignal', (signal) => {
+      this.emit('controlSignal', signal);
+    });
+    
+    this.controlsSystem.on('alarmTriggered', (alarm) => {
+      this.emit('alarmEscalation', alarm);
+    });
+    
+    this.controlsSystem.on('automationAction', (action) => {
+      this.emit('automationAction', action);
+    });
+    
+    logger.info('🔗 Controls system events configured');
+  }
+
+  /**
+   * Initialize legacy compatibility layers
+   */
+  initializeLegacyCompatibility() {
+    // Map legacy data structures to new controls system
+    this.controlNodes = this.controlsSystem.controlNetwork.controlNodes || new Map();
+    this.remoteSites = this.controlsSystem.siteManager?.sites || new Map();
+    this.dcsControllers = this.controlsSystem.dcsManager?.controllers || new Map();
+    this.scadaWorkstations = this.controlsSystem.scadaManager?.workstations || new Map();
+    this.industrialProtocols = this.controlsSystem.protocolManager?.protocols || new Map();
+    this.controlLoops = this.controlsSystem.loopManager?.loops || new Map();
+    this.automationRules = this.controlsSystem.automationManager?.rules || new Map();
+    
+    logger.info('🔄 Legacy compatibility layer initialized');
   }
 
   /**
@@ -306,75 +353,18 @@ class BambiDistributedIndustrialControlSystem extends EventEmitter {
       logger.info(`🔌 Industrial Node disconnected: ${nodeId} (processed ${node.metrics.signalsProcessed} signals, ${node.metrics.protocolMessages} protocol messages)`);
       this.emit('nodeDisconnected', node);
     }
-  }
-  /**
+  }  /**
    * Process an industrial control signal with protocol validation
    */
-  processControlSignal(signalType, signalData, sourceNodeId, protocolInfo = {}) {
-    const startTime = Date.now();
-    
+  async processControlSignal(signalType, signalData, sourceNodeId, protocolInfo = {}) {
     try {
-      // Rate limiting check
-      if (!this.checkRateLimit(sourceNodeId)) {
-        logger.warning(`🚫 Rate limit exceeded for node: ${sourceNodeId}`);
-        this.metrics.errorsEncountered++;
-        throw new Error('Rate limit exceeded');
-      }
-
-      // Protocol validation for industrial signals
-      if (!this.validateIndustrialProtocol(signalType, protocolInfo)) {
-        logger.warning(`🚫 Protocol validation failed for signal ${signalType} from ${sourceNodeId}`);
-        this.metrics.protocolErrors++;
-        throw new Error('Protocol validation failed');
-      }
-
-      const controlSignal = {
-        type: signalType,
-        data: signalData,
-        source: sourceNodeId,
-        timestamp: startTime,
-        priority: this.getNodePriority(sourceNodeId),
-        protocol: protocolInfo.protocol || 'BAMBI_NATIVE',
-        sequenceNumber: protocolInfo.sequenceNumber || this.generateSequenceNumber(),
-        redundancyInfo: protocolInfo.redundancy || {},
-        id: `ctrl_${startTime}_${Math.random().toString(36).substr(2, 9)}`
-      };
-
-      logger.debug(`📡 Processing industrial signal: ${signalType} from ${sourceNodeId} (priority: ${controlSignal.priority}, protocol: ${controlSignal.protocol})`);
-      
-      // Update node activity and metrics
-      this.updateNodeActivity(sourceNodeId);
-      const node = this.controlNodes.get(sourceNodeId);
-      if (node) {
-        node.metrics.signalsProcessed++;
-        node.metrics.protocolMessages++;
-      }
-      
-      // Handle industrial-specific signal processing
-      this.processIndustrialSignal(controlSignal);
-      
-      // Update system statistics
-      if (signalType === 'TRIGGER_ACTIVATION') {
-        this.systemState.totalTriggerEvents++;
-      }
-      this.metrics.signalsProcessed++;
-      this.metrics.industrialCommands++;
-
-      // Check automation rules
-      this.evaluateAutomationRules(controlSignal);
-      
-      // Update DCS control loops if applicable
-      this.updateDCSControlLoops(controlSignal);
-      
-      // Emit for other systems to handle
-      this.emit('controlSignal', controlSignal);
-      
-      // Update response time metrics
-      const responseTime = Date.now() - startTime;
-      this.updateResponseTimeMetrics(responseTime);
-      
-      return controlSignal;
-      
+      // Delegate to the modular controls system
+      return await this.controlsSystem.processControlSignal(
+        signalType, 
+        signalData, 
+        sourceNodeId, 
+        protocolInfo
+      );
     } catch (error) {
       this.metrics.errorsEncountered++;
       this.handleIndustrialError(error, sourceNodeId, signalType);
@@ -457,11 +447,21 @@ class BambiDistributedIndustrialControlSystem extends EventEmitter {
 
     logger.info('📋 Default automation rules loaded');
   }
-
   /**
    * Add an automation rule
    */
   addAutomationRule(ruleId, rule) {
+    // Delegate to the automation manager
+    if (this.controlsSystem.automationManager) {
+      return this.controlsSystem.automationManager.registerRule(ruleId, {
+        name: rule.name || ruleId,
+        condition: rule.condition,
+        action: rule.action,
+        ...rule
+      });
+    }
+    
+    // Legacy fallback
     this.automationRules.set(ruleId, {
       id: ruleId,
       ...rule,
@@ -721,11 +721,15 @@ class BambiDistributedIndustrialControlSystem extends EventEmitter {
     if (this._sequenceCounter > 65535) this._sequenceCounter = 1;
     return this._sequenceCounter;
   }
-
   /**
    * Get current industrial system status
    */
   getSystemStatus() {
+    // Get controls system status if available
+    const controlsSystemStatus = this.controlsSystem && this.controlsSystem.isInitialized 
+      ? this.controlsSystem.getSystemStatus() 
+      : null;
+
     return {
       ...this.systemState,
       config: {
@@ -784,7 +788,10 @@ class BambiDistributedIndustrialControlSystem extends EventEmitter {
         triggered: rule.triggered,
         created: rule.created
       })),
-      uptime: Date.now() - (this.startTime || Date.now())
+      uptime: Date.now() - (this.startTime || Date.now()),
+      
+      // Include controls system status if available
+      controlsSystem: controlsSystemStatus
     };
   }
 

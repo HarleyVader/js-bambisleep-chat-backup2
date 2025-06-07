@@ -14,6 +14,9 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Import Bambi Distributed Industrial Control System
+import bambiControlNetwork from '../services/bambiControlNetwork.js';
+
 // Initialize logger first before using it
 const logger = new Logger('LMStudio');
 
@@ -189,10 +192,42 @@ dotenv.config();
       } catch (modelError) {
         logger.debug(`Model registration error: ${modelError.message}`);
       }
-    }
-  } catch (error) {
+    }  } catch (error) {
     logger.error(`Database initialization error: ${error.message}`);
     logger.warning('⚠️ LMStudio worker will run without database access');
+  }
+})();
+
+// Register LMStudio worker with Bambi Distributed Industrial Control System
+(async function initControlNetwork() {
+  try {
+    const workerId = `lmstudio-worker-${process.pid}`;
+    
+    // Register this worker as an AI processing node
+    bambiControlNetwork.registerControlNode(workerId, 'AI_WORKER', {
+      priority: 'HIGH',
+      weight: 2.0,
+      capabilities: ['message_processing', 'session_management', 'trigger_processing'],
+      protocol: 'BAMBI_NATIVE',
+      processingModel: 'Steno Maid Blackroot',
+      maxConcurrentSessions: MAX_ACTIVE_SESSIONS
+    });
+
+    logger.info(`🏭 Registered LMStudio worker ${workerId} with BDICS`);
+    
+    // Set up control network event handlers
+    bambiControlNetwork.on('nodeRegistered', (node) => {
+      if (node.id === workerId) {
+        logger.info(`📡 Worker successfully integrated into industrial control network`);
+      }
+    });
+
+    // Store worker ID for later use
+    global.bambiControlNodeId = workerId;
+    
+  } catch (error) {
+    logger.error(`Failed to register with control network: ${error.message}`);
+    logger.warning('⚠️ Worker will operate without control network integration');
   }
 })();
 
@@ -227,6 +262,44 @@ async function getSessionHistoryModel() {
 parentPort.on('message', async (msg) => {
   try {
     lastActivityTimestamp = Date.now();
+
+    // Process message through Bambi Control Network if available
+    if (global.bambiControlNodeId) {
+      try {
+        // Check rate limiting through control network
+        const canProcess = bambiControlNetwork.checkRateLimit(msg.socketId || 'unknown');
+        if (!canProcess) {
+          logger.warning(`Rate limit exceeded for ${msg.socketId}, message dropped`);
+          parentPort.postMessage({
+            type: "error",
+            error: "Rate limit exceeded. Please slow down your requests.",
+            socketId: msg.socketId
+          });
+          return;
+        }
+
+        // Process as control signal
+        bambiControlNetwork.processControlSignal(
+          `worker_message_${msg.type}`,
+          {
+            messageType: msg.type,
+            socketId: msg.socketId,
+            username: msg.username,
+            timestamp: Date.now(),
+            workerId: global.bambiControlNodeId
+          },
+          global.bambiControlNodeId,
+          { protocol: 'BAMBI_NATIVE', version: '1.0' }
+        );
+
+        // Update node activity
+        bambiControlNetwork.updateNodeActivity(global.bambiControlNodeId);
+        
+      } catch (controlError) {
+        logger.warning(`Control network processing failed: ${controlError.message}`);
+        // Continue with normal processing
+      }
+    }
 
     switch (msg.type) {
       case "message":
@@ -279,14 +352,14 @@ parentPort.on('message', async (msg) => {
       case "settings:update":
         await handleSettingsUpdate(msg.data);
         break;
-        
-      case "health:check":
+          case "health:check":
         lastHealthCheckResponse = Date.now();
         parentPort.postMessage({
           type: "health:response",
           healthy: isHealthy,
           sessionCount: Object.keys(sessionHistories).length,
-          memoryUsage: process.memoryUsage()
+          memoryUsage: process.memoryUsage(),
+          controlNetwork: getControlNetworkStatus()
         });
         break;
       
@@ -726,6 +799,58 @@ Focus on creating permanent mental associations between these triggers and profo
 // Handle message with improved session management
 async function handleMessage(userPrompt, socketId, username) {
   try {
+    // Process through control network automation rules if available
+    let processedPrompt = userPrompt;
+    let automationTriggered = false;
+    
+    if (global.bambiControlNodeId) {
+      try {
+        // Create control signal for message processing
+        const messageSignal = {
+          type: 'user_message',
+          content: userPrompt,
+          socketId,
+          username,
+          triggers: triggers || [],
+          collar: collar || false,
+          timestamp: Date.now()
+        };
+
+        // Process through automation rules
+        const automationResults = bambiControlNetwork.evaluateAutomationRules(messageSignal);
+        
+        if (automationResults && automationResults.length > 0) {
+          automationTriggered = true;
+          logger.info(`🤖 Control network automation triggered ${automationResults.length} rules for ${username}`);
+          
+          // Apply automation results
+          for (const result of automationResults) {
+            if (result.action === 'modify_prompt') {
+              processedPrompt = result.data.modifiedPrompt || processedPrompt;
+            } else if (result.action === 'add_triggers') {
+              const additionalTriggers = result.data.triggers || [];
+              triggers = [...new Set([...triggers, ...additionalTriggers])];
+            } else if (result.action === 'intensity_boost') {
+              // Store intensity boost for use in system prompt
+              if (!sessionHistories[socketId]) {
+                sessionHistories[socketId] = [];
+              }
+              sessionHistories[socketId].intensityBoost = result.data.multiplier || 1.5;
+            }
+          }
+        }
+        
+        // Update industrial metrics
+        bambiControlNetwork.metrics.signalsProcessed++;
+        if (automationTriggered) {
+          bambiControlNetwork.metrics.rulesTriggered++;
+        }
+        
+      } catch (automationError) {
+        logger.warning(`Automation processing failed: ${automationError.message}`);
+      }
+    }
+
     // Ensure triggers is an array of strings
     let triggerArray = [];
     if (Array.isArray(triggers)) {
@@ -736,7 +861,8 @@ async function handleMessage(userPrompt, socketId, username) {
 
     // Log active triggers when processing a message
     let triggerDisplay = triggerArray.join(', ');
-    logger.info(`Processing message from ${username} with active triggers: ${triggerDisplay}`);
+    const automationStatus = automationTriggered ? ' [AUTOMATION ACTIVE]' : '';
+    logger.info(`Processing message from ${username} with active triggers: ${triggerDisplay}${automationStatus}`);
 
     // Add more detailed trigger logging
     if (typeof triggers === 'string' && triggers.includes(',')) {
@@ -791,10 +917,8 @@ async function handleMessage(userPrompt, socketId, username) {
 
     // Update session activity time
     sessionHistories[socketId].metadata.lastActivity = Date.now();
-    sessionHistories[socketId].metadata.username = username;
-
-    // Add user message
-    sessionHistories[socketId].push({ role: 'user', content: userPrompt });
+    sessionHistories[socketId].metadata.username = username;    // Add user message (use processed prompt from automation)
+    sessionHistories[socketId].push({ role: 'user', content: processedPrompt });
 
     // Format for API
     const formattedMessages = sessionHistories[socketId]
@@ -824,15 +948,44 @@ async function handleMessage(userPrompt, socketId, username) {
         top_k: 40,
         stream: false
       }
-    );
-
-    // Get and store response
+    );    // Get and store response
     finalContent = response.data.choices[0].message.content;
     sessionHistories[socketId].push({ role: 'assistant', content: finalContent });
 
-    // Save to database in background
+    // Process response through control network if available
+    if (global.bambiControlNodeId) {
+      try {
+        // Create response control signal
+        const responseSignal = {
+          type: 'ai_response',
+          content: finalContent,
+          socketId,
+          username,
+          wordCount: countWords(finalContent),
+          triggers: triggers || [],
+          automationApplied: automationTriggered,
+          timestamp: Date.now()
+        };
+
+        // Process response through control network
+        bambiControlNetwork.processControlSignal(
+          'ai_response_generated',
+          responseSignal,
+          global.bambiControlNodeId,
+          { protocol: 'BAMBI_NATIVE', version: '1.0' }
+        );
+
+        // Update industrial metrics
+        bambiControlNetwork.metrics.industrialCommands++;
+        
+      } catch (responseControlError) {
+        logger.warning(`Response control processing failed: ${responseControlError.message}`);
+      }
+    }
+
+    // Save to database in background (use processedPrompt for consistency)
     if (username && username !== 'anonBambi') {
-      saveSessionToDatabase(socketId, userPrompt, finalContent, username).catch(err => {
+      saveSessionToDatabase(socketId, processedPrompt, finalContent, username).catch(err => {
         logger.error(`Background session save failed: ${err.message}`);
       });
     }
@@ -929,9 +1082,53 @@ async function saveSessionToDatabase(socketId, userPrompt, aiResponse, username)
   }, { retries: 1, requireConnection: false });
 }
 
+/**
+ * Get control network status and metrics
+ */
+function getControlNetworkStatus() {
+  if (!global.bambiControlNodeId) {
+    return { enabled: false, message: 'Control network not initialized' };
+  }
+
+  try {
+    const systemStatus = bambiControlNetwork.getSystemStatus();
+    const metrics = bambiControlNetwork.getMetrics();
+    
+    return {
+      enabled: true,
+      nodeId: global.bambiControlNodeId,
+      systemStatus,
+      metrics: {
+        signalsProcessed: metrics.signalsProcessed,
+        rulesTriggered: metrics.rulesTriggered,
+        nodesConnected: metrics.nodesConnected,
+        industrialCommands: metrics.industrialCommands,
+        networkHealth: systemStatus.networkHealth,
+        activeControllers: systemStatus.activeControllers
+      }
+    };
+  } catch (error) {
+    return { 
+      enabled: true, 
+      nodeId: global.bambiControlNodeId,
+      error: `Control network error: ${error.message}` 
+    };
+  }
+}
+
 // Add to the worker cleanup/shutdown code
 function performWorkerCleanup() {
   logger.info('Starting worker cleanup process...');
+
+  // Unregister from control network
+  if (global.bambiControlNodeId) {
+    try {
+      bambiControlNetwork.unregisterControlNode(global.bambiControlNodeId);
+      logger.info(`🏭 Unregistered worker ${global.bambiControlNodeId} from BDICS`);
+    } catch (controlError) {
+      logger.warning(`Error unregistering from control network: ${controlError.message}`);
+    }
+  }
 
   // Clear all intervals
   if (healthCheckInterval) {

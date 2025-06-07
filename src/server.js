@@ -43,6 +43,7 @@ import errorHandler from './utils/errorHandler.js';
 
 // Import Bambi Distributed Industrial Control System (BDICS)
 import bambiIndustrialControlSystem from './services/bambiControlNetwork.js';
+import bambiControlsSystem from './controls/index.js';
 
 // Fix the registerModels function to properly export the models
 async function registerModels() {
@@ -448,20 +449,49 @@ async function initializeApp() {
     
     // Initialize scheduled tasks
     scheduledTasks.initialize();
-    global.scheduledTasks = scheduledTasks;
-
-    // Initialize the spirals worker for advanced hypnotic spiral controls
+    global.scheduledTasks = scheduledTasks;    // Initialize the spirals worker for advanced hypnotic spiral controls
     try {
       logger.info('Initializing spirals worker...');
       spiralsWorker.initialize(server);
       logger.info('Spirals worker initialized successfully');
+      
+      // Integrate spirals worker with controls system
+      logger.info('Integrating spirals worker with controls system...');
+      spiralsWorker.on('clientConnected', async (username, ws) => {
+        // Create spiral worker adapter and register with controls system
+        const workerId = `spiral_${username}_${Date.now()}`;        await bambiControlsSystem.spiralManager.registerSpiralWorker(workerId, { 
+          ws: ws, 
+          username: username 
+        });
+      });
+      
+      spiralsWorker.on('clientDisconnected', (username) => {
+        // Find and unregister spiral worker
+        const workerId = `spiral_${username}`;
+        bambiControlsSystem.spiralManager.unregisterSpiralWorker(workerId);
+      });
+      
+      logger.info('Spirals worker integrated with controls system');
     } catch (error) {
       logger.error('Failed to initialize spirals worker:', error);
-    }
-
-    // Initialize BNNCS (Bambi Neural Network Control System)
+    }// Initialize BNNCS (Bambi Neural Network Control System)
     logger.info('🧠 Starting Bambi Neural Network Control System...');
-      // Set up BDICS (Bambi Distributed Industrial Control System) event handlers
+      // Initialize BDICS (Bambi Distributed Industrial Control System)
+    try {
+      logger.info('🏭 Initializing Bambi Distributed Industrial Control System...');
+      await bambiIndustrialControlSystem.initialize();
+      logger.info('✅ BDICS initialized successfully');
+      
+      // Initialize the integrated controls system
+      logger.info('🎛️ Initializing Bambi Controls System...');
+      await bambiControlsSystem.initialize();
+      logger.info('✅ Controls System initialized successfully');
+    } catch (error) {
+      logger.error('❌ Failed to initialize BDICS:', error);
+      throw error;
+    }
+    
+    // Set up BDICS (Bambi Distributed Industrial Control System) event handlers
     bambiIndustrialControlSystem.on('automationAction', (action) => {
       if (action.type === 'CASCADE_TRIGGER' && action.targetTriggers) {
         // Emit cascade triggers to all connected clients
