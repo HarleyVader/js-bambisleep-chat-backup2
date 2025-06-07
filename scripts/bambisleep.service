@@ -1,55 +1,15 @@
 [Unit]
 Description=BambiSleep.Chat Neural Network Control System
-Documentation=https://github.com/bambisleep/js-bambisleep-chat
-After=network.target mongodb.service
-Wants=mongodb.service
+After=network.target
 
 [Service]
 Type=simple
 User=brandynette
-Group=brandynette
 WorkingDirectory=/home/brandynette/web/bambisleep.chat/js-bambisleep-chat
-ExecStart=/home/brandynette/.nvm/versions/node/v24.1.0/bin/node /home/brandynette/web/bambisleep.chat/js-bambisleep-chat/src/server.js
-ExecReload=/bin/kill -USR2 $MAINPID
-
-# Signal handling configuration
-KillSignal=SIGTERM
-KillMode=mixed
-TimeoutStopSec=10
-TimeoutStartSec=30
-
-# Restart configuration  
+ExecStart=/home/brandynette/.nvm/versions/node/v24.1.0/bin/node src/server.js
 Restart=always
-RestartSec=5
-StartLimitInterval=60
-StartLimitBurst=3
-
-# Environment configuration
 Environment=NODE_ENV=production
-Environment=MEMORY_MONITOR_ENABLED=true
-Environment=MEMORY_MONITOR_INTERVAL=60000
 EnvironmentFile=-/home/brandynette/web/bambisleep.chat/js-bambisleep-chat/.env
-
-# Process management
-LimitNOFILE=65536
-LimitNPROC=4096
-OOMScoreAdjust=-500
-
-# Security hardening
-NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=read-only
-ReadWritePaths=/home/brandynette/web/bambisleep.chat/js-bambisleep-chat/logs
-ReadWritePaths=/tmp
-PrivateTmp=true
-ProtectKernelTunables=true
-ProtectKernelModules=true
-ProtectControlGroups=true
-
-# Logging
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=bambisleep-chat
 
 [Install]
 WantedBy=multi-user.target
