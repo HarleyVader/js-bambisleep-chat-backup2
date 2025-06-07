@@ -1,6 +1,6 @@
 // Use window property to avoid redeclaration issues when script loads multiple times
 window.triggerData = window.triggerData || []; // Will hold the data from triggers.json
-const triggerData = window.triggerData;
+let triggerData = window.triggerData;
 const audioCache = {};
 let audioLoadAttempts = {};
 const MAX_LOAD_ATTEMPTS = 2;

@@ -53,8 +53,8 @@ function onWindowResize() {
   resizeCanvas(width, height);
 }
 
-function spiral(step, ang, color, baseWidth) {
-  const c = color(color[0], color[1], color[2], 255 * opacityLevel);
+function spiral(step, ang, colorArray, baseWidth) {
+  const c = color(colorArray[0], colorArray[1], colorArray[2], 255 * opacityLevel);
   fill(c);
   stroke(c);
   
