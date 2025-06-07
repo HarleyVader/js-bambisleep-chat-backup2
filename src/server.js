@@ -550,12 +550,10 @@ async function initializeApp() {
           error: error.message
         });
       }
-    });
-
-    // Add API route for server reboot
+    });    // Add API route for server reboot
     app.post('/api/reboot', async (req, res) => {
       try {
-        const { duration = 600 } = req.body;
+        const duration = req.body?.duration || 600; // Default 10 minutes
         
         logger.info('🔄 Reboot requested via API');
         

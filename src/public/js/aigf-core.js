@@ -29,11 +29,10 @@ let state = true;
 window._textArray = _textArray;
 window._audioArray = _audioArray;
 
-// Initialize bambi control network integration
-let controlNodeId = null;
-
 // Enhanced control network integration
 function initializeControlNetwork() {
+  // Initialize bambi control network integration
+  let controlNodeId = null;
   if (window.bambiControlNetwork && typeof window.bambiControlNetwork.registerControlNode === 'function') {
     const nodeId = `aigf-core-${Date.now()}`;
     const success = window.bambiControlNetwork.registerControlNode(nodeId, 'USER_INTERFACE', {

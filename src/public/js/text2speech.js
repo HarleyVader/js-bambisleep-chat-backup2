@@ -1,11 +1,10 @@
 // Instead of using let currentVoice, use the globally shared one
 window.currentVoice = window.currentVoice || 'af_bella'; // Default voice
 
-// Initialize bambi control network integration for TTS
-let controlNodeId = null;
-
 // Enhanced control network integration
 function initializeTTSControlNetwork() {
+  // Initialize bambi control network integration for TTS
+  let controlNodeId = null;
   if (window.bambiControlNetwork && typeof window.bambiControlNetwork.registerControlNode === 'function') {
     const nodeId = `tts-${Date.now()}`;
     const success = window.bambiControlNetwork.registerControlNode(nodeId, 'AUDIO_PROCESSOR', {
