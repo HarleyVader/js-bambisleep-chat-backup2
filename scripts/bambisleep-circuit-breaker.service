@@ -6,7 +6,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=/home/brandynette/web/bambisleep.chat/js-bambisleep-chat
-ExecStart=/home/brandynette/.nvm/versions/node/v24.1.0/bin/node --experimental-modules /home/brandynette/web/bambisleep.chat/js-bambisleep-chat/scripts/circuit-breaker-server.js
+ExecStart=/home/brandynette/.nvm/versions/node/v24.1.0/bin/node /home/brandynette/web/bambisleep.chat/js-bambisleep-chat/scripts/circuit-breaker-server.js
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=10
