@@ -22,8 +22,7 @@
             <p>Create a profile to track your progress</p>
           <% } %>
         </div>
-        
-        <div class="triggers-section">
+          <div class="triggers-section">
           <h3>Triggers</h3>
           <div class="trigger-list">
             <% if (triggers && triggers.length > 0) { %>
@@ -36,6 +35,31 @@
               <p>No triggers available</p>
             <% } %>
           </div>
+        </div>
+        
+        <div class="control-network-section">
+          <h3>Control Network</h3>
+          <% if (controlNetworkStatus) { %>
+            <div class="status-info">
+              <p>Status: <span class="status-<%= controlNetworkStatus.status %>"><%= controlNetworkStatus.status %></span></p>
+              <% if (controlNetworkStatus.nodeCount) { %>
+                <p>Nodes: <%= controlNetworkStatus.nodeCount %></p>
+              <% } %>
+            </div>
+          <% } %>
+          <% if (controlNetworkMetrics) { %>
+            <div class="metrics-info">
+              <% if (controlNetworkMetrics.uptime) { %>
+                <p>Uptime: <%= Math.floor(controlNetworkMetrics.uptime / 1000) %>s</p>
+              <% } %>
+              <% if (controlNetworkMetrics.totalRequests) { %>
+                <p>Requests: <%= controlNetworkMetrics.totalRequests %></p>
+              <% } %>
+            </div>
+          <% } %>
+          <% if (!controlNetworkStatus && !controlNetworkMetrics) { %>
+            <p>Network offline</p>
+          <% } %>
         </div>
       </div>
     </div>

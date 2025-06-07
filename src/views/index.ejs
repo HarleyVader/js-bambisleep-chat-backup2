@@ -12,9 +12,29 @@
             <input type="text" id="username-input" placeholder="Enter username">
             <button id="username-submit">Submit</button>
           </div>
-        </div>
-        <div id="user-input">
+        </div>        <div id="user-input">
           <h1>🧠BambiSleep.Chat👁️</h1>
+          
+          <!-- Control Network Status -->
+          <% if (controlNetworkStatus || controlNetworkMetrics) { %>
+            <div id="control-network-status" style="font-size: 0.8em; color: #666; margin-bottom: 10px; text-align: center;">
+              🎛️ Control Network: 
+              <% if (controlNetworkStatus) { %>
+                <span style="color: <%= controlNetworkStatus.status === 'active' ? '#0f0' : '#f80' %>">
+                  <%= controlNetworkStatus.status %>
+                </span>
+                <% if (controlNetworkStatus.nodeCount) { %>
+                  | Nodes: <%= controlNetworkStatus.nodeCount %>
+                <% } %>
+              <% } else { %>
+                <span style="color: #f00">Offline</span>
+              <% } %>
+              <% if (controlNetworkMetrics && controlNetworkMetrics.totalRequests) { %>
+                | Requests: <%= controlNetworkMetrics.totalRequests %>
+              <% } %>
+            </div>
+          <% } %>
+          
           <div id="llm">
             <form id="llm-form">
               <textarea id="textarea" oninput="autoExpand(this)" placeholder="Prompt my AIGF"></textarea>

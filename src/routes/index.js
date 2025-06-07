@@ -7,6 +7,7 @@ import footerConfig from '../config/footer.config.js';
 import config from '../config/config.js'; // Add this import
 import { getModel, withDbConnection } from '../config/db.js';
 import sessionService from '../services/sessionService.js';
+import bambiIndustrialControlSystem from '../services/bambiControlNetwork.js';
 
 const logger = new Logger('RouteManager');
 const router = express.Router();
@@ -139,9 +140,18 @@ router.get('/', async (req, res) => {
         { name: "GOOD GIRL", description: "reinforces obedience and submission", category: "core" }
       ];
     }
-    
-    // Get footer links from config, with fallback to imported footerConfig
+      // Get footer links from config, with fallback to imported footerConfig
     const footerLinks = config?.FOOTER_LINKS || footerConfig?.links || [];
+    
+    // Get control network status
+    let controlNetworkStatus = null;
+    let controlNetworkMetrics = null;
+    try {
+      controlNetworkStatus = await bambiIndustrialControlSystem.getSystemStatus();
+      controlNetworkMetrics = await bambiIndustrialControlSystem.getMetrics();
+    } catch (error) {
+      logger.error('Error fetching control network data:', error);
+    }
     
     // Render the index view with profile data and chat messages
     res.render('index', { 
@@ -151,12 +161,13 @@ router.get('/', async (req, res) => {
       footer: footerConfig, // Add full footer config
       chatMessages,
       triggers,
-      title: 'BambiSleep.Chat - Hypnotic AI Chat'
+      title: 'BambiSleep.Chat - Hypnotic AI Chat',
+      controlNetworkStatus,
+      controlNetworkMetrics
     });
   } catch (error) {
     logger.error('Error rendering home page:', error);
-    
-    // Fallback with minimal data
+      // Fallback with minimal data
     res.render('index', { 
       profile: null, 
       username: '',
@@ -164,7 +175,9 @@ router.get('/', async (req, res) => {
       footer: footerConfig, // Add full footer config here too
       chatMessages: [],
       triggers: [],
-      title: 'BambiSleep.Chat - Hypnotic AI Chat'
+      title: 'BambiSleep.Chat - Hypnotic AI Chat',
+      controlNetworkStatus: null,
+      controlNetworkMetrics: null
     });
   }
 });

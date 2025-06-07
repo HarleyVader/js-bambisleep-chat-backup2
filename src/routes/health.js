@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import Logger from '../utils/logger.js';
 import footerConfig from '../config/footer.config.js';
 import { getModel, withDbConnection } from '../config/db.js';
+import bambiIndustrialControlSystem from '../services/bambiControlNetwork.js';
 
 const router = express.Router();
 const logger = new Logger('Health');
@@ -27,11 +28,24 @@ router.get('/api', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const healthData = await getHealthData();
+    
+    // Get control network status
+    let controlNetworkStatus = null;
+    let controlNetworkMetrics = null;
+    try {
+      controlNetworkStatus = await bambiIndustrialControlSystem.getSystemStatus();
+      controlNetworkMetrics = await bambiIndustrialControlSystem.getMetrics();
+    } catch (error) {
+      logger.error('Error fetching control network data:', error);
+    }
+    
     res.render('health', {
       title: 'System Health Monitor',
       health: healthData,
       footer: footerConfig,
-      req: req
+      req: req,
+      controlNetworkStatus,
+      controlNetworkMetrics
     });
   } catch (error) {
     logger.error('Error rendering health dashboard:', error);

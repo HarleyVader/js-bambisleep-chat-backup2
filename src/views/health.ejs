@@ -570,9 +570,7 @@
                             <span>Usage:</span>
                             <span class="stat-value"><%= health.system.cpu.percentage %>%</span>
                         </div>
-                    </div>
-
-                    <!-- User Stats -->
+                    </div>                    <!-- User Stats -->
                     <div class="stat-box">
                         <h3>👥 User Statistics</h3>
                         <div class="stat-line">
@@ -587,6 +585,40 @@
                             <span>Offline:</span>
                             <span class="stat-value"><%= health.users.offline %></span>
                         </div>
+                    </div>
+                    
+                    <!-- Control Network Status -->
+                    <div class="stat-box">
+                        <h3>🎛️ Control Network</h3>
+                        <% if (controlNetworkStatus) { %>
+                            <div class="stat-line">
+                                <span>Status:</span>
+                                <span class="stat-value status-<%= controlNetworkStatus.status %>"><%= controlNetworkStatus.status %></span>
+                            </div>
+                            <% if (controlNetworkStatus.nodeCount) { %>
+                                <div class="stat-line">
+                                    <span>Active Nodes:</span>
+                                    <span class="stat-value"><%= controlNetworkStatus.nodeCount %></span>
+                                </div>
+                            <% } %>
+                            <% if (controlNetworkMetrics && controlNetworkMetrics.uptime) { %>
+                                <div class="stat-line">
+                                    <span>Uptime:</span>
+                                    <span class="stat-value"><%= Math.floor(controlNetworkMetrics.uptime / 1000) %>s</span>
+                                </div>
+                            <% } %>
+                            <% if (controlNetworkMetrics && controlNetworkMetrics.totalRequests) { %>
+                                <div class="stat-line">
+                                    <span>Total Requests:</span>
+                                    <span class="stat-value"><%= controlNetworkMetrics.totalRequests %></span>
+                                </div>
+                            <% } %>
+                        <% } else { %>
+                            <div class="stat-line">
+                                <span>Status:</span>
+                                <span class="stat-value">Offline</span>
+                            </div>
+                        <% } %>
                     </div>
                 </div>
             </div>

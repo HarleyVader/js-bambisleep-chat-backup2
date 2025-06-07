@@ -4,6 +4,7 @@ import Logger from '../utils/logger.js';
 import footerConfig from '../config/footer.config.js';
 import config from '../config/config.js';
 import Profile from '../models/Profile.js';
+import bambiIndustrialControlSystem from '../services/bambiControlNetwork.js';
 
 const router = express.Router();
 const logger = new Logger('Chat');
@@ -61,7 +62,16 @@ router.get('/', async (req, res) => {
       triggers = [
         { name: "BAMBI SLEEP", description: "triggers deep trance and receptivity", category: "core" },
         { name: "GOOD GIRL", description: "reinforces obedience and submission", category: "core" }
-      ];
+      ];    }
+    
+    // Get control network status
+    let controlNetworkStatus = null;
+    let controlNetworkMetrics = null;
+    try {
+      controlNetworkStatus = await bambiIndustrialControlSystem.getSystemStatus();
+      controlNetworkMetrics = await bambiIndustrialControlSystem.getMetrics();
+    } catch (error) {
+      logger.error('Error fetching control network data:', error);
     }
       // Render the chat view with necessary data
     res.render('chat', {
@@ -71,11 +81,12 @@ router.get('/', async (req, res) => {
       footerLinks,
       footer: footerConfig,
       chatMessages,
-      triggers
-    });  } catch (error) {
+      triggers,
+      controlNetworkStatus,
+      controlNetworkMetrics
+    });} catch (error) {
     logger.error('Error rendering chat page:', error);
-    
-    // Fallback with minimal data
+      // Fallback with minimal data
     res.render('chat', {
       title: 'BambiSleep Chat',
       profile: null,
@@ -83,7 +94,9 @@ router.get('/', async (req, res) => {
       footerLinks: config?.FOOTER_LINKS || footerConfig?.links || [],
       footer: footerConfig,
       chatMessages: [],
-      triggers: []
+      triggers: [],
+      controlNetworkStatus: null,
+      controlNetworkMetrics: null
     });
   }
 });
