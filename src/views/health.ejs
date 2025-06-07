@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+<head>    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><%= title %></title>
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         * {
             margin: 0;
@@ -268,10 +268,200 @@
                 grid-template-columns: 1fr;
                 gap: 5px;
             }
-            
-            .stats-grid {
+              .stats-grid {
                 grid-template-columns: 1fr;
             }
+        }
+
+        /* Admin Control Panel Styles */
+        .admin-panel {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .admin-header {
+            color: #00ffff;
+            font-size: 16px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-section {
+            background: #0a0a0a;
+            border: 1px solid #444;
+            border-radius: 3px;
+            padding: 15px;
+        }
+
+        .control-section h4 {
+            color: #00ff00;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .control-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .admin-btn {
+            background: #333;
+            color: #00ff00;
+            border: 1px solid #555;
+            padding: 8px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            transition: all 0.2s;
+        }
+
+        .admin-btn:hover {
+            background: #555;
+            border-color: #00ff00;
+        }
+
+        .admin-btn:active {
+            background: #00ff00;
+            color: #000;
+        }
+
+        .admin-btn.danger {
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        .admin-btn.danger:hover {
+            background: #ff0000;
+            color: #fff;
+        }
+
+        .admin-btn.success {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .admin-btn.warning {
+            border-color: #ffff00;
+            color: #ffff00;
+        }
+
+        .status-lights {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .status-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 1px solid #333;
+            position: relative;
+        }
+
+        .status-light.online {
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }
+
+        .status-light.offline {
+            background: #333;
+        }
+
+        .status-light.warning {
+            background: #ffff00;
+            box-shadow: 0 0 10px #ffff00;
+        }
+
+        .status-light.error {
+            background: #ff0000;
+            box-shadow: 0 0 10px #ff0000;
+        }
+
+        .status-light.pulse {
+            animation: adminPulse 1s infinite;
+        }
+
+        @keyframes adminPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .status-text {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .timer-display {
+            background: #000;
+            border: 1px solid #333;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .admin-log {
+            background: #000;
+            border: 1px solid #333;
+            padding: 10px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            margin-top: 10px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            color: #666;
+        }
+
+        .log-entry.success {
+            color: #00ff00;
+        }
+
+        .log-entry.error {
+            color: #ff0000;
+        }
+
+        .log-entry.warning {
+            color: #ffff00;
+        }
+
+        .auth-section {
+            background: #2a1a1a;
+            border: 1px solid #555;
+            padding: 15px;
+            border-radius: 3px;
+            margin-bottom: 15px;
+        }
+
+        .auth-input {
+            background: #000;
+            border: 1px solid #333;
+            color: #00ff00;
+            padding: 8px;
+            width: 100%;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -289,6 +479,8 @@
             <div class="nav-item" data-view="database">🗄️ Database Status</div>
             <div class="nav-item" data-view="workers">⚙️ Worker Status</div>
             <div class="nav-item" data-view="logs">📋 System Logs</div>
+            <div class="nav-item" data-view="admin">🔧 Circuit Breaker Admin</div>
+            <div class="nav-item" data-view="admin">🔧 Circuit Breaker Admin</div>
 
             <h3 style="margin-top: 20px;">Quick Actions</h3>
             <div class="nav-item" onclick="refreshData()">🔄 Refresh Now</div>
@@ -473,9 +665,7 @@
                     </div>
                     <% }); %>
                 </div>
-            </div>
-
-            <!-- Logs Section -->
+            </div>            <!-- Logs Section -->
             <div id="logs-section" class="view-section" style="display: none;">
                 <div class="stat-box">
                     <h3>📋 System Logs</h3>
@@ -490,6 +680,94 @@
                             <li>Error logs</li>
                             <li>Performance warnings</li>
                         </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Section -->
+            <div id="admin-section" class="view-section" style="display: none;">
+                <div class="admin-panel">
+                    <div class="admin-header">🔧 Circuit Breaker Admin Control Panel</div>
+                    
+                    <!-- Authentication -->
+                    <div class="auth-section" id="auth-section">
+                        <h4 style="color: #ffff00; margin-bottom: 10px;">🔐 Authentication Required</h4>
+                        <input type="password" class="auth-input" id="admin-token" placeholder="Enter admin token...">
+                        <button class="admin-btn success" onclick="authenticateAdmin()">Authenticate</button>
+                    </div>
+
+                    <!-- Admin Controls (hidden until authenticated) -->
+                    <div id="admin-controls" style="display: none;">
+                        <div class="control-grid">
+                            <!-- Server Management -->
+                            <div class="control-section">
+                                <h4>🖥️ Server Management</h4>
+                                <div class="status-lights">
+                                    <div class="status-light offline" id="server-status-light"></div>
+                                    <span class="status-text">Server Status: <span id="server-status-text">Unknown</span></span>
+                                </div>
+                                <div class="control-buttons">
+                                    <button class="admin-btn success" onclick="serverCommand('start')">Start</button>
+                                    <button class="admin-btn danger" onclick="serverCommand('stop')">Stop</button>
+                                    <button class="admin-btn warning" onclick="serverCommand('restart')">Restart</button>
+                                </div>
+                            </div>
+
+                            <!-- Circuit Breaker -->
+                            <div class="control-section">
+                                <h4>🔌 Circuit Breaker</h4>
+                                <div class="status-lights">
+                                    <div class="status-light warning" id="breaker-status-light"></div>
+                                    <span class="status-text">Route: <span id="breaker-status-text">Active</span></span>
+                                </div>
+                                <div class="control-buttons">
+                                    <button class="admin-btn warning" onclick="toggleRoute(true)">Switch OFF</button>
+                                    <button class="admin-btn success" onclick="toggleRoute(false)">Switch ON</button>
+                                </div>
+                            </div>
+
+                            <!-- Git Operations -->
+                            <div class="control-section">
+                                <h4>📁 Git Operations</h4>
+                                <div class="status-lights">
+                                    <div class="status-light offline" id="git-status-light"></div>
+                                    <span class="status-text">Last Op: <span id="git-status-text">None</span></span>
+                                </div>
+                                <div class="control-buttons">
+                                    <button class="admin-btn" onclick="gitCommand('git status')">Status</button>
+                                    <button class="admin-btn" onclick="gitCommand('git pull')">Pull</button>
+                                    <button class="admin-btn" onclick="gitCommand('git add .')">Add All</button>
+                                    <button class="admin-btn warning" onclick="showCommitDialog()">Commit</button>
+                                </div>
+                            </div>
+
+                            <!-- System Timer -->
+                            <div class="control-section">
+                                <h4>⏰ System Timer</h4>
+                                <div class="timer-display" id="system-timer">
+                                    00:00:00
+                                </div>
+                                <div class="status-text">Server Uptime</div>
+                            </div>
+                        </div>
+
+                        <!-- Admin Log -->
+                        <div class="control-section">
+                            <h4>📊 Admin Activity Log</h4>
+                            <div class="admin-log" id="admin-log">
+                                <div class="log-entry">System ready for admin commands...</div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="control-section">
+                            <h4>⚡ Quick Actions</h4>
+                            <div class="control-buttons">
+                                <button class="admin-btn" onclick="getAdminStatus()">Refresh Status</button>
+                                <button class="admin-btn warning" onclick="showMaintenanceDialog()">Set Maintenance</button>
+                                <button class="admin-btn danger" onclick="emergencyStop()">Emergency Stop</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -609,14 +887,246 @@
         }
 
         // Restore saved tab on page load
-        restoreSavedTab();
-
-        // Handle page visibility for performance
+        restoreSavedTab();        // Handle page visibility for performance
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 clearInterval(refreshInterval);
             } else if (autoRefresh) {
                 startAutoRefresh();
+            }
+        });
+
+        // Admin Panel Functionality
+        let adminSocket = null;
+        let adminAuthenticated = false;
+        let adminTimer = null;
+
+        // Load Socket.IO for admin functionality
+        function loadSocketIO() {
+            if (typeof io === 'undefined') {
+                const script = document.createElement('script');
+                script.src = '/socket.io/socket.io.js';
+                script.onload = initAdminSocket;
+                document.head.appendChild(script);
+            } else {
+                initAdminSocket();
+            }
+        }
+
+        function initAdminSocket() {
+            adminSocket = io('/admin');
+            
+            adminSocket.on('connect', () => {
+                addAdminLog('Connected to admin interface', 'success');
+            });
+
+            adminSocket.on('authenticated', (data) => {
+                if (data.success) {
+                    adminAuthenticated = true;
+                    document.getElementById('auth-section').style.display = 'none';
+                    document.getElementById('admin-controls').style.display = 'block';
+                    addAdminLog('Authentication successful', 'success');
+                    startAdminTimer();
+                    getAdminStatus();
+                } else {
+                    addAdminLog('Authentication failed', 'error');
+                }
+            });
+
+            adminSocket.on('commandResult', (result) => {
+                updateServerStatus(result);
+                addAdminLog(`Server command: ${JSON.stringify(result)}`, result.success ? 'success' : 'error');
+            });
+
+            adminSocket.on('gitResult', (result) => {
+                updateGitStatus(result);
+                addAdminLog(`Git: ${result.command} - ${result.success ? 'Success' : 'Failed'}`, result.success ? 'success' : 'error');
+                if (result.stdout) addAdminLog(`Output: ${result.stdout}`, 'success');
+                if (result.stderr) addAdminLog(`Error: ${result.stderr}`, 'error');
+            });
+
+            adminSocket.on('routeResult', (result) => {
+                updateBreakerStatus(result.switched);
+                addAdminLog(`Route switched: ${result.switched ? 'OFF' : 'ON'}`, 'warning');
+            });
+
+            adminSocket.on('adminStatus', (status) => {
+                updateAllStatus(status);
+                addAdminLog('Status refreshed', 'success');
+            });
+
+            adminSocket.on('disconnect', () => {
+                addAdminLog('Disconnected from admin interface', 'error');
+                adminAuthenticated = false;
+            });
+        }
+
+        function authenticateAdmin() {
+            const token = document.getElementById('admin-token').value;
+            if (!adminSocket) {
+                loadSocketIO();
+                setTimeout(() => {
+                    adminSocket.emit('authenticate', token);
+                }, 1000);
+            } else {
+                adminSocket.emit('authenticate', token);
+            }
+        }
+
+        function serverCommand(action) {
+            if (!adminAuthenticated) return;
+            adminSocket.emit('serverCommand', { action });
+            addAdminLog(`Sending server command: ${action}`, 'warning');
+        }
+
+        function gitCommand(command) {
+            if (!adminAuthenticated) return;
+            adminSocket.emit('gitCommand', { command });
+            addAdminLog(`Executing git command: ${command}`, 'warning');
+        }
+
+        function toggleRoute(switched) {
+            if (!adminAuthenticated) return;
+            adminSocket.emit('switchRoute', { switched });
+            addAdminLog(`Toggling route: ${switched ? 'OFF' : 'ON'}`, 'warning');
+        }
+
+        function getAdminStatus() {
+            if (!adminAuthenticated) return;
+            adminSocket.emit('getAdminStatus');
+        }
+
+        function showCommitDialog() {
+            const message = prompt('Enter commit message:');
+            if (message && message.trim()) {
+                if (!adminAuthenticated) return;
+                adminSocket.emit('gitCommit', { message: message.trim() });
+                addAdminLog(`Git commit: ${message}`, 'warning');
+            }
+        }
+
+        function showMaintenanceDialog() {
+            const message = prompt('Enter maintenance message:');
+            if (message && message.trim()) {
+                // This would update the circuit breaker maintenance message
+                fetch('/api/maintenance/status', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message.trim(),
+                        currentIssue: 'Admin maintenance',
+                        countdown: 300
+                    })
+                }).then(response => response.json())
+                  .then(data => {
+                      addAdminLog(`Maintenance message updated: ${message}`, 'success');
+                  })
+                  .catch(error => {
+                      addAdminLog(`Failed to update maintenance: ${error}`, 'error');
+                  });
+            }
+        }
+
+        function emergencyStop() {
+            if (confirm('Are you sure you want to perform an emergency stop?')) {
+                serverCommand('stop');
+                toggleRoute(true);
+                addAdminLog('EMERGENCY STOP INITIATED', 'error');
+            }
+        }
+
+        function updateServerStatus(result) {
+            const light = document.getElementById('server-status-light');
+            const text = document.getElementById('server-status-text');
+            
+            if (result.success) {
+                light.className = 'status-light online';
+                text.textContent = 'Running';
+            } else {
+                light.className = 'status-light error';
+                text.textContent = 'Error';
+            }
+        }
+
+        function updateGitStatus(result) {
+            const light = document.getElementById('git-status-light');
+            const text = document.getElementById('git-status-text');
+            
+            if (result.success) {
+                light.className = 'status-light online';
+                text.textContent = result.command.split(' ')[1] || 'Success';
+            } else {
+                light.className = 'status-light error';
+                text.textContent = 'Failed';
+            }
+        }
+
+        function updateBreakerStatus(switched) {
+            const light = document.getElementById('breaker-status-light');
+            const text = document.getElementById('breaker-status-text');
+            
+            if (switched) {
+                light.className = 'status-light error';
+                text.textContent = 'OFF (Bypassed)';
+            } else {
+                light.className = 'status-light warning';
+                text.textContent = 'ON (Active)';
+            }
+        }
+
+        function updateAllStatus(status) {
+            updateBreakerStatus(status.routeSwitched);
+            
+            const serverLight = document.getElementById('server-status-light');
+            const serverText = document.getElementById('server-status-text');
+            
+            if (status.serverRunning) {
+                serverLight.className = 'status-light online';
+                serverText.textContent = 'Running';
+            } else {
+                serverLight.className = 'status-light offline';
+                serverText.textContent = 'Stopped';
+            }
+        }
+
+        function addAdminLog(message, type = '') {
+            const log = document.getElementById('admin-log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+            
+            // Keep only last 50 entries
+            while (log.children.length > 50) {
+                log.removeChild(log.firstChild);
+            }
+        }
+
+        function startAdminTimer() {
+            const timerDisplay = document.getElementById('system-timer');
+            const startTime = Date.now();
+            
+            adminTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const hours = Math.floor(elapsed / 3600).toString().padStart(2, '0');
+                const minutes = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                timerDisplay.textContent = `${hours}:${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        // Initialize admin panel when admin tab is clicked
+        document.addEventListener('DOMContentLoaded', () => {
+            const adminNavItem = document.querySelector('[data-view="admin"]');
+            if (adminNavItem) {
+                adminNavItem.addEventListener('click', () => {
+                    if (!adminSocket) {
+                        loadSocketIO();
+                    }
+                });
             }
         });
     </script>
