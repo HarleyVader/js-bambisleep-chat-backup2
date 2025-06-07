@@ -80,24 +80,153 @@ function spiral(step, ang, colorArray, baseWidth) {
   endShape();
 }
 
-// Simple parameter update functions
+// Color presets for easy switching
+const COLOR_PRESETS = {
+  'BAMBI_CLASSIC': {
+    spiral1: [0, 128, 128],      // Teal
+    spiral2: [255, 20, 147]      // Barbie Pink
+  },
+  'DEEP_TRANCE': {
+    spiral1: [75, 0, 130],       // Indigo
+    spiral2: [138, 43, 226]      // Blue Violet
+  },
+  'HYPNO_PINK': {
+    spiral1: [255, 105, 180],    // Hot Pink
+    spiral2: [255, 182, 193]     // Light Pink
+  },
+  'MIND_MELT': {
+    spiral1: [255, 0, 255],      // Magenta
+    spiral2: [0, 255, 255]       // Cyan
+  },
+  'DREAM_STATE': {
+    spiral1: [147, 0, 211],      // Dark Violet
+    spiral2: [186, 85, 211]      // Medium Orchid
+  },
+  'SUBMISSIVE_BLUE': {
+    spiral1: [30, 144, 255],     // Dodger Blue
+    spiral2: [0, 191, 255]       // Deep Sky Blue
+  }
+};
+
+// Enhanced parameter update functions
 function updateSpiralParams(w1, w2, s1, s2) {
   spiral1Width = w1 || spiral1Width;
   spiral2Width = w2 || spiral2Width;
   spiral1Speed = s1 || spiral1Speed;
   spiral2Speed = s2 || spiral2Speed;
+  
+  // Send update to network control system
+  if (window.bambiControlNetwork) {
+    window.bambiControlNetwork.processControlSignal('SPIRAL_CONTROL_UPDATE', {
+      type: 'PARAMS_UPDATE',
+      spiral1Width, spiral2Width, spiral1Speed, spiral2Speed
+    }, 'CLIENT_SPIRAL_CONTROL');
+  }
 }
 
 function updateSpiralColors(c1, c2) {
   if (c1) spiral1Color = c1;
   if (c2) spiral2Color = c2;
+  
+  // Send update to network control system
+  if (window.bambiControlNetwork) {
+    window.bambiControlNetwork.processControlSignal('SPIRAL_CONTROL_UPDATE', {
+      type: 'COLOR_UPDATE',
+      spiral1Color, spiral2Color
+    }, 'CLIENT_SPIRAL_CONTROL');
+  }
 }
 
 function updateSpiralOpacity(opacity) {
   opacityLevel = Math.max(0.1, Math.min(1.0, opacity || 1.0));
+  
+  // Send update to network control system
+  if (window.bambiControlNetwork) {
+    window.bambiControlNetwork.processControlSignal('SPIRAL_CONTROL_UPDATE', {
+      type: 'OPACITY_UPDATE',
+      opacityLevel
+    }, 'CLIENT_SPIRAL_CONTROL');
+  }
+}
+
+// New enhanced color control functions
+function setColorPreset(presetName) {
+  const preset = COLOR_PRESETS[presetName];
+  if (preset) {
+    updateSpiralColors(preset.spiral1, preset.spiral2);
+    console.log(`🎨 Color preset applied: ${presetName}`);
+  }
+}
+
+function fadeOpacity(targetOpacity, duration = 2000) {
+  const startOpacity = opacityLevel;
+  const startTime = Date.now();
+  
+  function animate() {
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    const currentOpacity = startOpacity + (targetOpacity - startOpacity) * progress;
+    updateSpiralOpacity(currentOpacity);
+    
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    }
+  }
+  
+  animate();
+}
+
+function pulseOpacity(minOpacity = 0.3, maxOpacity = 1.0, period = 3000) {
+  let startTime = Date.now();
+  
+  function pulse() {
+    const elapsed = (Date.now() - startTime) % period;
+    const progress = elapsed / period;
+    const opacity = minOpacity + (maxOpacity - minOpacity) * (0.5 + 0.5 * Math.sin(progress * Math.PI * 2));
+    
+    updateSpiralOpacity(opacity);
+    requestAnimationFrame(pulse);
+  }
+  
+  pulse();
+}
+
+// Network control integration
+function initializeNetworkControl() {
+  // Create a simple network control interface for spiral effects
+  window.bambiControlNetwork = window.bambiControlNetwork || {
+    processControlSignal: function(signalType, signalData, sourceId) {
+      console.log(`🎛️ Network Control Signal: ${signalType}`, signalData);
+      
+      // Process incoming network control signals
+      if (signalType === 'SPIRAL_CONTROL_UPDATE') {
+        switch(signalData.type) {
+          case 'COLOR_PRESET':
+            setColorPreset(signalData.preset);
+            break;
+          case 'FADE_OPACITY':
+            fadeOpacity(signalData.targetOpacity, signalData.duration);
+            break;
+          case 'PULSE_OPACITY':
+            pulseOpacity(signalData.minOpacity, signalData.maxOpacity, signalData.period);
+            break;
+        }
+      }
+    }
+  };
+}
+
+// Initialize network control when page loads
+if (typeof window !== 'undefined') {
+  initializeNetworkControl();
 }
 
 // Export functions globally
 window.updateSpiralParams = updateSpiralParams;
 window.updateSpiralColors = updateSpiralColors;
 window.updateSpiralOpacity = updateSpiralOpacity;
+window.setColorPreset = setColorPreset;
+window.fadeOpacity = fadeOpacity;
+window.pulseOpacity = pulseOpacity;
+window.COLOR_PRESETS = COLOR_PRESETS;

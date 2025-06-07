@@ -128,14 +128,8 @@ window.bambiSystem = (function() {
       });
     }
   }
-
   // Get settings for external use
   function getSettings() {
-    return JSON.parse(JSON.stringify(state)); // Return a copy
-  }
-
-  // Collect settings for external use
-  function collectSettings() {
     return JSON.parse(JSON.stringify(state)); // Return a copy
   }
 
@@ -204,13 +198,11 @@ window.bambiSystem = (function() {
     // Save state
     localStorage.setItem('bambiSystemState', JSON.stringify(state));
   }
-
   // Public API
   return {
     init,
     saveState,
     getSettings,
-    collectSettings,
     loadProfile,
     state // For direct access when needed
   };
@@ -219,5 +211,5 @@ window.bambiSystem = (function() {
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
   window.bambiSystem.init();
-  socket.emit('system-settings', window.bambiSystem.collectSettings());
+  socket.emit('system-settings', window.bambiSystem.getSettings());
 });

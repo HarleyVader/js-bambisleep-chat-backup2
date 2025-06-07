@@ -7,7 +7,7 @@ import footerConfig from '../config/footer.config.js';
 import config from '../config/config.js'; // Add this import
 import { getModel, withDbConnection } from '../config/db.js';
 import sessionService from '../services/sessionService.js';
-import bambiIndustrialControlSystem from '../services/bambiControlNetwork.js';
+import bambiControlNetwork from '../services/bambiControlNetwork.js';
 
 const logger = new Logger('RouteManager');
 const router = express.Router();
@@ -146,9 +146,8 @@ router.get('/', async (req, res) => {
     // Get control network status
     let controlNetworkStatus = null;
     let controlNetworkMetrics = null;
-    try {
-      controlNetworkStatus = await bambiIndustrialControlSystem.getSystemStatus();
-      controlNetworkMetrics = await bambiIndustrialControlSystem.getMetrics();
+    try {      controlNetworkStatus = await bambiControlNetwork.getSystemStatus();
+      controlNetworkMetrics = await bambiControlNetwork.getMetrics();
     } catch (error) {
       logger.error('Error fetching control network data:', error);
     }
