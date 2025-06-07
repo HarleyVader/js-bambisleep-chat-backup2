@@ -1,8 +1,9 @@
 import express from 'express';
-import ChatMessage from '../models/ChatMessage.js';
+import sessionService from '../services/sessionService.js';
 import Logger from '../utils/logger.js';
 import footerConfig from '../config/footer.config.js';
 import config from '../config/config.js';
+import Profile from '../models/Profile.js';
 
 const router = express.Router();
 const logger = new Logger('Chat');
@@ -17,11 +18,10 @@ router.get('/', async (req, res) => {
     const username = req.cookies?.bambiname 
       ? decodeURIComponent(req.cookies.bambiname) 
       : 'anonBambi';
-    
-    // Get recent chat messages for the chat history
+      // Get recent chat messages for the chat history
     let chatMessages = [];
     try {
-      chatMessages = await ChatMessage.getRecentMessages(50);
+      chatMessages = await sessionService.ChatMessage.getRecentMessages(50);
       logger.info(`Retrieved ${chatMessages.length} messages for chat history`);
     } catch (error) {
       logger.error(`Error fetching chat messages: ${error.message}`);
@@ -32,9 +32,7 @@ router.get('/', async (req, res) => {
     let profile = null;
     if (username && username !== 'anonBambi') {
       try {
-        // Assuming getProfile function exists (imported from Profile model)
-        const Profile = await import('../models/Profile.js').then(module => module.getProfile);
-        profile = await Profile(username);
+        profile = await Profile.findByUsername(username);
       } catch (error) {
         logger.error(`Error fetching profile for ${username}:`, error);
       }
@@ -65,17 +63,16 @@ router.get('/', async (req, res) => {
         { name: "GOOD GIRL", description: "reinforces obedience and submission", category: "core" }
       ];
     }
-    
-    // Render the chat view with necessary data
+      // Render the chat view with necessary data
     res.render('chat', {
       title: 'BambiSleep Chat',
       profile,
       username,
       footerLinks,
+      footer: footerConfig,
       chatMessages,
       triggers
-    });
-  } catch (error) {
+    });  } catch (error) {
     logger.error('Error rendering chat page:', error);
     
     // Fallback with minimal data
@@ -84,6 +81,7 @@ router.get('/', async (req, res) => {
       profile: null,
       username: '',
       footerLinks: config?.FOOTER_LINKS || footerConfig?.links || [],
+      footer: footerConfig,
       chatMessages: [],
       triggers: []
     });

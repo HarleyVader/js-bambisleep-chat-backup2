@@ -1,0 +1,248 @@
+/* Component: Notifications
+ * Styling for notification elements like alerts, toasts, badges
+ */
+
+/* In-app notifications */
+.in-app-notification {
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    color: white;
+    box-shadow: var(--shadow-lg);
+    animation: slideIn 0.3s forwards;
+    max-width: 100%;
+    border-left: 3px solid var(--tertiary-color);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.in-app-notification.notification-hiding {
+    animation: fadeOut 0.5s forwards;
+}
+
+.notification-title {
+    font-weight: bold;
+    margin-bottom: var(--spacing-xs);
+    color: var(--nav-alt);
+}
+
+.notification-message {
+    font-size: 0.9rem;
+}
+
+.notification-close {
+    position: absolute;
+    top: var(--spacing-xs);
+    right: var(--spacing-xs);
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0;
+    line-height: 1;
+}
+
+.notification-close:hover {
+    color: white;
+}
+
+/* Notification types */
+.in-app-notification.info {
+    border-left-color: var(--nav-alt);
+}
+
+.in-app-notification.success {
+    border-left-color: var(--success);
+}
+
+.in-app-notification.warning {
+    border-left-color: var(--warning);
+}
+
+.in-app-notification.error {
+    border-left-color: var(--error);
+}
+
+.in-app-notification.xp-notification {
+    border-left-color: var(--tertiary-alt);
+}
+
+.in-app-notification.level-notification {
+    border-left-color: var(--tertiary-color);
+}
+
+/* Notification Area */
+#notification-area {
+    position: fixed;
+    top: var(--spacing-xl);
+    right: var(--spacing-xl);
+    z-index: 9999;
+    max-width: 300px;
+}
+
+/* URL Styling from enhanced-chat.css */
+.chat-url {
+    color: var(--nav-alt);
+    text-decoration: underline;
+    transition: color 0.2s ease;
+    word-break: break-all;
+}
+
+.chat-url:hover {
+    color: var(--tertiary-alt);
+    text-decoration: underline;
+}
+
+.unsafe-url-warning {
+    color: var(--error);
+    background-color: var(--error-bg);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius);
+    font-style: italic;
+    display: inline-block;
+    max-width: 100%;
+    word-break: break-all;
+}
+
+/* User Mentions from enhanced-chat.css */
+.mention-highlight {
+    animation: mention-pulse 2s infinite;
+    background-color: rgba(23, 219, 216, 0.1);
+    border-left: var(--border-width) solid var(--nav-alt);
+    padding-left: var(--spacing-sm);
+}
+
+@keyframes mention-pulse {
+    0% { background-color: rgba(var(--nav-color-rgb), 0.1); }
+    50% { background-color: rgba(var(--nav-color-rgb), 0.2); }
+    100% { background-color: rgba(var(--nav-color-rgb), 0.1); }
+}
+
+/* Alert boxes */
+.alert {
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border: 1px solid transparent;
+    border-radius: var(--border-radius);
+}
+
+.alert-info {
+    color: var(--nav-alt);
+    background-color: rgba(var(--nav-color-rgb), 0.2);
+    border-color: var(--nav-alt);
+}
+
+.alert-success {
+    color: var(--success);
+    background-color: rgba(1, 198, 158, 0.1);
+    border-color: var(--success);
+}
+
+.alert-warning {
+    color: var(--warning);
+    background-color: rgba(255, 170, 0, 0.1);
+    border-color: var(--warning);
+}
+
+.alert-danger {
+    color: var(--error);
+    background-color: var(--error-bg);
+    border-color: var(--error);
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 0.25em 0.6em;
+    font-size: 75%;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: 10rem;
+    background-color: var(--nav-color);
+    color: var(--nav-alt);
+}
+
+.badge-primary {
+    background-color: var(--button-color);
+    color: white;
+}
+
+.badge-secondary {
+    background-color: var(--secondary-color);
+    color: var(--secondary-alt);
+}
+
+.badge-success {
+    background-color: var(--success);
+    color: white;
+}
+
+.badge-warning {
+    background-color: var(--warning);
+    color: white;
+}
+
+.badge-danger {
+    background-color: var(--error);
+    color: white;
+}
+
+/* Status indicators */
+.status-message {
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    margin-top: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    background: rgba(var(--nav-color-rgb), 0.2);
+    color: var(--nav-alt);
+}
+
+.status-message.error {
+    background: var(--error-bg);
+    color: var(--error);
+}
+
+.status-message.success {
+    background: rgba(1, 198, 158, 0.1);
+    color: var(--success);
+}
+
+/* Toast notifications */
+.toast {
+    position: fixed;
+    bottom: var(--spacing-xl);
+    right: var(--spacing-xl);
+    padding: var(--spacing-md);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    border-radius: var(--border-radius);
+    z-index: 9999;
+    box-shadow: var(--shadow-lg);
+    animation: slideInUp 0.3s forwards;
+}
+
+@keyframes slideInUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #notification-area {
+        top: var(--spacing-md);
+        right: var(--spacing-md);
+        max-width: 90%;
+    }
+    
+    .toast {
+        bottom: var(--spacing-md);
+        right: var(--spacing-md);
+        max-width: 90%;
+    }
+}

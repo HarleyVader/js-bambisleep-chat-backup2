@@ -403,34 +403,40 @@ async function updateSessionHistory(socketId, collarText, userPrompt, finalConte
       lastActivity: Date.now()
     };
   } else {
-    sessionHistories[socketId].metadata.lastActivity = Date.now();
+    if (!sessionHistories[socketId].metadata) {
+      sessionHistories[socketId].metadata = { createdAt: Date.now(), lastActivity: Date.now() };
+    } else {
+      sessionHistories[socketId].metadata.lastActivity = Date.now();
+    }
   }
 
-  // Add messages to in-memory session
-  sessionHistories[socketId].push(
-    { role: 'system', content: collarText },
-    { role: 'user', content: userPrompt },
-    { role: 'assistant', content: finalContent }
-  );
+  // Only push if session still exists (not garbage collected)
+  if (sessionHistories[socketId]) {
+    sessionHistories[socketId].push(
+      { role: 'system', content: collarText },
+      { role: 'user', content: userPrompt },
+      { role: 'assistant', content: finalContent }
+    );
+  }
 
   // Run garbage collection if needed
   if (Object.keys(sessionHistories).length > MAX_SESSIONS) {
     collectGarbage(1);
   }
+
   // Store in database for registered users
   if (username && username !== 'anonBambi') {
     try {
-      // Process triggers into a usable format
       const triggerList = Array.isArray(triggers)
         ? triggers
         : (typeof triggers === 'string'
           ? triggers.split(',').map(t => t.trim())
           : ['BAMBI SLEEP']);
 
-      // Prepare session data
       const sessionData = {
         username,
         socketId,
+        sessionId: socketId,
         messages: [
           { role: 'system', content: collarText },
           { role: 'user', content: userPrompt },
@@ -441,27 +447,22 @@ async function updateSessionHistory(socketId, collarText, userPrompt, finalConte
           triggers: triggerList,
           collarActive: state,
           collarText: collar,
-          modelName: 'Steno Maid Blackroot' // Get actual model name from your LMS response
+          modelName: 'Steno Maid Blackroot'
         }
       };
 
-      // Check if database connection is available first
       if (!db.hasConnection()) {
         logger.warning(`Cannot save session history for ${username} - no database connection available`);
       } else {
-        // Get our SessionHistory model using the safe helper function
         const SessionHistoryModelInstance = await getSessionHistoryModel();
         if (!SessionHistoryModelInstance) {
           logger.warning(`Cannot save session history for ${username} - SessionHistoryModel not available`);
           return;
         }
-
-        // Use withDbConnection with requireConnection=false to avoid throwing errors
         await withDbConnection(async () => {
           try {
-            // Try to find existing session
-            let sessionHistory = await SessionHistoryModelInstance.findOne({ socketId });
-
+            // Try to find existing session by sessionId
+            let sessionHistory = await SessionHistoryModelInstance.findOne({ sessionId: socketId });
             if (sessionHistory) {
               // Update existing session
               sessionHistory.messages.push(...sessionData.messages);
@@ -469,20 +470,16 @@ async function updateSessionHistory(socketId, collarText, userPrompt, finalConte
               sessionHistory.metadata.triggers = sessionData.metadata.triggers;
               sessionHistory.metadata.collarActive = sessionData.metadata.collarActive;
               sessionHistory.metadata.collarText = sessionData.metadata.collarText;
-
               await sessionHistory.save();
               logger.debug(`Updated session history in database for ${username} (socketId: ${socketId})`);
             } else {
               // Create new session with auto-generated title
               sessionData.title = `${username}'s session on ${new Date().toLocaleDateString()}`;
               sessionHistory = await SessionHistoryModelInstance.create(sessionData);
-
-              // Add reference to user's profile
               await mongoose.model('Profile').findOneAndUpdate(
                 { username },
                 { $addToSet: { sessionHistories: sessionHistory._id } }
               );
-
               logger.info(`Created new session history in database for ${username} (socketId: ${socketId})`);
             }
           } catch (dbError) {
@@ -494,7 +491,6 @@ async function updateSessionHistory(socketId, collarText, userPrompt, finalConte
       logger.error(`Failed to save session history to database: ${error.message}`);
     }
   }
-
   return sessionHistories[socketId];
 }
 
@@ -607,11 +603,11 @@ async function syncSessionWithDatabase(socketId) {
             await existingSession.save();
             logger.debug(`Synced ${newMessages.length} messages to database before removing session ${socketId}`);
           }
-        } else {
-          // Create basic session record
+        } else {          // Create basic session record
           const newSession = new SessionHistoryModelInstance({
             username: session.metadata.username,
             socketId,
+            sessionId: socketId, // Add this line to fix validation error
             messages: session,
             title: `${session.metadata.username}'s saved session`,
             metadata: {
@@ -769,7 +765,7 @@ async function handleMessage(userPrompt, socketId, username) {
     // Get model ID with error handling
     let modelId;
     try {
-      modelId = await selectLoadedModels('l3-sthenomaidblackroot-8b-v1');
+      modelId = await selectLoadedModels('l3-sthenomaidblackroot-8b-v1@q2_k');
       if (!modelId) {
         throw new Error('No models loaded');
       }

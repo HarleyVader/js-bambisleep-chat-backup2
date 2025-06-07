@@ -1,0 +1,30 @@
+[Unit]
+Description=BambiSleep.Chat Circuit Breaker Service
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/brandynette/web/bambisleep.chat/js-bambisleep-chat
+ExecStart=/home/brandynette/.nvm/versions/node/v24.1.0/bin/node /home/brandynette/web/bambisleep.chat/js-bambisleep-chat/scripts/circuit-breaker-server.js
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=bambisleep-circuit-breaker
+KillMode=mixed
+TimeoutStopSec=30
+
+# Security settings (relaxed for proper function)
+NoNewPrivileges=true
+PrivateTmp=false
+ProtectSystem=false
+ProtectHome=false
+ReadWritePaths=/home/brandynette/web/bambisleep.chat/js-bambisleep-chat
+
+# Environment variables
+EnvironmentFile=-/home/brandynette/web/bambisleep.chat/js-bambisleep-chat/.env
+
+[Install]
+WantedBy=default.target

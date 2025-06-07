@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - BambiSleepChat Documentation</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/docs.css">
+  <link rel="stylesheet" href="/css/highlight.css">
+  <meta name="description" content="<%= description %>">
+</head>
+<body class="docs-page">
+  <header class="header">
+    <div class="container">
+      <h1>BambiSleepChat Documentation</h1>
+      <p class="subtitle">GitHub Organizations API Server</p>
+    </div>
+  </header>
+  
+  <nav class="nav">
+    <div class="container">
+      <ul class="nav-list">
+        <li><a href="/" class="nav-link">Dashboard</a></li>
+        <li><a href="/api/status" class="nav-link">API Status</a></li>
+        <li><a href="/docs" class="nav-link active">Documentation</a></li>
+      </ul>
+    </div>
+  </nav>
+  
+  <main class="main-content">
+    <div class="container docs-container">
+      <aside class="docs-sidebar">
+        <div class="docs-sidebar-header">
+          <a href="/docs" class="back-link">← All Documents</a>
+        </div>
+        <h3>Documentation Files</h3>
+        <ul class="docs-list">
+          <% files.forEach(function(file) { %>
+            <li>
+              <a href="<%= file.path %>" class="doc-link <%= file.name === fileName+'.md' ? 'active' : '' %>">
+                <%= file.title %>
+              </a>
+            </li>
+          <% }); %>
+        </ul>
+      </aside>
+      
+      <section class="docs-content">        <div class="docs-header">
+          <h2><%= title %></h2>
+          <div class="docs-actions">
+            <a href="/docs/<%= fileName %>.md" class="action-button" title="View Original File" target="_blank">
+              <span class="icon">📄</span> View Original
+            </a>
+            <a href="/docs/<%= fileName %>/raw" class="action-button" title="View Raw Markdown" target="_blank">
+              <span class="icon">📝</span> Raw
+            </a>
+          </div>
+        </div>
+        
+        <div class="markdown-body">
+          <%- content %>
+        </div>
+      </section>
+    </div>
+  </main>
+  
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; <%= new Date().getFullYear() %> BambiSleepChat - GitHub Organizations API Server</p>
+    </div>
+  </footer>
+</body>
+</html>

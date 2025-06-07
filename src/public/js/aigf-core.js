@@ -12,6 +12,11 @@ const submit = document.getElementById('submit');
 const response = document.getElementById('response');
 const userPrompt = document.getElementById('user-prompt');
 
+// Check for missing critical elements
+if (!textarea) console.warn('textarea element not found');
+if (!submit) console.warn('submit button not found');
+if (!response) console.warn('response element not found');
+
 // Share audio element between scripts
 window.audio = window.audio || document.getElementById('audio');
 const audio = window.audio;
@@ -212,6 +217,25 @@ socket.on('response', async (message) => {
     applyUppercaseStyle();
 });
 
+socket.on('chat message', (messageData) => {
+    displayChatMessage(messageData);
+});
+
+function displayChatMessage(messageData) {
+    const chatResponse = document.getElementById('chat-response');
+    if (!chatResponse) return;
+    
+    const li = document.createElement('li');
+    li.innerHTML = `
+        <span class="chat-time">${new Date(messageData.timestamp).toLocaleTimeString([], {hour12: false})}</span> -
+        <span class="chat-username"><a href="/profile/${messageData.username}" class="username-link">${messageData.username}</a>:</span>
+        <span class="chat-message">${messageData.data}</span>
+    `;
+    
+    chatResponse.appendChild(li);
+    chatResponse.scrollTop = chatResponse.scrollHeight;
+}
+
 function handleAudioEnded() {
     if (_textArray.length > 0) {
         state = false;
@@ -240,8 +264,11 @@ function handleAudioPlay() {
     applyUppercaseStyle();
 }
 
-audio.addEventListener('ended', handleAudioEnded);
-audio.addEventListener('play', handleAudioPlay);
+// Add null check before adding event listeners
+if (audio) {
+    audio.addEventListener('ended', handleAudioEnded);
+    audio.addEventListener('play', handleAudioPlay);
+}
 
 // Clean up event listeners when appropriate
 function cleanup() {

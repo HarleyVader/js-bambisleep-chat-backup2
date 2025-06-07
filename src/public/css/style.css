@@ -27,8 +27,6 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 
-    --hypno-giphy: url("<div style='width:100%; height:0; padding-bottom:100%; position:relative;'><iframe src='' width='100%' height='100%' style='position:absolute' frameBorder='0' class='giphy-embed' allowFullScreen></iframe></div><p><a href='https://giphy.com/embed/10l8fc00NMNJNm'>via GIPHY</a></p>");
-    
     --primary-color-rgb: 12, 42, 42;
     --secondary-color-rgb: 64, 0, 47;
     --tertiary-color-rgb: 204, 1, 116;
@@ -418,6 +416,25 @@ button i,
     overflow-y: auto;
 }
 
+/* Custom scrollbar for trigger grid */
+.trigger-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.trigger-grid::-webkit-scrollbar-track {
+    background: rgba(var(--nav-color-rgb), 0.2);
+    border-radius: 3px;
+}
+
+.trigger-grid::-webkit-scrollbar-thumb {
+    background: var(--tertiary-color);
+    border-radius: 3px;
+}
+
+.trigger-grid::-webkit-scrollbar-thumb:hover {
+    background: var(--button-color);
+}
+
 /* Make control panels smaller */
 .control-panel {
     padding: 5px 8px;
@@ -559,9 +576,9 @@ button i,
         width: 100%;
         margin-bottom: 10px;
     }
-    
-    .trigger-grid {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      .trigger-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 3px;
     }
     
     .system-controls {
@@ -828,18 +845,20 @@ a:hover {
 
 .trigger-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    max-height: 100%;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    max-height: 300px;
     overflow-y: auto;
-    padding-right: 10px;
+    padding-right: 8px;
+    gap: 4px;
 }
 
 .trigger-toggle-item {
     display: flex;
     align-items: center;
     background-color: rgba(var(--nav-color-rgb), 0.3);
-    border-radius: 6px;
+    border-radius: 4px;
     transition: all 0.2s ease;
+    padding: 4px;
 }
 
 .trigger-toggle-item:hover {
@@ -851,12 +870,12 @@ a:hover {
 .toggle-input {
     appearance: none;
     position: relative;
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
     border: 2px solid var(--button-color);
     background-color: var(--nav-color);
-    margin-right: 12px;
+    margin-right: 8px;
     cursor: pointer;
     vertical-align: middle;
     transition: all 0.2s ease;
@@ -878,11 +897,12 @@ a:hover {
 
 .toggle-label {
     color: var(--button-color);
-    font-size: 0.95rem;
+    font-size: 0.75rem;
     cursor: pointer;
     flex-grow: 1;
     font-weight: 500;
     text-shadow: 0 0 3px rgba(0,0,0,0.3);
+    line-height: 1.2;
 }
 
 .system-controls-section {

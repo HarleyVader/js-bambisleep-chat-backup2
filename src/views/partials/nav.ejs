@@ -1,27 +1,9 @@
 <!-- Main navigation -->
 <nav class="main-nav">
   <ul>
-    <li><a href="/">Home</a></li>
-    <li><a href="/help">Help</a></li>
-    <li><a href="/profile">Profile</a></li>
+    <li><a href="/" class="<%= locals.path === '/' ? 'active' : '' %>">Home</a></li>
+    <li><a href="/chat" class="<%= locals.path === '/chat' ? 'active' : '' %>">Chat</a></li>
+    <li><a href="/psychodelic-trigger-mania" class="<%= locals.path === '/psychodelic-trigger-mania' ? 'active' : '' %>">Trigger Mania</a></li>
+    <li><a href="/help" class="<%= locals.path === '/help' ? 'active' : '' %>">Help</a></li>
   </ul>
 </nav>
-
-<% if (locals.username && locals.path && locals.path.startsWith('/sessions')) { %>
-  <nav class="subnav sessions-nav">
-    <ul>
-      <li><a href="/sessions/dashboard" class="<%= locals.path === '/sessions/dashboard' ? 'active' : '' %>">
-        <i class="fas fa-th-large"></i> Dashboard
-      </a></li>
-      <li><a href="/sessions" class="<%= locals.path === '/sessions' ? 'active' : '' %>">
-        <i class="fas fa-list"></i> All Sessions
-      </a></li>
-      <li><a href="/sessions/dashboard?visibility=public" class="<%= locals.path === '/sessions/dashboard' && locals.query && locals.query.visibility === 'public' ? 'active' : '' %>">
-        <i class="fas fa-globe"></i> Public Sessions
-      </a></li>
-      <li><a href="/sessions/dashboard?sortBy=most_likes" class="<%= locals.path === '/sessions/dashboard' && locals.query && locals.query.sortBy === 'most_likes' ? 'active' : '' %>">
-        <i class="fas fa-thumbs-up"></i> Most Liked
-      </a></li>
-    </ul>
-  </nav>
-<% } %>

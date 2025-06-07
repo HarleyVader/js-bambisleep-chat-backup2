@@ -3,628 +3,235 @@
 
 <head>
     <%- include('partials/head') %>
-        <title>Psychodelic Trigger Mania</title>
-        <style>
-            #eyeCursor {
-                margin: 0;
-                padding: 0;
-                width: 100%;
-                height: 100%;
-            }
-            
-            .session-selector-container {
-                margin-top: 15px;
-                max-height: 300px;
-                overflow-y: auto;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 5px;
-                padding: 10px;
-                background: rgba(0, 0, 0, 0.2);
-            }
-            
-            .session-selector-container h4 {
-                margin-top: 0;
-                margin-bottom: 10px;
-                font-size: 0.9em;
-                color: rgba(255, 255, 255, 0.8);
-            }
-            
-            .session-list {
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .session-item {
-                padding: 8px;
-                border-radius: 4px;
-                background: rgba(255, 255, 255, 0.05);
-                transition: background 0.2s ease;
-            }
-            
-            .session-item:hover {
-                background: rgba(255, 255, 255, 0.1);
-            }
-            
-            .session-checkbox-label {
-                display: flex;
-                align-items: flex-start;
-                cursor: pointer;
-                width: 100%;
-            }
-            
-            .session-checkbox {
-                margin-top: 3px;
-                margin-right: 10px;
-            }
-            
-            .session-info {
-                flex-grow: 1;
-            }
-            
-            .session-date {
-                font-weight: bold;
-                font-size: 0.85em;
-                color: #00ccff;
-            }
-            
-            .session-msg-count {
-                font-size: 0.75em;
-                color: rgba(255, 255, 255, 0.6);
-                margin: 2px 0;
-            }
-            
-            .session-preview {
-                font-size: 0.8em;
-                font-style: italic;
-                color: rgba(255, 255, 255, 0.7);
-                margin-top: 3px;
-                line-height: 1.3;
-            }
-            
-            .no-sessions {
-                padding: 15px;
-                text-align: center;
-                color: rgba(255, 255, 255, 0.5);
-                font-style: italic;
-            }
-        </style>
+    <title>Psychodelic Trigger Mania</title>
+    <style>
+        .trigger-mania-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .file-upload-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .file-upload-section h2 {
+            color: #00ccff;
+            margin-bottom: 15px;
+        }
+        
+        .file-upload {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .file-upload input[type="file"] {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            padding: 8px;
+            color: white;
+        }
+        
+        .status-message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            background: rgba(0, 255, 255, 0.1);
+            color: #00ccff;
+        }
+        
+        .status-message.error {
+            background: rgba(255, 0, 0, 0.1);
+            color: #ff7777;
+        }
+        
+        .chat-container {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 300px;
+        }
+        
+        .response-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .response-text {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            line-height: 1.5;
+        }
+    </style>
 </head>
 
 <body>
-    <%- include('partials/nav') %>
-        <div>
-            <h1>Psychodelic Trigger Mania</h1>
-            <input type="file" id="upload-file" accept=".txt">
-            <div id="system-controls-container">
-                <%- include('partials/profile-system-controls.ejs', { profile: req.user }) %>
+    <%- include('partials/nav', { path: '/triggers/mania' }) %>
+    
+    <div class="trigger-mania-container">
+        <h1>Psychodelic Trigger Mania</h1>
+        
+        <div class="file-upload-section">
+            <h2>Upload Text File</h2>
+            <div class="file-upload">
+                <input type="file" id="upload-file" accept=".txt">
+                <button id="process-file" class="secondary-btn" disabled>Process File</button>
             </div>
-            <p id="message"></p>
+            <div class="status-message" id="status-message" style="display: none;"></div>
         </div>
-        <div id="chat-container">
-            <div id="response-container">
-                <div id="eyeCursor">
-                    <div id="eye" aria-label="Eye Cursor"></div>
-                </div>
+        
+        <div id="system-controls-container">
+            <%- include('partials/profile-system-controls.ejs', { profile: req.user }) %>
+        </div>
+        
+        <div class="chat-container">
+            <div class="response-container" id="response-container">
+                <div class="response-text">Ready to process trigger sequences...</div>
             </div>
         </div>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
-        <script src="js/psychodelic-trigger-mania.js"></script>
-        <script src="js/text2speech.js"></script>
-        <script src="js/responsive.js"></script>
-        <script src="js/triggers.js"></script>
-        <script src="/socket.io/socket.io.js"></script>
-        <script src="js/aigf-core.js"></script>
-        <!-- Add this script right after the aigf-core.js script -->
-        <script>
-            // Initialize socket connection and system controls
-            document.addEventListener("DOMContentLoaded", function() {
-                // Ensure username is available
-                const cookies = document.cookie.split(";").reduce((acc, cookie) => {
-                    const [name, value] = cookie.split("=").map(c => c.trim());
-                    acc[name] = value;
-                    return acc;
-                }, {});
-                
-                const username = decodeURIComponent(cookies['bambiname'] || 'anonBambi').replace(/%20/g, ' ');
-                window.username = username;
-                
-                // Set username on body for system controls to access
-                document.body.setAttribute('data-username', username);
-                
-                console.log("Socket setup with username:", username);
-                
-                // Set up system controls after connection is established
-                if (typeof window.socket !== 'undefined') {
-                    if (window.socket.connected) {
-                        console.log("Socket already connected, setting up controls");
-                        setupSystemControls();
-                        setupXPUpdates();
-                    } else {
-                        window.socket.on('connect', function() {
-                            console.log("Socket connected, setting up controls");
-                            setupSystemControls();
-                            setupXPUpdates();
-                        });
-                    }
+    </div>
+
+    <!-- Core scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/aigf-core.js"></script>
+    <script src="js/text2speech.js"></script>
+    <script src="js/responsive.js"></script>
+    <script src="js/triggers.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('upload-file');
+            const processBtn = document.getElementById('process-file');
+            const statusMessage = document.getElementById('status-message');
+            const responseContainer = document.getElementById('response-container');
+            
+            let currentFile = null;
+            let audio = document.createElement('audio');
+            document.body.appendChild(audio);
+            
+            // File input handler
+            fileInput.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file && file.type === 'text/plain') {
+                    currentFile = file;
+                    processBtn.disabled = false;
+                    showStatus(`File "${file.name}" ready to process`, false);
                 } else {
-                    console.error("Socket not found! Make sure aigf-core.js is loaded first.");
+                    currentFile = null;
+                    processBtn.disabled = true;
+                    showStatus('Please select a valid text file', true);
+                }
+            });
+            
+            // Process button handler
+            processBtn.addEventListener('click', function() {
+                if (!currentFile) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    processTextContent(content);
+                };
+                reader.readAsText(currentFile);
+            });
+            
+            function processTextContent(content) {
+                showStatus('Processing text content...', false);
+                
+                // Split into sentences
+                const sentences = content.split(/(?<=[:;,.!?]["']?)\s+|\n+/g)
+                    .filter(sentence => sentence.trim() !== '');
+                
+                if (sentences.length === 0) {
+                    showStatus('No valid sentences found in file', true);
+                    return;
                 }
                 
-                // Join profile room for real-time updates
-                if (username && username !== 'anonBambi' && window.socket) {
+                showStatus(`Processing ${sentences.length} trigger sequences...`, false);
+                
+                // Clear response container
+                responseContainer.innerHTML = '';
+                
+                // Process each sentence
+                processSentences(sentences);
+            }
+            
+            async function processSentences(sentences) {
+                for (let i = 0; i < sentences.length; i++) {
+                    const sentence = sentences[i].trim();
+                    if (!sentence) continue;
+                    
+                    // Add to response container
+                    const responseDiv = document.createElement('div');
+                    responseDiv.className = 'response-text';
+                    responseDiv.textContent = sentence;
+                    responseContainer.appendChild(responseDiv);
+                    
+                    // Try TTS
+                    try {
+                        const ttsUrl = `/api/tts?text=${encodeURIComponent(sentence)}`;
+                        await playAudio(ttsUrl);
+                        
+                        // Brief pause between sentences
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    } catch (error) {
+                        console.error('Error playing TTS:', error);
+                    }
+                }
+                
+                showStatus('Processing complete!', false);
+            }
+            
+            function playAudio(url) {
+                return new Promise((resolve, reject) => {
+                    audio.src = url;
+                    audio.load();
+                    
+                    audio.onloadedmetadata = function() {
+                        audio.play().then(resolve).catch(reject);
+                    };
+                    
+                    audio.onended = resolve;
+                    audio.onerror = reject;
+                });
+            }
+            
+            function showStatus(message, isError = false) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'status-message' + (isError ? ' error' : '');
+                statusMessage.style.display = 'block';
+            }
+            
+            // Socket setup
+            if (window.socket) {
+                const username = getCookie('bambiname') || 'anonBambi';
+                window.socket.emit('join-psychodelic-trigger-mania', { username });
+                
+                if (username !== 'anonBambi') {
                     window.socket.emit('join-profile', username);
                 }
-            });
-        </script>
-        <script>
-            const audio = document.createElement('audio');
-            document.body.appendChild(audio);
-            let _textArray = [];
-            let _urlArray = [];
-            let state = true;
-
-            document.getElementById('upload-file').addEventListener('change', function (event) {
-                const file = event.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        const fileContent = e.target.result;
-                        processText(fileContent);
-                    };
-                    reader.readAsText(file);
-                }
-            });
-
-            function processText(_text) {
-                _textArray = _text.split(/(?<=[:;,.!?]["']?)\s+|\n+/g).filter(sentence => sentence.trim() !== '');
-                _urlArray = _textArray.map(sentence => `/api/tts?text=${encodeURIComponent(sentence)}`);
-                console.log('URL array:', _urlArray);
-                return _urlArray;
-            }
-
-            async function do_tts(_urlArray) {
-                document.querySelector("#message").textContent = "Synthesizing...";
-
-                while (_urlArray.length > 0) {
-                    let currentURL = _urlArray.shift();
-                    audio.src = currentURL;
-                    console.log("audio.src ", audio.src);
-                    audio.load();
-                    await new Promise((resolve, reject) => {
-                        audio.onloadedmetadata = function () {
-                            console.log("audio ", audio);
-                            console.log("audio.duration ", audio.duration);
-                            document.querySelector("#message").textContent = "Playing...";
-                            audio.play();
-                        };
-                        audio.onended = function () {
-                            console.log("audio ended");
-                            document.querySelector("#message").textContent = "Finished!";
-                            resolve();
-                        };
-                        audio.onerror = function (e) {
-                            console.error("Error playing audio:", e);
-                            document.querySelector("#message").textContent = "Error playing audio." + e;
-                            reject(e);
-                        };
-                    });
-                }
-            }
-
-            function handleAudioPlay() {
-                console.log('Audio is playing');
-                const duration = audio.duration * 1000;
-                new Promise(resolve => setTimeout(resolve, duration));
-                flashTrigger(text, duration);
-                applyUppercaseStyle();
-            }
-
-            function handleAudioEnded() {
-                console.log('Audio has ended');
-                if (_urlArray.length > 0) {
-                    do_tts(_urlArray);
-                }
-            }
-
-            audio.addEventListener('ended', handleAudioEnded);
-            audio.addEventListener('play', handleAudioPlay);
-        </script>
-        <!-- Replace the DOMContentLoaded event listener script with this enhanced version -->
-        <script>
-          // Session history replay functionality
-          document.addEventListener("DOMContentLoaded", function() {
-            const loadHistoryBtn = document.getElementById('load-history-btn');
-            const replayHistoryBtn = document.getElementById('replay-history-btn');
-            const sessionHistoryStatus = document.getElementById('session-history-status');
-            const sessionCountElem = document.getElementById('session-count');
-            const sessionListElem = document.getElementById('session-list');
-            
-            let allSessions = [];
-            let selectedSessions = new Set();
-            let sessionResponses = [];
-            
-            if (loadHistoryBtn) {
-              loadHistoryBtn.addEventListener('click', function() {
-                const username = document.body.getAttribute('data-username') || window.username;
-                if (!username || username === 'anonBambi') {
-                  setHistoryStatus('Please log in to load session history', true);
-                  return;
-                }
-                
-                setHistoryStatus('Loading session history...');
-                
-                // Fetch the session history from the server
-                fetch(`/api/profile/${username}/session-history`)
-                  .then(response => {
-                    if (!response.ok) {
-                      throw new Error('Failed to load session history');
-                    }
-                    return response.json();
-                  })
-                  .then(data => {
-                    if (!data.sessions || data.sessions.length === 0) {
-                      setHistoryStatus('No session history found', true);
-                      return;
-                    }
-                    
-                    allSessions = data.sessions;
-                    selectedSessions.clear();
-                    
-                    // Reset session list
-                    if (sessionListElem) {
-                      sessionListElem.innerHTML = '';
-                      
-                      // Create a session entry for each session with timestamp and preview
-                      allSessions.forEach((session, index) => {
-                        let aiMessageCount = 0;
-                        let previewText = '';
-                        
-                        // Count AI messages and get a preview
-                        if (session.messages && Array.isArray(session.messages)) {
-                          session.messages.forEach(message => {
-                            if (message.role === 'assistant' && message.content) {
-                              aiMessageCount++;
-                              if (!previewText && message.content.length > 0) {
-                                previewText = message.content.substring(0, 40) + (message.content.length > 40 ? '...' : '');
-                              }
-                            }
-                          });
-                        }
-                        
-                        if (aiMessageCount === 0) {
-                          return; // Skip sessions with no AI messages
-                        }
-                        
-                        // Format date
-                        let sessionDate = 'Unknown date';
-                        if (session.timestamp) {
-                          const date = new Date(session.timestamp);
-                          sessionDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-                        }
-                        
-                        // Create session element
-                        const sessionElem = document.createElement('div');
-                        sessionElem.className = 'session-item';
-                        sessionElem.dataset.sessionIndex = index;
-                        sessionElem.innerHTML = `
-                          <label class="session-checkbox-label">
-                            <input type="checkbox" class="session-checkbox" data-index="${index}" />
-                            <div class="session-info">
-                              <div class="session-date">${sessionDate}</div>
-                              <div class="session-msg-count">${aiMessageCount} response${aiMessageCount !== 1 ? 's' : ''}</div>
-                              <div class="session-preview">${previewText || 'No preview available'}</div>
-                            </div>
-                          </label>
-                        `;
-                        
-                        sessionListElem.appendChild(sessionElem);
-                        
-                        // Add event listener to checkbox
-                        const checkbox = sessionElem.querySelector('.session-checkbox');
-                        checkbox.addEventListener('change', function() {
-                          if (this.checked) {
-                            selectedSessions.add(parseInt(this.dataset.index));
-                          } else {
-                            selectedSessions.delete(parseInt(this.dataset.index));
-                          }
-                          
-                          // Update UI and button state
-                          updateSessionSelection();
-                        });
-                      });
-                      
-                      if (sessionListElem.children.length === 0) {
-                        sessionListElem.innerHTML = '<div class="no-sessions">No sessions with AI responses found</div>';
-                      }
-                    }
-                    
-                    setHistoryStatus(`Loaded ${allSessions.length} sessions from history`);
-                    updateSessionSelection();
-                    
-                    // Award XP for using session history feature
-                    if (typeof socket !== 'undefined' && socket.connected) {
-                      socket.emit('award-xp', {
-                        username: username,
-                        amount: 5,
-                        action: 'history_loaded'
-                      });
-                    }
-                  })
-                  .catch(error => {
-                    console.error('Error loading session history:', error);
-                    setHistoryStatus(`Error: ${error.message}`, true);
-                  });
-              });
             }
             
-            function updateSessionSelection() {
-              const selectedCount = selectedSessions.size;
-              
-              // Update session count display
-              if (sessionCountElem) {
-                sessionCountElem.textContent = selectedCount > 0 
-                  ? `${selectedCount} session${selectedCount !== 1 ? 's' : ''} selected` 
-                  : '';
-              }
-              
-              // Enable/disable replay button
-              if (replayHistoryBtn) {
-                replayHistoryBtn.disabled = selectedCount === 0;
-              }
-              
-              // Collect responses from selected sessions
-              sessionResponses = [];
-              
-              selectedSessions.forEach(index => {
-                const session = allSessions[index];
-                if (session && session.messages && Array.isArray(session.messages)) {
-                  session.messages.forEach(message => {
-                    if (message.role === 'assistant' && message.content) {
-                      sessionResponses.push(message.content);
-                    }
-                  });
-                }
-              });
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
             }
-            
-            if (replayHistoryBtn) {
-              replayHistoryBtn.addEventListener('click', function() {
-                if (sessionResponses.length === 0) {
-                  setHistoryStatus('No responses to replay', true);
-                  return;
-                }
-                
-                // Disable replay button during playback
-                replayHistoryBtn.disabled = true;
-                setHistoryStatus(`Replaying ${sessionResponses.length} responses...`);
-                
-                // Process the text for TTS and replay
-                processSelectedResponses();
-                
-                // Award XP for replaying session history
-                const username = document.body.getAttribute('data-username') || window.username;
-                if (username && username !== 'anonBambi' && typeof socket !== 'undefined' && socket.connected) {
-                  socket.emit('award-xp', {
-                    username: username,
-                    amount: 10,
-                    action: 'history_replayed'
-                  });
-                }
-              });
-            }
-            
-            function processSelectedResponses() {
-              // Clear existing arrays
-              _textArray = [];
-              _urlArray = [];
-              
-              // Process all selected responses as one combined text
-              const combinedText = sessionResponses.join(' ');
-              
-              // Split into sentences for playback
-              _textArray = combinedText.split(/(?<=[:;,.!?]["']?)\s+|\n+/g).filter(sentence => sentence.trim() !== '');
-              
-              // Create URLs for TTS API
-              _urlArray = _textArray.map(sentence => `/api/tts?text=${encodeURIComponent(sentence)}`);
-              
-              // Start playback
-              if (_urlArray.length > 0) {
-                do_tts(_urlArray);
-              } else {
-                setHistoryStatus('No valid text to synthesize', true);
-                replayHistoryBtn.disabled = false;
-              }
-            }
-            
-            function setHistoryStatus(message, isError = false) {
-              if (sessionHistoryStatus) {
-                sessionHistoryStatus.textContent = message;
-                sessionHistoryStatus.className = 'session-history-status' + (isError ? ' error' : '');
-              }
-            }
-            
-            // Override handleAudioEnded to re-enable replay button when done
-            const originalHandleAudioEnded = handleAudioEnded;
-            if (typeof handleAudioEnded === 'function') {
-              handleAudioEnded = function() {
-                originalHandleAudioEnded.apply(this, arguments);
-                if (_urlArray.length === 0) {
-                  // Playback complete
-                  if (replayHistoryBtn) {
-                    replayHistoryBtn.disabled = false;
-                    setHistoryStatus('Replay complete');
-                  }
-                }
-              };
-            }
-          });
-        </script>
+        });
+    </script>
 
-        <style>
-          .session-history-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 15px;
-          }
-          
-          .session-history-status {
-            padding: 10px;
-            background: rgba(0, 255, 255, 0.1);
-            border-radius: 5px;
-            margin-top: 10px;
-            color: #00ffff;
-          }
-          
-          .session-history-status.error {
-            background: rgba(255, 0, 0, 0.1);
-            color: #ff7777;
-          }
-          
-          .session-count {
-            font-size: 0.8em;
-            color: rgba(255, 255, 255, 0.7);
-            margin-top: 5px;
-          }
-          
-          .secondary-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 8px 15px;
-            border-radius: 5px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-          }
-          
-          .secondary-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-          }
-          
-          .secondary-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-          }
-          
-          .session-selector-container {
-            margin-top: 15px;
-          }
-          
-          .session-list {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 5px;
-          }
-          
-          .no-sessions {
-            color: rgba(255, 255, 255, 0.5);
-            font-style: italic;
-          }
-        </style>
-
-        <% if (req && req.user && req.user.level >= 3) { %>
-          <div id="session-history-panel" class="control-panel">
-            <h3>Session History Replay</h3>
-            
-            <div class="session-history-controls">
-              <button id="load-history-btn" class="secondary-btn">Load Session History</button>
-              <button id="replay-history-btn" class="secondary-btn" disabled>Replay Selected Responses</button>
-              <div class="session-count" id="session-count"></div>
-            </div>
-            
-            <div class="session-history-status" id="session-history-status"></div>
-            
-            <!-- Add session history selector container -->
-            <div id="session-selector-container" class="session-selector-container">
-              <h4>Select Sessions to Replay</h4>
-              <div id="session-list" class="session-list">
-                <!-- Sessions will be populated here -->
-                <div class="no-sessions">No sessions loaded yet</div>
-              </div>
-            </div>
-          </div>
-        <% } %>
-
-        <!-- Add this right before the closing </body> tag -->
-        <div id="spirals-panel" class="control-panel">
-          <h3>Spiral Controls</h3>
-          <div class="control-group">
-            <label class="toggle-switch">
-              <input type="checkbox" id="spirals-enable" checked>
-              <span class="toggle-slider"></span>
-              <span class="toggle-label">Enable Spirals</span>
-            </label>
-          </div>
-          
-          <div class="control-group">
-            <label for="spiral1-width">Spiral 1 Width: <span id="spiral1-width-value">5.0</span></label>
-            <input type="range" id="spiral1-width" min="1" max="10" step="0.1" value="5.0">
-          </div>
-          
-          <div class="control-group">
-            <label for="spiral2-width">Spiral 2 Width: <span id="spiral2-width-value">3.0</span></label>
-            <input type="range" id="spiral2-width" min="1" max="10" step="0.1" value="3.0">
-          </div>
-          
-          <div class="control-group">
-            <label for="spiral1-speed">Spiral 1 Speed: <span id="spiral1-speed-value">20</span></label>
-            <input type="range" id="spiral1-speed" min="5" max="50" step="1" value="20">
-          </div>
-          
-          <div class="control-group">
-            <label for="spiral2-speed">Spiral 2 Speed: <span id="spiral2-speed-value">15</span></label>
-            <input type="range" id="spiral2-speed" min="5" max="50" step="1" value="15">
-          </div>
-          
-          <button id="save-spirals" class="secondary-btn">Save Settings</button>
-        </div>
-
-        <!-- Add script to initialize system controls -->
-        <script src="js/spiral-controls.js"></script>
-        <script src="/js/brainwave-controls.js"></script>
-        <script src="js/system-controls.js"></script>
-        <script>
-          document.addEventListener('DOMContentLoaded', function() {
-            // Update value displays when sliders change
-            document.querySelectorAll('#spirals-panel input[type="range"]').forEach(slider => {
-              const valueDisplay = document.getElementById(slider.id + '-value');
-              if (valueDisplay) {
-                // Update display on change
-                slider.addEventListener('input', function() {
-                  valueDisplay.textContent = this.value;
-                });
-              }
-            });
-            
-            // Connect p5.js sketch with control values
-            if (window.bambiSpirals) {
-              const updateP5Spirals = function() {
-                const settings = window.bambiSpirals.getCurrentSettings();
-                if (typeof updateSpiralParams === 'function') {
-                  updateSpiralParams(
-                    settings.spiral1Width,
-                    settings.spiral2Width,
-                    settings.spiral1Speed,
-                    settings.spiral2Speed
-                  );
-                }
-              };
-              
-              // Run initially and on any control change
-              document.querySelectorAll('#spirals-panel input').forEach(input => {
-                input.addEventListener('change', updateP5Spirals);
-              });
-              
-              // Run after a brief delay to ensure p5.js is initialized
-              setTimeout(updateP5Spirals, 500);
-            }
-          });
-        </script>
+    <%- include('partials/footer') %>
 </body>
 
 </html>

@@ -1,0 +1,102 @@
+/* CSS Custom Properties - BambiSleepChat Color Palette */
+:root {
+    /* Primary Colors - Deep Teal */
+    --primary-color: #0c2a2ac9;
+    --primary-alt: #15aab5ec;
+    --primary-color-rgb: 12, 42, 42;
+    
+    /* Secondary Colors - Dark Magenta */
+    --secondary-color: #40002f;
+    --secondary-alt: #cc0174;
+    --secondary-color-rgb: 64, 0, 47;
+    
+    /* Tertiary Colors - Bright Pink */
+    --tertiary-color: #cc0174;
+    --tertiary-alt: #01c69eae;
+    --tertiary-color-rgb: 204, 1, 116;
+    
+    /* Button Colors */
+    --button-color: #df0471;
+    --button-alt: #110000;
+    --button-color-rgb: 223, 4, 113;
+    
+    /* Navigation Colors */
+    --nav-color: #0a2626;
+    --nav-alt: #17dbd8;
+    --nav-color-rgb: 10, 38, 38;
+    
+    /* Transparency */
+    --transparent: #124141ce;
+    --transparent-alt: rgba(var(--primary-color-rgb), 0.2);
+    
+    /* Status Colors */
+    --success: #01c69e;
+    --warning: #ffaa00;
+    --error: #ff3333;
+    --error-bg: rgba(255, 51, 51, 0.1);
+    
+    /* Semantic Colors */
+    --accent-color: var(--button-color);
+    --border-color: var(--tertiary-color);
+    --text-color: var(--primary-alt);
+    --secondary-text-color: var(--nav-alt);
+    --bg-color-secondary: var(--nav-color);
+    --bg-color-primary: var(--primary-color);
+    
+    /* Typography */
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    
+    /* Spacing */
+    --spacing-xs: 0.125rem;  /* 2px */
+    --spacing-sm: 0.25rem;   /* 4px */
+    --spacing-md: 0.5rem;    /* 8px */
+    --spacing-lg: 0.75rem;   /* 12px */
+    --spacing-xl: 1rem;      /* 16px */
+    --spacing-xxl: 1.5rem;   /* 24px */
+    
+    /* Borders */
+    --border-radius: 4px;
+    --border-radius-lg: 6px;
+    --border-width: 1px;
+    --border-separator: 2px solid rgba(23, 219, 216, 0.2);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.4);
+    --shadow-glow: 0 0 15px rgba(23, 219, 216, 0.4);
+    --shadow-separator: 0 1px 0 rgba(23, 219, 216, 0.3);
+    
+    /* Z-indices */
+    --z-index-dropdown: 1000;
+    --z-index-sticky: 1020;
+    --z-index-fixed: 1030;
+    --z-index-modal: 1040;
+    --z-index-popover: 1050;
+    --z-index-tooltip: 1060;
+}
+    
+    /* Spacing - Reduced for Smaller Theme */
+    --spacing-xs: 0.125rem;
+    --spacing-sm: 0.25rem;
+    --spacing-md: 0.5rem;
+    --spacing-lg: 0.75rem;
+    --spacing-xl: 1rem;
+    --spacing-xxl: 1.5rem;
+    
+    /* Borders - Enhanced for Better Contrast */
+    --border-radius: 4px;
+    --border-radius-lg: 6px;
+    --border-width: 1px;
+    --border-separator: 2px solid rgba(23, 219, 216, 0.2);
+    
+    /* Shadows - Enhanced for Adjacent Item Contrast */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.4);
+    --shadow-glow: 0 0 15px rgba(23, 219, 216, 0.4);
+    --shadow-separator: 0 1px 0 rgba(23, 219, 216, 0.3);
+}

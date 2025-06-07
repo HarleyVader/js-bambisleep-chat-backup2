@@ -6,7 +6,7 @@ import Logger from '../utils/logger.js';
 import footerConfig from '../config/footer.config.js';
 import config from '../config/config.js'; // Add this import
 import { getModel, withDbConnection } from '../config/db.js';
-import ChatMessage from '../models/ChatMessage.js';
+import sessionService from '../services/sessionService.js';
 
 const logger = new Logger('RouteManager');
 const router = express.Router();
@@ -58,13 +58,13 @@ export async function loadAllRoutes(app) {
     
     // Register the homepage routes
     app.use('/', router);
-    
-    // Handle 404 routes - move this to the end after all routes are registered
+      // Handle 404 routes - move this to the end after all routes are registered
     app.use((req, res, next) => {
       res.status(404).render('error', {
         message: 'Page not found',
         error: { status: 404 },
-        title: 'Error - Page Not Found'
+        title: 'Error - Page Not Found',
+        footer: footerConfig
       });
     });
     
@@ -117,9 +117,8 @@ router.get('/', async (req, res) => {
         username = profile.username;
       }
     }
-    
-    // Fetch recent chat messages
-    const chatMessages = await ChatMessage.getRecentMessages(50);
+      // Fetch recent chat messages
+    const chatMessages = await sessionService.ChatMessage.getRecentMessages(50);
     
     // Load trigger data for client
     let triggers = [];
@@ -149,6 +148,7 @@ router.get('/', async (req, res) => {
       profile,
       username,
       footerLinks,
+      footer: footerConfig, // Add full footer config
       chatMessages,
       triggers,
       title: 'BambiSleep.Chat - Hypnotic AI Chat'
@@ -161,6 +161,7 @@ router.get('/', async (req, res) => {
       profile: null, 
       username: '',
       footerLinks: config?.FOOTER_LINKS || footerConfig?.links || [],
+      footer: footerConfig, // Add full footer config here too
       chatMessages: [],
       triggers: [],
       title: 'BambiSleep.Chat - Hypnotic AI Chat'

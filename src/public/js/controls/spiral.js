@@ -84,13 +84,12 @@ document.addEventListener('DOMContentLoaded', function() {
       if (spiral2SpeedEl) spiral2SpeedEl.textContent = spiral2Speed;
     }
   }
-  
-  // Update current values from sliders
+    // Update current values from sliders
   function updateValues() {
-    spiral1Width = parseFloat(width1Slider.value);
-    spiral2Width = parseFloat(width2Slider.value);
-    spiral1Speed = parseInt(speed1Slider.value);
-    spiral2Speed = parseInt(speed2Slider.value);
+    spiral1Width = parseFloat(width1Slider?.value || 5.0);
+    spiral2Width = parseFloat(width2Slider?.value || 3.0);
+    spiral1Speed = parseInt(speed1Slider?.value || 20);
+    spiral2Speed = parseInt(speed2Slider?.value || 15);
     
     // Update displays
     const spiral1WidthEl = document.getElementById('spiral1-width-value');
@@ -98,13 +97,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const spiral1SpeedEl = document.getElementById('spiral1-speed-value');
     const spiral2SpeedEl = document.getElementById('spiral2-speed-value');
     
-    if (spiral1WidthEl) spiral1WidthEl.textContent = spiral1Width;
-    if (spiral2WidthEl) spiral2WidthEl.textContent = spiral2Width;
+    if (spiral1WidthEl) spiral1WidthEl.textContent = spiral1Width.toFixed(1);
+    if (spiral2WidthEl) spiral2WidthEl.textContent = spiral2Width.toFixed(1);
     if (spiral1SpeedEl) spiral1SpeedEl.textContent = spiral1Speed;
     if (spiral2SpeedEl) spiral2SpeedEl.textContent = spiral2Speed;
   }
-  
-  // Save current settings
+    // Save current settings
   function saveSettings() {
     const settings = {
       enabled: enableToggle.checked,
@@ -117,6 +115,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.bambiSystem?.saveState) {
       window.bambiSystem.saveState('spirals', settings);
       showMessage('Spiral settings saved!');
+    } else {
+      // Fallback to localStorage
+      localStorage.setItem('bambiSpiralSettings', JSON.stringify(settings));
+      showMessage('Spiral settings saved to local storage!');
     }
   }
   
@@ -138,20 +140,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const eyeCursor = document.getElementById('eyeCursor');
     if (eyeCursor) eyeCursor.style.display = 'none';
   }
-  
-  // Ensure eye cursor element exists
+    // Ensure eye cursor element exists
   function ensureEyeCursor() {
     if (!document.getElementById('eyeCursor')) {
       const cursor = document.createElement('div');
       cursor.id = 'eyeCursor';
-      cursor.style.position = 'fixed';
-      cursor.style.top = '0';
-      cursor.style.left = '0';
-      cursor.style.width = '100%';
-      cursor.style.height = '100%';
-      cursor.style.pointerEvents = 'none';
-      cursor.style.zIndex = '1000';
-      cursor.style.display = 'none';
+      cursor.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1000;
+        display: none;
+      `;
       document.body.appendChild(cursor);
     }
   }
@@ -162,19 +165,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     p5Instance = new p5(function(p) {
       let width, height;
-      
-      p.setup = function() {
+        p.setup = function() {
         const container = document.getElementById('eyeCursor');
-        width = container.clientWidth;
-        height = container.clientHeight;
+        if (!container) return;
         
-        p.createCanvas(width, height).parent('eyeCursor');
+        width = container.clientWidth || window.innerWidth;
+        height = container.clientHeight || window.innerHeight;
+        
+        const canvas = p.createCanvas(width, height);
+        canvas.parent('eyeCursor');
         
         // Resize handler
         window.addEventListener('resize', function() {
-          width = container.clientWidth;
-          height = container.clientHeight;
-          p.resizeCanvas(width, height);
+          const newWidth = container.clientWidth || window.innerWidth;
+          const newHeight = container.clientHeight || window.innerHeight;
+          if (newWidth !== width || newHeight !== height) {
+            width = newWidth;
+            height = newHeight;
+            p.resizeCanvas(width, height);
+          }
         });
       };
       
@@ -187,10 +196,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const b = p.map(p.cos(p.frameCount / spiral2Speed), -1, 1, 1, 1.5);
         
         p.rotate(p.frameCount / 5);
-        
-        // Draw spirals
-        drawSpiral(p, a, 1, [199, 0, 199], spiral1Width);
-        drawSpiral(p, b, 0.3, [255, 130, 255], spiral2Width);
+          // Draw spirals with Teal and Barbie Pink colors
+        drawSpiral(p, a, 1, [0, 128, 128], spiral1Width); // Teal color
+        drawSpiral(p, b, 0.3, [255, 20, 147], spiral2Width); // Barbie Pink color
       };
       
       function drawSpiral(p, step, ang, color, width) {
@@ -220,32 +228,33 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   }
-  
-  // Update spiral parameters
+    // Update spiral parameters
   function updateSpiral() {
-    // Nothing to do if no instance
-    if (!p5Instance) return;
+    // Update global spiral parameters if they exist
+    if (window.updateSpiralParams) {
+      window.updateSpiralParams(spiral1Width, spiral2Width, spiral1Speed, spiral2Speed);
+    }
   }
-  
-  // Show message
+    // Show message
   function showMessage(text) {
     const msg = document.createElement('div');
     msg.className = 'success-message';
     msg.textContent = text;
-    msg.style.position = 'absolute';
-    msg.style.bottom = '10px';
-    msg.style.left = '50%';
-    msg.style.transform = 'translateX(-50%)';
-    msg.style.backgroundColor = 'rgba(0, 255, 0, 0.2)';
-    msg.style.color = '#00ff00';
-    msg.style.padding = '5px 10px';
-    msg.style.borderRadius = '4px';
+    msg.style.cssText = `
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 255, 0, 0.2);
+      color: #00ff00;
+      padding: 5px 10px;
+      border-radius: 4px;
+      z-index: 1001;
+    `;
     
-    const panel = document.getElementById('spirals-panel');
-    if (panel) {
-      panel.appendChild(msg);
-      setTimeout(() => msg.remove(), 3000);
-    }
+    const panel = document.getElementById('spirals-panel') || document.body;
+    panel.appendChild(msg);
+    setTimeout(() => msg.remove(), 3000);
   }
   
   // Start initialization

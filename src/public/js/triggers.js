@@ -1,4 +1,6 @@
-let triggerData = []; // Will hold the data from triggers.json
+// Use window property to avoid redeclaration issues when script loads multiple times
+window.triggerData = window.triggerData || []; // Will hold the data from triggers.json
+let triggerData = window.triggerData;
 const audioCache = {};
 let audioLoadAttempts = {};
 const MAX_LOAD_ATTEMPTS = 2;
@@ -466,26 +468,34 @@ function setupToggleListeners() {
 
 // Handle specific trigger activation with error handling
 function activateTrigger(trigger) {
+  // Handle null or undefined triggers
+  if (!trigger) {
+    console.log('Null or undefined trigger provided to activateTrigger');
+    return;
+  }
+  
   // If trigger is a string, find the matching trigger data
   if (typeof trigger === 'string') {
     const triggerObj = triggerData.find(t => t.name === trigger);
     if (triggerObj) {
       console.log(`Activating trigger: ${triggerObj.name}`);
-      playTriggerWithDisplay(triggerObj);
-    } else {
+      playTriggerWithDisplay(triggerObj);    } else {
       console.log(`Trigger not found: ${trigger}`);
       
       // Create a temporary trigger object for display
       const tempTrigger = { name: trigger };
       
       // Show text even if we don't have audio
-      displayTriggerText(trigger);
+      displayTriggerText(tempTrigger.name);
     }
   } 
   // If trigger is an object, use it directly
   else if (typeof trigger === 'object' && trigger.name) {
     console.log(`Activating trigger: ${trigger.name}`);
     playTriggerWithDisplay(trigger);
+  }
+  else {
+    console.error('Invalid trigger type provided to activateTrigger:', typeof trigger);
   }
 }
 
