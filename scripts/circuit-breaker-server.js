@@ -426,6 +426,70 @@ app.get('/health', (req, res) => {
     }
 });
 
+// Health API endpoint - specifically for JSON requests
+app.get('/health/api', (req, res) => {
+    const startTime = Date.now();
+    
+    // Update the health data with current information
+    const currentHealthData = {
+        status: 'maintenance',
+        service: 'circuit-breaker',
+        uptime: formatUptime(process.uptime()),
+        timestamp: new Date().toISOString(),
+        system: {
+            hostname: os.hostname(),
+            platform: os.platform(),
+            arch: os.arch(),
+            uptime: formatUptime(os.uptime()),
+            memory: {
+                total: Math.round(os.totalmem() / 1024 / 1024),
+                free: Math.round(os.freemem() / 1024 / 1024),
+                used: Math.round((os.totalmem() - os.freemem()) / 1024 / 1024),
+                percentage: Math.round(((os.totalmem() - os.freemem()) / os.totalmem()) * 100)
+            },
+            cpu: {
+                load1: os.loadavg()[0],
+                load5: os.loadavg()[1],
+                load15: os.loadavg()[2],
+                percentage: Math.min(Math.round((os.loadavg()[0] / os.cpus().length) * 100), 100)
+            }
+        },
+        users: {
+            count: io.engine.clientsCount,
+            online: io.engine.clientsCount,
+            anonymous: io.engine.clientsCount,
+            list: []
+        },
+        database: {
+            status: 'Circuit Breaker Mode',
+            connected: false,
+            message: 'Database bypassed during maintenance'
+        },
+        workers: {
+            lmstudio: { status: 'disabled', message: 'Disabled during maintenance' },
+            spirals: { status: 'disabled', message: 'Disabled during maintenance' },
+            total: 2,
+            running: 0,
+            workers: [
+                { name: 'LMStudio', status: 'disabled' },
+                { name: 'Spirals', status: 'disabled' }
+            ]
+        },
+        circuitBreaker: {
+            status: 'active',
+            service: 'circuit-breaker',
+            uptime: formatUptime(process.uptime()),
+            connections: io.engine.clientsCount,
+            adminState: adminState.routeSwitched,
+            maintenanceState: maintenanceState.isActive
+        },
+        maintenanceState: maintenanceState,
+        responseTime: Date.now() - startTime
+    };
+    
+    res.json(currentHealthData);
+});
+
 // Helper function to format uptime
 function formatUptime(uptimeSeconds) {
     const days = Math.floor(uptimeSeconds / 86400);
@@ -457,6 +521,27 @@ function updateConnectedTimes() {
 
 // Update connected times every minute
 setInterval(updateConnectedTimes, 60000);
+
+// API catch-all route - return JSON for any API requests not handled above
+app.all('/api/*', (req, res) => {
+    // Check if route is switched off (admin bypassed circuit breaker)
+    if (adminState.routeSwitched) {
+        return res.status(200).json({ 
+            message: 'Circuit breaker bypassed by admin - API unavailable',
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    // Return maintenance mode JSON response for all other API routes
+    res.status(503).json({
+        status: 'maintenance',
+        message: maintenanceState.message,
+        currentIssue: maintenanceState.currentIssue,
+        service: 'circuit-breaker',
+        timestamp: new Date().toISOString(),
+        maintenanceState: maintenanceState
+    });
+});
 
 // Main maintenance page (must be last)
 app.get('*', (req, res) => {
