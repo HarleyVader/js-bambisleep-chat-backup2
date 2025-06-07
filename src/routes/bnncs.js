@@ -37,13 +37,11 @@ router.get('/status', (req, res) => {
  */
 router.get('/nodes', (req, res) => {
   try {
-    const status = bambiIndustrialControlSystem.getSystemStatus();
+    const nodes = bambiIndustrialControlSystem.getConnectedNodes();
     res.json({
       success: true,
-      data: {
-        nodes: status.controlNodes,
-        total: status.activeControllers
-      }
+      data: nodes,
+      total: nodes.length
     });
   } catch (error) {
     logger.error(`Error getting control nodes: ${error.message}`);

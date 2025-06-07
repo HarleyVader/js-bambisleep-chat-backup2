@@ -37,7 +37,6 @@ class BambiControlNetwork extends EventEmitter {
     
     this.initialized = false;
   }
-
   /**
    * Initialize the control network
    */
@@ -49,6 +48,7 @@ class BambiControlNetwork extends EventEmitter {
     
     logger.info('🌀 Initializing Bambi Control Network');
     this.initialized = true;
+    this.initTime = Date.now();
     logger.info('✅ Bambi Control Network initialized');
   }
 
@@ -169,12 +169,45 @@ class BambiControlNetwork extends EventEmitter {
   getConnectedNodes() {
     return Array.from(this.controlNodes.values());
   }
-
   /**
    * Get current system metrics (compatibility method)
    */
   getMetrics() {
     return this.metrics;
+  }  /**
+   * Get system status (compatibility method for BNNCS API)
+   */
+  getSystemStatus() {
+    const nodes = Array.from(this.controlNodes.values());
+    return {
+      nodes: nodes.length,
+      signalsProcessed: this.metrics.signalsProcessed,
+      networkHealth: this.initialized ? 'healthy' : 'offline',
+      activeControllers: nodes.filter(node => node.type === 'WORKER').length,
+      connectedNodes: nodes,
+      rateLimitConfig: this.config,
+      uptime: this.initialized ? Date.now() - this.initTime : 0,
+      automationRules: [], // Empty for now
+      systemMode: this.systemMode || 'AUTO' // Default mode
+    };
+  }
+
+  /**
+   * Set system mode (compatibility method for BNNCS API)
+   */
+  setSystemMode(mode) {
+    this.systemMode = mode;
+    logger.info(`System mode changed to: ${mode}`);
+    this.emit('systemModeChanged', { mode });
+  }
+
+  /**
+   * Add automation rule (compatibility method for BNNCS API)
+   */
+  addAutomationRule(ruleId, rule) {
+    // Basic implementation - just log for now
+    logger.info(`Automation rule added: ${ruleId}`);
+    this.emit('automationRuleAdded', { ruleId, rule });
   }
 
   /**
