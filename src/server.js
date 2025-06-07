@@ -36,9 +36,13 @@ import psychodelicTriggerManiaRouter from './routes/psychodelic-trigger-mania.js
 import helpRoute from './routes/help.js';
 import chatRouter, { basePath as chatBasePath } from './routes/chat.js';
 import healthRoute from './routes/health.js';
+import bnncsRoutes from './routes/bnncs.js';
 
 import Logger from './utils/logger.js';
 import errorHandler from './utils/errorHandler.js';
+
+// Import Bambi Neural Network Control System
+import bambiControlNetwork from './services/bambiControlNetwork.js';
 
 // Fix the registerModels function to properly export the models
 async function registerModels() {
@@ -455,6 +459,24 @@ async function initializeApp() {
       logger.error('Failed to initialize spirals worker:', error);
     }
 
+    // Initialize BNNCS (Bambi Neural Network Control System)
+    logger.info('🧠 Starting Bambi Neural Network Control System...');
+    
+    // Set up BNNCS event handlers
+    bambiControlNetwork.on('automationAction', (action) => {
+      if (action.type === 'CASCADE_TRIGGER' && action.targetTriggers) {
+        // Emit cascade triggers to all connected clients
+        setTimeout(() => {
+          io.emit('automation trigger', {
+            triggers: action.targetTriggers,
+            source: 'BNNCS_AUTOMATION',
+            type: 'CASCADE'
+          });
+          logger.info(`🔄 BNNCS automation: Cascading triggers ${action.targetTriggers.join(', ')}`);
+        }, action.delay || 0);
+      }
+    });
+
     return { app, server, io, socketStore };
   } catch (error) {
     logger.error('Error in initializeApp:', error);
@@ -554,6 +576,12 @@ async function setupRoutes(app) {  // Routes that don't strictly require databas
       }
     });
   }
+
+  // Add BNNCS routes
+  app.use('/bnncs', bnncsRoutes);
+
+  // BNNCS API routes
+  app.use('/api/bnncs', bnncsRoutes);
 }
 
 /**
@@ -1113,7 +1141,15 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
 
         // Add socket to global store
         socketStore.set(socket.id, { socket, worker: lmstudio, files: [] });
-        logger.info(`Client connected: ${socket.id} sockets: ${socketStore.size}`);        // Enhanced chat message handling
+        logger.info(`Client connected: ${socket.id} sockets: ${socketStore.size}`);
+
+        // Register socket in BNNCS
+        bambiControlNetwork.registerControlNode(socket.id, 'USER', {
+          username: socket.bambiUsername || 'anonymous',
+          connectTime: Date.now()
+        });
+
+        // Enhanced chat message handling
         socket.on('chat message', async (msg) => {
           try {
             // Validate message format
@@ -1236,6 +1272,17 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
                   });
                 }
               }
+
+              // Process chat message through BNNCS
+              bambiControlNetwork.processControlSignal('CHAT_MESSAGE', {
+                message: msg.data,
+                username: socket.bambiUsername,
+                hasUrls: savedMessage.urls && savedMessage.urls.length > 0,
+                detectedTriggers
+              }, socket.id);
+
+              // Update node activity
+              bambiControlNetwork.updateNodeActivity(socket.id);
 
               // Give XP for chat interactions
               xpSystem.awardXP(socket, 1, 'chat');            } catch (dbError) {
@@ -1400,6 +1447,14 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
         // Fixed triggers handler - not nested inside other handlers
         socket.on('triggers', async (data) => {
           logger.info('Received triggers:', data);
+
+          // Process trigger through BNNCS
+          bambiControlNetwork.processControlSignal('TRIGGER_ACTIVATION', {
+            triggerNames: data.triggerNames,
+            triggerDetails: data.triggerDetails,
+            username: socket.bambiUsername
+          }, socket.id);
+
           lmstudio.postMessage({
             type: 'triggers',
             triggers: data.triggerNames,
@@ -1453,6 +1508,9 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
         socket.on('disconnect', (reason) => {
           try {
             logger.info('Client disconnected:', socket.id, 'Reason:', reason);
+
+            // Unregister from BNNCS
+            bambiControlNetwork.unregisterControlNode(socket.id);
 
             // Get socket data and clean up
             const socketData = socketStore.get(socket.id);
