@@ -266,6 +266,37 @@ app.get('/help*', (req, res) => {
     });
 });
 
+// Health check endpoint with admin controls
+app.get('/health', (req, res) => {
+    // Check if this is the admin control panel request
+    if (req.headers.accept && req.headers.accept.includes('text/html')) {
+        // Return the enhanced health dashboard with admin controls
+        res.render('health', {
+            title: 'Circuit Breaker Health Monitor',
+            health: {
+                status: 'Circuit Breaker Active',
+                service: 'circuit-breaker',
+                uptime: process.uptime(),
+                connections: io.engine.clientsCount,
+                adminState: adminState,
+                maintenanceState: maintenanceState
+            },
+            footer: { links: [] },
+            req: req
+        });
+    } else {
+        // Return JSON for API requests
+        res.json({ 
+            status: 'ok', 
+            service: 'circuit-breaker',
+            uptime: process.uptime(),
+            connections: io.engine.clientsCount,
+            adminState: adminState,
+            maintenanceState: maintenanceState
+        });
+    }
+});
+
 // Main maintenance page (must be last)
 app.get('*', (req, res) => {
     // Check if route is switched off (admin bypassed circuit breaker)
@@ -432,72 +463,47 @@ setInterval(() => {
     }
 }, 1000);
 
-// Health check endpoint with admin controls
-app.get('/health', (req, res) => {
-    // Check if this is the admin control panel request
-    if (req.headers.accept && req.headers.accept.includes('text/html')) {
-        // Return the enhanced health dashboard with admin controls
-        res.render('health', {
-            title: 'Circuit Breaker Health Monitor',
-            health: {
-                status: 'Circuit Breaker Active',
-                service: 'circuit-breaker',
-                uptime: process.uptime(),
-                connections: io.engine.clientsCount,
-                adminState: adminState,
-                maintenanceState: maintenanceState
-            },
-            footer: { links: [] },
-            req: req
+// Check for existing processes on port BEFORE starting server
+console.log('🛑 Checking for existing processes on port 6969...');
+const killCommand = process.platform === 'win32' 
+    ? `netstat -ano | findstr :6969`
+    : `lsof -ti:6969`;
+    
+exec(killCommand, (error, stdout, stderr) => {
+    if (stdout && stdout.trim()) {
+        console.log('🛑 Found existing process on port 6969, terminating...');
+        const killCmd = process.platform === 'win32' 
+            ? `for /f "tokens=5" %a in ('netstat -ano ^| findstr :6969') do taskkill /PID %a /F`
+            : `lsof -ti:6969 | xargs kill -9`;
+            
+        exec(killCmd, (killError) => {
+            if (killError) {
+                console.log('⚠️  Could not kill existing process, may cause conflicts');
+            } else {
+                console.log('✅ Existing process terminated successfully');
+            }
+            // Wait a moment then start our server
+            setTimeout(startCircuitBreakerServer, 2000);
         });
     } else {
-        // Return JSON for API requests
-        res.json({ 
-            status: 'ok', 
-            service: 'circuit-breaker',
-            uptime: process.uptime(),
-            connections: io.engine.clientsCount,
-            adminState: adminState,
-            maintenanceState: maintenanceState
-        });
+        console.log('✅ No existing process found on port 6969');
+        startCircuitBreakerServer();
     }
 });
 
-// Start server with automatic main server takeover
-server.listen(PORT, () => {
-    console.log(`🔧 Circuit Breaker Server running on port ${PORT}`);
-    console.log(`🌐 Maintenance mode active for BambiSleep.Chat`);
-    console.log(`📊 Status API: http://localhost:${PORT}/api/maintenance/status`);
-    console.log(`🔧 Admin API: http://localhost:${PORT}/api/admin/*`);
-    console.log(`🔌 Admin Socket: /admin namespace`);
-    console.log(`🔑 Admin Token: ${ADMIN_TOKEN}`);
-    console.log(`❤️  Health check: http://localhost:${PORT}/health`);
-    
-    // Automatically terminate any existing main server process on this port
-    console.log('🛑 Checking for existing processes on port 6969...');
-    const killCommand = process.platform === 'win32' 
-        ? `netstat -ano | findstr :6969`
-        : `lsof -ti:6969`;
-        
-    exec(killCommand, (error, stdout, stderr) => {
-        if (stdout && stdout.trim()) {
-            console.log('🛑 Found existing process on port 6969, terminating...');
-            const killCmd = process.platform === 'win32' 
-                ? `for /f "tokens=5" %a in ('netstat -ano ^| findstr :6969') do taskkill /PID %a /F`
-                : `lsof -ti:6969 | xargs kill -9`;
-                
-            exec(killCmd, (killError) => {
-                if (killError) {
-                    console.log('⚠️  Could not kill existing process, may cause conflicts');
-                } else {
-                    console.log('✅ Circuit breaker now has full control of port 6969');
-                }
-            });
-        } else {
-            console.log('✅ No existing processes found - circuit breaker has control');
-        }
+// Start server function
+function startCircuitBreakerServer() {
+    server.listen(PORT, () => {
+        console.log(`🔧 Circuit Breaker Server running on port ${PORT}`);
+        console.log(`🌐 Maintenance mode active for BambiSleep.Chat`);
+        console.log(`📊 Status API: http://localhost:${PORT}/api/maintenance/status`);
+        console.log(`🔧 Admin API: http://localhost:${PORT}/api/admin/*`);
+        console.log(`🔌 Admin Socket: /admin namespace`);
+        console.log(`🔑 Admin Token: ${ADMIN_TOKEN}`);
+        console.log(`❤️  Health check: http://localhost:${PORT}/health`);
+        console.log('🚀 Circuit breaker now controlling port 6969');
     });
-});
+}
 
 // Graceful shutdown
 const shutdown = () => {
