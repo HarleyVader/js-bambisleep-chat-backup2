@@ -271,8 +271,15 @@ app.get('/help*', (req, res) => {
 app.get('/health', (req, res) => {
     const startTime = Date.now();
     
-    // Check if this is the admin control panel request
-    if (req.headers.accept && req.headers.accept.includes('text/html')) {        // Create comprehensive health data compatible with health.ejs template
+    // Debug log for health endpoint
+    console.log(`🔍 Health request: Accept=${req.headers.accept || 'none'}, IP=${req.ip}`);
+    
+    // Check if this is an API request (wants JSON)
+    const isAPIRequest = req.headers.accept && req.headers.accept.includes('application/json');
+    console.log(`🔍 Request type: ${isAPIRequest ? 'API/JSON' : 'Browser/HTML'}`);
+    
+    // If not API request, serve the admin control panel HTML
+    if (!isAPIRequest) {        // Create comprehensive health data compatible with health.ejs template
         const healthData = {
             system: {
                 hostname: os.hostname(),
@@ -317,23 +324,45 @@ app.get('/health', (req, res) => {
                 maintenanceState: maintenanceState
             }
         };
-        
-        // Return the enhanced health dashboard with admin controls
-        res.render('health', {
-            title: 'Circuit Breaker Health Monitor',
-            health: healthData,
-            footer: { links: [] },
-            req: req
-        });
+          // Return the enhanced health dashboard with admin controls
+        try {
+            res.render('health', {
+              title: 'Circuit Breaker Health Monitor',
+              health: healthData,
+              footer: { links: [] },
+              req: req        });
+        } catch (err) {
+            console.error('❌ Error rendering health template:', err);
+            res.status(500).send(`
+                <html>
+                    <head><title>Health Dashboard Error</title></head>
+                    <body>
+                        <h1>Error rendering health dashboard</h1>
+                        <p>${err.message}</p>
+                        <p>Check server logs for details.</p>
+                    </body>
+                </html>
+            `);
+        }
     } else {
         // Return JSON for API requests
         res.json({ 
             status: 'ok', 
             service: 'circuit-breaker',
-            uptime: process.uptime(),
+            uptime: formatUptime(process.uptime()),
+            memory: {
+                total: Math.round(os.totalmem() / 1024 / 1024) + ' MB',
+                free: Math.round(os.freemem() / 1024 / 1024) + ' MB',
+                used: Math.round((os.totalmem() - os.freemem()) / 1024 / 1024) + ' MB'
+            },
             connections: io.engine.clientsCount,
-            adminState: adminState,
-            maintenanceState: maintenanceState
+            adminState: {
+                routeSwitched: adminState.routeSwitched,
+                serverRunning: !!adminState.childProcess,
+                gitOperations: adminState.gitOperations.length
+            },
+            maintenanceState: maintenanceState,
+            responseTime: Date.now() - startTime + ' ms'
         });
     }
 });
