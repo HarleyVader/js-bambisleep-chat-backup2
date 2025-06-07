@@ -1,5 +1,25 @@
 import Logger from './logger.js';
 
+// Terminal interface integration for AIGF logging
+let terminalInterface = null;
+
+/**
+ * Initialize terminal interface for AIGF logging
+ */
+export function initTerminalInterface() {
+  if (process.env.TERMINAL_UI === 'true') {
+    try {
+      import('./terminalInterface.js').then(({ default: TerminalInterface }) => {
+        terminalInterface = new TerminalInterface();
+        terminalInterface.init();
+        logger.info('AIGF Terminal interface initialized');
+      });
+    } catch (error) {
+      logger.error('Failed to initialize AIGF terminal interface:', error.message);
+    }
+  }
+}
+
 const logger = new Logger('AigfLogger');
 
 /**
@@ -89,5 +109,6 @@ export async function logAigfError(
 
 export default {
   logAigfInteraction,
-  logAigfError
+  logAigfError,
+  initTerminalInterface
 };

@@ -2,7 +2,7 @@
 
 /**
  * BambiSleep Chat Boot Script
- * Entry point for application with auto-deployment
+ * Entry point for application with auto-deployment and optional terminal interface
  */
 
 import { exec } from 'child_process';
@@ -11,6 +11,27 @@ import { readFileSync, existsSync } from 'fs';
 import { createHash } from 'crypto';
 
 const execAsync = promisify(exec);
+
+// Check for terminal interface mode
+const useTerminalInterface = process.env.TERMINAL_UI === 'true' || process.argv.includes('--terminal');
+
+/**
+ * Initialize terminal interface if requested
+ */
+async function initTerminalInterface() {
+  if (useTerminalInterface) {
+    try {
+      const { enableTerminalInterface } = await import('./src/utils/logger.js');
+      enableTerminalInterface();
+      console.log('🖥️  Terminal interface mode enabled');
+      return true;
+    } catch (error) {
+      console.error('Failed to enable terminal interface:', error.message);
+      return false;
+    }
+  }
+  return false;
+}
 
 /**
  * Execute a command and return the result
@@ -69,6 +90,9 @@ async function hasGitChanges() {
 async function deployAndStart() {
   console.log('🚀 Starting BambiSleep Chat deployment sequence...');
   
+  // Initialize terminal interface if requested
+  const terminalEnabled = await initTerminalInterface();
+  
   try {
     // Store original package.json hash
     const originalPackageHash = getPackageJsonHash();
@@ -111,8 +135,14 @@ async function deployAndStart() {
     } else {
       console.log('📦 No package.json changes detected, skipping npm install');
     }
-      // Start the server
+    
+    // Start the server
     console.log('🌟 Starting BambiSleep Chat server...');
+    
+    if (terminalEnabled) {
+      console.log('🖥️  Terminal interface active - press ? for help');
+    }
+    
     await import('./src/server.js');
     console.log('✅ BambiSleep Chat server started successfully');
     
