@@ -8,24 +8,28 @@ Type=simple
 User=brandynette
 Group=brandynette
 WorkingDirectory=/home/brandynette/web/bambisleep.chat/js-bambisleep-chat
-ExecStart=/usr/bin/node /home/brandynette/web/bambisleep.chat/js-bambisleep-chat/scripts/circuit-breaker-server.js
+ExecStart=/usr/bin/node --experimental-modules /home/brandynette/web/bambisleep.chat/js-bambisleep-chat/scripts/circuit-breaker-server.js
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
-RestartSec=5
+RestartSec=10
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=bambisleep-circuit-breaker
+KillMode=mixed
+TimeoutStopSec=30
 
-# Security settings
+# Security settings (relaxed for proper function)
 NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=strict
-ProtectHome=true
-ReadWritePaths=/var/log /var/run /home/brandynette/web/bambisleep.chat/js-bambisleep-chat
+PrivateTmp=false
+ProtectSystem=false
+ProtectHome=false
+ReadWritePaths=/home/brandynette/web/bambisleep.chat/js-bambisleep-chat
 
-# Environment
+# Environment variables
 Environment=NODE_ENV=production
-Environment=CIRCUIT_BREAKER_PORT=6970
+Environment=PORT=6970
+Environment=ADMIN_TOKEN=bambi-admin-2025
+EnvironmentFile=-/home/brandynette/web/bambisleep.chat/js-bambisleep-chat/.env
 
 [Install]
 WantedBy=multi-user.target
