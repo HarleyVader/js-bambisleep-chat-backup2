@@ -36,11 +36,14 @@
 
 
 <details>
-<summary>Lawfull Good Scrapers</summary>
+<summary>HYPNOTIC BAMBISLEEP AIGIRLFRIEND</summary>
 
-> The Lawful Good Bambisleep Scrapers are designed to facilitate the scraping, processing, and analysis of content related to BambiSleep. It utilizes multiple worker 
-> threads to handle different content types, including text, images, and videos. The project is structured to allow for easy extension and integration of various models 
-> for enhanced performance and capabilities. With the new multi-mode profile system, users can now save and organize their favorite scraped content.
+> - **BambiSleep.Chat** is an AI-powered interactive platform designed to provide a hypnotic AIGF (AI Girlfriend) experience tailored to the BambiSleep community.
+> - This guide will help you navigate and make the most of all features available on the platform.
+
+> - BambiSleep.Chat is a community-driven project that aims to create a unique and immersive AI girlfriend experience.
+> - It combines advanced AI models, real-time chat, and hypnotic triggers to create a personalized interaction.
+> - The platform is built with a focus on user privacy, security, and community engagement.
 
 </details>
 

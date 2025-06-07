@@ -8,18 +8,13 @@
 
 ## Core Methodology: Enhanced 3-State Work Loop
 
-<!--
 - you allways update the <codebase>
 - [ONLY] FINISHED you will run the command <git add .>
 - [ONLY] FINISHED you will run the command <git commit -m "copilot: [description of changes]">
 - [ONLY] FINISHED you will run the command <git push>
-- IF git push was successful you are allowed to <git pull> the codebase on the server:
-    - use <x-hypno-boot.js> to pull the codebase
-    - use <x-hypno-boot.js> to restart the server -->
-
-**AUTHORIZATION ONLY FOR DEBUGGING ONLY:** 
-- [ONLY] IF you are debugging the webserver you will run the command <ssh brandynette@192.168.0.72>
-
+- IF git push was successful you are allowed to <git pull> the codebase on <ssh brandynette@192.168.0.72>
+- ALLWAYS MAKE SURE TO RESTART THE WEBSERVER AFTER CHANGES
+- [CURL] the codebase on <bambisleep.chat> to check if the changes are live
 
 ### RULE: Think More, Code Less
 **Always try to do the LEAST possible amount of work, even if it means thinking longer.**
