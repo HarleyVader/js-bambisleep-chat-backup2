@@ -911,9 +911,8 @@
             } else {
                 initAdminSocket();
             }
-        }
-
-        function initAdminSocket() {
+        }        function initAdminSocket() {
+            // Try connecting to admin namespace on same domain first
             adminSocket = io('/admin');
             
             adminSocket.on('connect', () => {

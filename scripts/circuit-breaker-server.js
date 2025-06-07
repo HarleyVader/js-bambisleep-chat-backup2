@@ -23,7 +23,7 @@ const io = new SocketIOServer(server, {
     }
 });
 
-const PORT = process.env.SERVER_PORT || 6969;
+const PORT = process.env.CIRCUIT_BREAKER_PORT || 6970;
 const STATUS_FILE = path.join(__dirname, '..', 'maintenance-status.json');
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'bambi-admin-2025';
 
@@ -249,9 +249,43 @@ app.get('/api/maintenance/status', (req, res) => {
     res.json(maintenanceState);
 });
 
+// Admin authentication endpoint
+app.post('/api/admin/authenticate', (req, res) => {
+    const { token } = req.body;
+    
+    console.log(`🔍 Admin auth API request: token=${token ? token.substring(0, 10) + '...' : 'NONE'}`);
+    
+    if (token === ADMIN_TOKEN) {
+        console.log('✅ Admin authentication successful via API');
+        res.json({ success: true, message: 'Authentication successful' });
+    } else {
+        console.log('❌ Admin authentication failed via API');
+        res.status(401).json({ success: false, message: 'Invalid token' });
+    }
+});
+
+// Route switching endpoint
+app.post('/api/admin/route', (req, res) => {
+    const token = req.headers.authorization?.replace('Bearer ', '') || req.body.token;
+    if (token !== ADMIN_TOKEN) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+    
+    const { switched } = req.body;
+    adminState.routeSwitched = switched;
+    
+    console.log(`🔀 Route switch ${switched ? 'ON' : 'OFF'} via API`);
+    
+    res.json({ 
+        success: true, 
+        switched: adminState.routeSwitched,
+        message: `Route switching ${switched ? 'enabled' : 'disabled'}` 
+    });
+});
+
 // Admin API endpoints (backup to socket commands)
 app.post('/api/admin/server/:action', (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const token = req.headers.authorization?.replace('Bearer ', '') || req.body.token;
     if (token !== ADMIN_TOKEN) {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
@@ -263,7 +297,7 @@ app.post('/api/admin/server/:action', (req, res) => {
 });
 
 app.post('/api/admin/git', (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const token = req.headers.authorization?.replace('Bearer ', '') || req.body.token;
     if (token !== ADMIN_TOKEN) {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
@@ -291,7 +325,7 @@ app.post('/api/admin/git', (req, res) => {
 });
 
 app.get('/api/admin/status', (req, res) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
+    const token = req.headers.authorization?.replace('Bearer ', '') || req.query.token;
     if (token !== ADMIN_TOKEN) {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
     }

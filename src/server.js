@@ -890,6 +890,127 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
       }
     });
 
+    // Add admin namespace for circuit breaker admin interface
+    const adminNamespace = io.of('/admin');
+    adminNamespace.on('connection', (socket) => {
+      logger.info(`Admin connected to main server: ${socket.id}`);
+      let authenticated = false;
+
+      // Authentication handler
+      socket.on('authenticate', async (token) => {
+        try {
+          // Verify token against circuit breaker server
+          const response = await axios.post(`http://localhost:6970/api/admin/authenticate`, 
+            { token }, 
+            { timeout: 5000 }
+          );
+          
+          if (response.data.success) {
+            authenticated = true;
+            socket.emit('authenticated', { success: true });
+            logger.info(`Admin authenticated on main server: ${socket.id}`);
+          } else {
+            socket.emit('authenticated', { success: false });
+            logger.warning(`Admin auth failed on main server: ${socket.id}`);
+          }
+        } catch (error) {
+          logger.error(`Admin auth error: ${error.message}`);
+          socket.emit('authenticated', { success: false });
+        }
+      });
+
+      // Server command handler
+      socket.on('serverCommand', async (data) => {
+        if (!authenticated) {
+          socket.emit('commandResult', { success: false, message: 'Not authenticated' });
+          return;
+        }
+
+        try {
+          const response = await axios.post(`http://localhost:6970/api/admin/server/${data.action}`, 
+            { token: process.env.ADMIN_TOKEN }, 
+            { timeout: 10000 }
+          );
+          socket.emit('commandResult', response.data);
+        } catch (error) {
+          logger.error(`Server command error: ${error.message}`);
+          socket.emit('commandResult', { success: false, message: error.message });
+        }
+      });
+
+      // Git command handler
+      socket.on('gitCommand', async (data) => {
+        if (!authenticated) {
+          socket.emit('gitResult', { success: false, message: 'Not authenticated' });
+          return;
+        }        try {
+          const response = await axios.post(`http://localhost:6970/api/admin/git`, 
+            { command: data.command, token: process.env.ADMIN_TOKEN }, 
+            { timeout: 15000 }
+          );
+          socket.emit('gitResult', response.data);
+        } catch (error) {
+          logger.error(`Git command error: ${error.message}`);
+          socket.emit('gitResult', { success: false, message: error.message });
+        }
+      });
+
+      // Git commit handler
+      socket.on('gitCommit', async (data) => {
+        if (!authenticated) {
+          socket.emit('gitResult', { success: false, message: 'Not authenticated' });
+          return;
+        }
+
+        try {          const response = await axios.post(`http://localhost:6970/api/admin/git`, 
+            { command: `git commit -m "${data.message}"`, token: process.env.ADMIN_TOKEN }, 
+            { timeout: 15000 }
+          );
+          socket.emit('gitResult', response.data);
+        } catch (error) {
+          logger.error(`Git commit error: ${error.message}`);
+          socket.emit('gitResult', { success: false, message: error.message });
+        }
+      });
+
+      // Route switching handler
+      socket.on('switchRoute', async (data) => {
+        if (!authenticated) {
+          socket.emit('routeResult', { success: false, message: 'Not authenticated' });
+          return;
+        }
+
+        try {
+          const response = await axios.post(`http://localhost:6970/api/admin/route`, 
+            { switched: data.switched, token: process.env.ADMIN_TOKEN }, 
+            { timeout: 5000 }
+          );
+          socket.emit('routeResult', response.data);
+        } catch (error) {
+          logger.error(`Route switch error: ${error.message}`);
+          socket.emit('routeResult', { success: false, message: error.message });
+        }
+      });
+
+      // Admin status handler
+      socket.on('getAdminStatus', async () => {
+        if (!authenticated) return;
+
+        try {
+          const response = await axios.get(`http://localhost:6970/api/admin/status`, 
+            { timeout: 5000 }
+          );
+          socket.emit('adminStatus', response.data);
+        } catch (error) {
+          logger.error(`Admin status error: ${error.message}`);
+        }
+      });
+
+      socket.on('disconnect', () => {
+        logger.info(`Admin disconnected from main server: ${socket.id}`);
+      });
+    });
+
     // Simple filter function to avoid bad words
     function filter(content) {
       if (!content || !filteredWords || !filteredWords.length) return content;
