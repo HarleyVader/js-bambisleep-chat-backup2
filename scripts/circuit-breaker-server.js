@@ -40,6 +40,57 @@ let adminState = {
     gitOperations: []
 };
 
+// Health data for status dashboard - Fixed to avoid duplicates and include all required properties
+let healthData = {
+    system: {
+        hostname: os.hostname(),
+        platform: os.platform(),
+        arch: os.arch(),
+        uptime: '0s',
+        memory: {
+            total: 0,
+            free: 0,
+            used: 0,
+            percentage: 0
+        },
+        cpu: {
+            load1: 0,
+            load5: 0,
+            load15: 0,
+            percentage: 0
+        }
+    },
+    users: {
+        count: 0,
+        list: [],
+        online: 0,
+        anonymous: 0
+    },
+    database: {
+        status: 'Circuit Breaker Mode',
+        connected: false,
+        message: 'Database bypassed during maintenance'
+    },
+    workers: {
+        lmstudio: { status: 'disabled', message: 'Disabled during maintenance' },
+        spirals: { status: 'disabled', message: 'Disabled during maintenance' },
+        total: 2,
+        running: 0,
+        workers: [
+            { name: 'LMStudio', status: 'disabled' },
+            { name: 'Spirals', status: 'disabled' }
+        ]
+    },
+    circuitBreaker: {
+        status: 'active',
+        service: 'circuit-breaker',
+        uptime: 0,
+        connections: 0,
+        adminState: false,
+        maintenanceState: false
+    }
+};
+
 // Load status from file if exists
 if (fs.existsSync(STATUS_FILE)) {
     try {
@@ -240,7 +291,8 @@ app.get('/api/admin/status', (req, res) => {
         routeSwitched: adminState.routeSwitched,
         serverRunning: !!adminState.childProcess,
         gitOperations: adminState.gitOperations.slice(-10),
-        maintenanceState    });
+        maintenanceState
+    });
 });
 
 // Help route handling
@@ -279,58 +331,64 @@ app.get('/health', (req, res) => {
     console.log(`🔍 Request type: ${isAPIRequest ? 'API/JSON' : 'Browser/HTML'}`);
     
     // If not API request, serve the admin control panel HTML
-    if (!isAPIRequest) {        // Create comprehensive health data compatible with health.ejs template
-        const healthData = {
-            system: {
-                hostname: os.hostname(),
-                platform: os.platform(),
-                arch: os.arch(),
-                uptime: formatUptime(os.uptime()),
-                totalMemory: os.totalmem(),
-                freeMemory: os.freemem(),
-                cpuCount: os.cpus().length,
-                timestamp: new Date().toISOString(),
-                memory: {
-                    total: Math.round(os.totalmem() / 1024 / 1024),
-                    free: Math.round(os.freemem() / 1024 / 1024),
-                    used: Math.round((os.totalmem() - os.freemem()) / 1024 / 1024),
-                    percentage: Math.round(((os.totalmem() - os.freemem()) / os.totalmem()) * 100)
-                },
-                cpu: {
-                    load1: os.loadavg()[0],
-                    load5: os.loadavg()[1],
-                    load15: os.loadavg()[2],
-                    percentage: Math.min(Math.round((os.loadavg()[0] / os.cpus().length) * 100), 100)
-                }
+    if (!isAPIRequest) {
+        // Update the health data with current information
+        healthData.system = {
+            hostname: os.hostname(),
+            platform: os.platform(),
+            arch: os.arch(),
+            uptime: formatUptime(os.uptime()),
+            totalMemory: os.totalmem(),
+            freeMemory: os.freemem(),
+            cpuCount: os.cpus().length,
+            timestamp: new Date().toISOString(),
+            memory: {
+                total: Math.round(os.totalmem() / 1024 / 1024),
+                free: Math.round(os.freemem() / 1024 / 1024),
+                used: Math.round((os.totalmem() - os.freemem()) / 1024 / 1024),
+                percentage: Math.round(((os.totalmem() - os.freemem()) / os.totalmem()) * 100)
             },
-            users: [],
-            database: {
-                status: 'Circuit Breaker Mode',
-                connected: false,
-                message: 'Database bypassed during maintenance'
-            },
-            workers: {
-                lmstudio: { status: 'disabled', message: 'Disabled during maintenance' },
-                spirals: { status: 'disabled', message: 'Disabled during maintenance' }
-            },
-            responseTime: Date.now() - startTime,
-            // Circuit breaker specific data
-            circuitBreaker: {
-                status: 'active',
-                service: 'circuit-breaker',
-                uptime: process.uptime(),
-                connections: io.engine.clientsCount,
-                adminState: adminState,
-                maintenanceState: maintenanceState
+            cpu: {
+                load1: os.loadavg()[0],
+                load5: os.loadavg()[1],
+                load15: os.loadavg()[2],
+                percentage: Math.min(Math.round((os.loadavg()[0] / os.cpus().length) * 100), 100)
             }
         };
-          // Return the enhanced health dashboard with admin controls
+        
+        // Update workers info
+        healthData.workers = {
+            lmstudio: { status: 'disabled', message: 'Disabled during maintenance' },
+            spirals: { status: 'disabled', message: 'Disabled during maintenance' },
+            total: 2,
+            running: 0,
+            workers: [
+                { name: 'LMStudio', status: 'disabled' },
+                { name: 'Spirals', status: 'disabled' }
+            ]
+        };
+        
+        // Update circuit breaker info
+        healthData.circuitBreaker = {
+            status: 'active',
+            service: 'circuit-breaker',
+            uptime: formatUptime(process.uptime()),
+            connections: io.engine.clientsCount,
+            adminState: adminState,
+            maintenanceState: maintenanceState
+        };
+        
+        // Update response time
+        healthData.responseTime = Date.now() - startTime;
+        
+        // Return the enhanced health dashboard with admin controls
         try {
             res.render('health', {
-              title: 'Circuit Breaker Health Monitor',
-              health: healthData,
-              footer: { links: [] },
-              req: req        });
+                title: 'Circuit Breaker Health Monitor',
+                health: healthData,
+                footer: { links: [] },
+                req: req
+            });
         } catch (err) {
             console.error('❌ Error rendering health template:', err);
             res.status(500).send(`
@@ -383,6 +441,22 @@ function formatUptime(uptimeSeconds) {
     return formatted.trim();
 }
 
+// Update connected times for users
+function updateConnectedTimes() {
+    if (healthData.users && healthData.users.list) {
+        const now = new Date();
+        healthData.users.list.forEach(user => {
+            if (user.connectedAt && user.socketId !== 'offline') {
+                const connectedTime = (now - new Date(user.connectedAt)) / 1000; // in seconds
+                user.connectedTime = formatUptime(connectedTime);
+            }
+        });
+    }
+}
+
+// Update connected times every minute
+setInterval(updateConnectedTimes, 60000);
+
 // Main maintenance page (must be last)
 app.get('*', (req, res) => {
     // Check if route is switched off (admin bypassed circuit breaker)
@@ -411,6 +485,23 @@ app.get('*', (req, res) => {
 io.on('connection', (socket) => {
     console.log(`🔌 Client connected: ${socket.id}`);
     
+    // Track connected users for health dashboard
+    const connectedAt = new Date();
+    const userData = {
+        socketId: socket.id,
+        username: `Client-${socket.id.substring(0, 6)}`,
+        bambiId: 'n/a',
+        location: socket.handshake.headers.referer || 'Unknown',
+        lastTrigger: 'None',
+        connectedAt: connectedAt,
+        connectedTime: '0s'
+    };
+    
+    // Add to connected users list
+    healthData.users.list.push(userData);
+    healthData.users.count = healthData.users.list.length;
+    healthData.users.online = healthData.users.list.filter(u => u.socketId !== 'offline').length;
+    
     // Send current state to new client
     socket.emit('statusUpdate', maintenanceState);
     
@@ -421,6 +512,14 @@ io.on('connection', (socket) => {
     
     socket.on('disconnect', () => {
         console.log(`🔌 Client disconnected: ${socket.id}`);
+        
+        // Update connected users list when client disconnects
+        const index = healthData.users.list.findIndex(u => u.socketId === socket.id);
+        if (index !== -1) {
+            healthData.users.list.splice(index, 1);
+            healthData.users.count = healthData.users.list.length;
+            healthData.users.online = healthData.users.list.filter(u => u.socketId !== 'offline').length;
+        }
     });
 });
 
@@ -441,7 +540,8 @@ adminNamespace.on('connection', (socket) => {
             console.log(`❌ Admin auth failed: ${socket.id}`);
         }
     });
-      // Admin commands with automatic main server termination
+    
+    // Admin commands with automatic main server termination
     socket.on('serverCommand', (data) => {
         if (!authenticated) {
             socket.emit('commandResult', { success: false, message: 'Not authenticated' });
