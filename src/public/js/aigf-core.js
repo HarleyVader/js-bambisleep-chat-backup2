@@ -29,6 +29,65 @@ let state = true;
 window._textArray = _textArray;
 window._audioArray = _audioArray;
 
+// Initialize bambi control network integration
+let controlNodeId = null;
+
+// Enhanced control network integration
+function initializeControlNetwork() {
+  if (window.bambiControlNetwork && typeof window.bambiControlNetwork.registerControlNode === 'function') {
+    const nodeId = `aigf-core-${Date.now()}`;
+    const success = window.bambiControlNetwork.registerControlNode(nodeId, 'USER_INTERFACE', {
+      component: 'AIGF_CORE',
+      username: window.username || 'unknown',
+      capabilities: ['message_processing', 'response_display', 'audio_control'],
+      onSignal: function(signalType, signalData, sourceId) {
+        console.log(`🎛️ AIGF received signal: ${signalType}`, signalData);
+        
+        // Handle incoming control signals
+        switch(signalType) {
+          case 'SYSTEM_TRIGGER':
+            if (signalData.trigger && signalData.duration) {
+              flashTrigger(signalData.trigger, signalData.duration);
+            }
+            break;
+          case 'AUDIO_CONTROL':
+            if (signalData.action === 'stop' && window.audio) {
+              window.audio.pause();
+              window.audio.currentTime = 0;
+            }
+            break;
+          case 'UI_UPDATE':
+            if (signalData.element && signalData.content) {
+              const element = document.getElementById(signalData.element);
+              if (element) {
+                element.textContent = signalData.content;
+              }
+            }
+            break;
+        }
+      }
+    });
+    
+    if (success) {
+      controlNodeId = nodeId;
+      console.log(`📡 AIGF Core successfully registered with control network: ${nodeId}`);
+    }
+  } else {
+    // Fallback for when control network is not available
+    console.log('🎛️ Control network not available, using fallback integration');
+    window.bambiControlNetwork = window.bambiControlNetwork || {
+      processControlSignal: function(signalType, signalData, sourceId) {
+        console.log(`🎛️ AIGF Control Signal (fallback): ${signalType}`, signalData);
+      },
+      registerControlNode: function(nodeId, nodeType, nodeData) {
+        controlNodeId = nodeId;
+        console.log(`📡 AIGF registered as control node (fallback): ${nodeId}`);
+        return true;
+      }
+    };
+  }
+}
+
 // Socket event handlers
 socket.on('disconnect', () => {
     console.log('Disconnected');
@@ -136,9 +195,14 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
-    
+
     let username = decodeURIComponent(cookies['bambiname'] || 'anonBambi').replace(/%20/g, ' ');
     window.username = username;
+    
+    // Initialize control network integration
+    setTimeout(() => {
+        initializeControlNetwork();
+    }, 500); // Wait for bambiControlNetwork to be fully loaded
 });
 
 function arrayPush(array, text) {
@@ -194,6 +258,20 @@ function handleClick() {
         return;
     }
     
+    // Send through control network if available
+    if (controlNodeId && window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
+        window.bambiControlNetwork.processControlSignal('USER_MESSAGE', {
+            content: message,
+            timestamp: Date.now(),
+            source: 'AIGF_CORE'
+        }, controlNodeId);
+        
+        // Update node activity
+        if (typeof window.bambiControlNetwork.updateNodeActivity === 'function') {
+            window.bambiControlNetwork.updateNodeActivity(controlNodeId);
+        }
+    }
+    
     if (userPrompt) userPrompt.textContent = message;
     socket.emit('message', message);
 
@@ -206,6 +284,22 @@ function handleClick() {
 socket.on('response', async (message) => {
     const messageText = message;
     const sentences = messageText.split(/(?<=[:;,.!?]["']?)\s+/g);
+    
+    // Send response processing through control network
+    if (controlNodeId && window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
+        window.bambiControlNetwork.processControlSignal('AI_RESPONSE_RECEIVED', {
+            content: messageText,
+            sentenceCount: sentences.length,
+            timestamp: Date.now(),
+            source: 'AIGF_CORE'
+        }, controlNodeId);
+        
+        // Update node activity
+        if (typeof window.bambiControlNetwork.updateNodeActivity === 'function') {
+            window.bambiControlNetwork.updateNodeActivity(controlNodeId);
+        }
+    }
+
     for (let sentence of sentences) {
         _textArray.push(sentence);
         console.log('Text array:', _textArray);

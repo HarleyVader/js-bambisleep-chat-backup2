@@ -1,12 +1,94 @@
 // Instead of using let currentVoice, use the globally shared one
 window.currentVoice = window.currentVoice || 'af_bella'; // Default voice
 
+// Initialize bambi control network integration for TTS
+let controlNodeId = null;
+
+// Enhanced control network integration
+function initializeTTSControlNetwork() {
+  if (window.bambiControlNetwork && typeof window.bambiControlNetwork.registerControlNode === 'function') {
+    const nodeId = `tts-${Date.now()}`;
+    const success = window.bambiControlNetwork.registerControlNode(nodeId, 'AUDIO_PROCESSOR', {
+      component: 'TEXT2SPEECH',
+      voice: window.currentVoice,
+      capabilities: ['voice_synthesis', 'audio_playback', 'queue_management'],
+      onSignal: function(signalType, signalData, sourceId) {
+        console.log(`🎛️ TTS received signal: ${signalType}`, signalData);
+        
+        // Handle incoming control signals
+        switch(signalType) {
+          case 'TTS_VOICE_CHANGE':
+            if (signalData.voice) {
+              setVoice(signalData.voice);
+            }
+            break;
+          case 'TTS_STOP':
+            if (window.audio) {
+              window.audio.pause();
+              window.audio.currentTime = 0;
+            }
+            break;
+          case 'TTS_QUEUE_CLEAR':
+            if (window._audioArray) {
+              window._audioArray.length = 0;
+            }
+            break;
+          case 'TTS_VOLUME_CHANGE':
+            if (window.audio && typeof signalData.volume === 'number') {
+              window.audio.volume = Math.max(0, Math.min(1, signalData.volume));
+            }
+            break;
+        }
+      }
+    });
+    
+    if (success) {
+      controlNodeId = nodeId;
+      console.log(`📡 TTS successfully registered with control network: ${nodeId}`);
+    }
+  } else {
+    // Fallback for when control network is not available
+    console.log('🎛️ Control network not available, using TTS fallback integration');
+    window.bambiControlNetwork = window.bambiControlNetwork || {
+      processControlSignal: function(signalType, signalData, sourceId) {
+        console.log(`🎛️ TTS Control Signal (fallback): ${signalType}`, signalData);
+      },
+      registerControlNode: function(nodeId, nodeType, nodeData) {
+        controlNodeId = nodeId;
+        console.log(`📡 TTS registered as control node (fallback): ${nodeId}`);
+        return true;
+      }
+    };
+  }
+}
+
+// Initialize TTS control network when DOM is ready
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    initializeTTSControlNetwork();
+  }, 600); // Wait for bambiControlNetwork and aigf-core to be loaded
+});
+
 /**
  * Set the voice to use for TTS
  */
 function setVoice(voice) {
     if (voice && typeof voice === 'string') {
         window.currentVoice = voice;
+        
+        // Send voice change through control network
+        if (controlNodeId && window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
+            window.bambiControlNetwork.processControlSignal('TTS_VOICE_CHANGED', {
+                voice: voice,
+                timestamp: Date.now(),
+                source: 'TEXT2SPEECH'
+            }, controlNodeId);
+            
+            // Update node activity
+            if (typeof window.bambiControlNetwork.updateNodeActivity === 'function') {
+                window.bambiControlNetwork.updateNodeActivity(controlNodeId);
+            }
+        }
     }
 }
 
@@ -18,6 +100,21 @@ function arrayPush(array, e) {
         document.querySelector("#audio").hidden = true;
     }
     
+    // Send TTS request through control network
+    if (controlNodeId && window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
+        window.bambiControlNetwork.processControlSignal('TTS_REQUEST', {
+            text: e,
+            voice: window.currentVoice,
+            timestamp: Date.now(),
+            source: 'TEXT2SPEECH'
+        }, controlNodeId);
+        
+        // Update node activity
+        if (typeof window.bambiControlNetwork.updateNodeActivity === 'function') {
+            window.bambiControlNetwork.updateNodeActivity(controlNodeId);
+        }
+    }
+
     // Use window.currentVoice to access the shared voice setting
     let URL = `/api/tts?text=${encodeURIComponent(e)}&voice=${encodeURIComponent(window.currentVoice)}`;
     array.push(URL);
@@ -44,6 +141,14 @@ async function do_tts(array) {
 
     let currentURL = arrayShift(array);
     if (!currentURL) return;
+      // Send TTS processing start through control network
+    if (controlNodeId && window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
+        window.bambiControlNetwork.processControlSignal('TTS_PROCESSING_START', {
+            url: currentURL,
+            timestamp: Date.now(),
+            source: 'TEXT2SPEECH'
+        }, controlNodeId);
+    }
     
     let retries = 2; // Number of retry attempts
     
@@ -84,6 +189,15 @@ async function do_tts(array) {
                 window.audio.onloadedmetadata = function() {
                     console.log("Audio metadata loaded, duration:", window.audio.duration);
                     if (messageEl) messageEl.textContent = "Playing...";
+                      // Send audio playback start through control network
+                    if (controlNodeId && window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
+                        window.bambiControlNetwork.processControlSignal('TTS_PLAYBACK_START', {
+                            duration: window.audio.duration,
+                            timestamp: Date.now(),
+                            source: 'TEXT2SPEECH'
+                        }, controlNodeId);
+                    }
+                    
                     window.audio.play().catch(e => {
                         console.error("Error playing audio:", e);
                         if (messageEl) messageEl.textContent = "Error playing audio: " + e.message;
@@ -93,6 +207,13 @@ async function do_tts(array) {
                 window.audio.onended = function() {
                     console.log("Audio playback ended");
                     if (messageEl) messageEl.textContent = "Finished!";
+                      // Send audio playback end through control network
+                    if (controlNodeId && window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
+                        window.bambiControlNetwork.processControlSignal('TTS_PLAYBACK_END', {
+                            timestamp: Date.now(),
+                            source: 'TEXT2SPEECH'
+                        }, controlNodeId);
+                    }
                     
                     // Release the blob URL to free memory
                     URL.revokeObjectURL(audioUrl);
@@ -109,6 +230,14 @@ async function do_tts(array) {
                     console.error("Error message:", window.audio.error ? window.audio.error.message : "unknown");
                     if (messageEl) messageEl.textContent = "Error playing audio: " + 
                         (window.audio.error ? window.audio.error.message : "Unknown error");
+                      // Send audio error through control network
+                    if (controlNodeId && window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
+                        window.bambiControlNetwork.processControlSignal('TTS_PLAYBACK_ERROR', {
+                            error: window.audio.error ? window.audio.error.message : "Unknown error",
+                            timestamp: Date.now(),
+                            source: 'TEXT2SPEECH'
+                        }, controlNodeId);
+                    }
                     
                     // Release the blob URL on error
                     URL.revokeObjectURL(audioUrl);
@@ -126,6 +255,14 @@ async function do_tts(array) {
             if (retries <= 0) {
                 console.error("Fetch error:", error);
                 if (messageEl) messageEl.textContent = "Error fetching audio: " + error.message;
+                  // Send TTS error through control network
+                if (controlNodeId && window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
+                    window.bambiControlNetwork.processControlSignal('TTS_PROCESSING_ERROR', {
+                        error: error.message,
+                        timestamp: Date.now(),
+                        source: 'TEXT2SPEECH'
+                    }, controlNodeId);
+                }
                 
                 // Process next item in queue if any
                 if (array.length > 0) {

@@ -14,24 +14,34 @@
           </div>
         </div>        <div id="user-input">
           <h1>🧠BambiSleep.Chat👁️</h1>
-          
-          <!-- Control Network Status -->
+            <!-- Control Network Status -->
           <% if (controlNetworkStatus || controlNetworkMetrics) { %>
             <div id="control-network-status" style="font-size: 0.8em; color: #666; margin-bottom: 10px; text-align: center;">
-              🎛️ Control Network: 
-              <% if (controlNetworkStatus) { %>
-                <span style="color: <%= controlNetworkStatus.status === 'active' ? '#0f0' : '#f80' %>">
-                  <%= controlNetworkStatus.status %>
-                </span>
-                <% if (controlNetworkStatus.nodeCount) { %>
-                  | Nodes: <%= controlNetworkStatus.nodeCount %>
+              🎛️ Control Network:              <span id="network-status-indicator" style="color: #f80;">
+                <% if (controlNetworkStatus) { %>
+                  <%= controlNetworkStatus.status || 'Unknown' %>
+                <% } else { %>
+                  Offline
                 <% } %>
+              </span>
+              <% if (controlNetworkStatus && controlNetworkStatus.nodeCount) { %>
+                | Nodes: <span id="network-node-count"><%= controlNetworkStatus.nodeCount %></span>
               <% } else { %>
-                <span style="color: #f00">Offline</span>
+                | Nodes: <span id="network-node-count">0</span>
               <% } %>
               <% if (controlNetworkMetrics && controlNetworkMetrics.totalRequests) { %>
-                | Requests: <%= controlNetworkMetrics.totalRequests %>
+                | Requests: <span id="network-request-count"><%= controlNetworkMetrics.totalRequests %></span>
+              <% } else { %>
+                | Requests: <span id="network-request-count">0</span>
               <% } %>
+              | Client: <span id="client-network-status" style="color: #f80;">Connecting...</span>
+            </div>
+          <% } else { %>
+            <div id="control-network-status" style="font-size: 0.8em; color: #666; margin-bottom: 10px; text-align: center;">
+              🎛️ Control Network: <span id="network-status-indicator" style="color: #f00">Offline</span>
+              | Nodes: <span id="network-node-count">0</span>
+              | Requests: <span id="network-request-count">0</span>
+              | Client: <span id="client-network-status" style="color: #f80;">Connecting...</span>
             </div>
           <% } %>
           
@@ -94,8 +104,7 @@
           <div id="textarea-collar-response"></div>
         </div>
       </div>
-      <%- include('../views/partials/footer.ejs') %>
-        <!-- Make sure these scripts appear in exactly this order -->
+      <%- include('../views/partials/footer.ejs') %>        <!-- Make sure these scripts appear in exactly this order -->
         <script src="/socket.io/socket.io.js"></script>
         <script>
           // Initialize socket at the global level
@@ -104,6 +113,14 @@
           // Log socket connection
           window.socket.on('connect', function() {
             console.log('Socket.io connected with ID:', window.socket.id);
+            
+            // Initialize control network status display
+            if (window.bambiControlNetwork) {
+              setTimeout(() => {
+                window.bambiControlNetwork.requestNetworkStatus();
+              }, 200);
+            }
+            
             // Load triggers after connection
             if (typeof initProfileAndTriggers === 'function') {
               setTimeout(initProfileAndTriggers, 100);
@@ -113,6 +130,14 @@
           // Handle reconnection
           window.socket.on('reconnect', function() {
             console.log('Socket.io reconnected');
+            
+            // Re-initialize control network
+            if (window.bambiControlNetwork) {
+              setTimeout(() => {
+                window.bambiControlNetwork.requestNetworkStatus();
+              }, 200);
+            }
+            
             // Re-initialize as needed
             if (typeof initProfileAndTriggers === 'function') {
               setTimeout(initProfileAndTriggers, 100);
@@ -123,11 +148,13 @@
           window.socket.on('disconnect', function() {
             console.log('Socket.io disconnected');
           });
-        </script>
+        </script>        <script src="js/bambiControlNetwork.js"></script>
         <script src="js/aigf-core.js"></script>
         <script src="js/psychodelic-trigger-mania.js"></script>
         <script src="js/text2speech.js"></script>
         <script src="js/responsive.js"></script>
+        <!-- Control Network Integration Test (can be removed in production) -->
+        <script src="js/control-network-test.js"></script>
         <script>
           document.addEventListener("DOMContentLoaded", () => {
             // Use window.socket instead of socket
@@ -257,9 +284,56 @@
             window.initProfileAndTriggers = initProfileAndTriggers;
             window.loadProfileTriggers = loadProfileTriggers;
           });
-        </script>
-        <script>
-          document.addEventListener("DOMContentLoaded", () => {
+        </script>        <script>
+          document.addEventListener("DOMContentLoaded", () => {            // Control Network Status Updates
+            function updateControlNetworkDisplay() {
+              if (window.bambiControlNetwork) {
+                const status = window.bambiControlNetwork.getNetworkStatus();
+                const clientStatusEl = document.getElementById('client-network-status');
+                const serverStatusEl = document.getElementById('network-status-indicator');
+                
+                if (clientStatusEl) {
+                  if (status.connected && status.socket) {
+                    clientStatusEl.textContent = 'Connected';
+                    clientStatusEl.style.color = '#0f0';
+                  } else if (status.socket) {
+                    clientStatusEl.textContent = 'Socket Only';
+                    clientStatusEl.style.color = '#f80';
+                  } else {
+                    clientStatusEl.textContent = 'Disconnected';
+                    clientStatusEl.style.color = '#f00';
+                  }
+                }
+                
+                // Update server status color based on current text
+                if (serverStatusEl) {
+                  const statusText = serverStatusEl.textContent.toLowerCase();
+                  if (statusText.includes('active')) {
+                    serverStatusEl.style.color = '#0f0';
+                  } else if (statusText.includes('offline')) {
+                    serverStatusEl.style.color = '#f00';
+                  } else {
+                    serverStatusEl.style.color = '#f80';
+                  }
+                }
+                
+                // Update client node count
+                const nodeCountEl = document.getElementById('network-node-count');
+                if (nodeCountEl && status.nodes > 0) {
+                  const currentCount = parseInt(nodeCountEl.textContent) || 0;
+                  if (currentCount === 0) {
+                    nodeCountEl.textContent = status.nodes;
+                  }
+                }
+              }
+            }
+            
+            // Update display every 5 seconds
+            setInterval(updateControlNetworkDisplay, 5000);
+            
+            // Initial update after a delay to allow initialization
+            setTimeout(updateControlNetworkDisplay, 2000);
+            
             // Create a simple settings object if needed
             window.bambiSystemSettings = window.bambiSystemSettings || {};
               // Handle settings updates in a safer way
