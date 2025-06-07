@@ -18,7 +18,7 @@ const io = new SocketIOServer(server, {
     }
 });
 
-const PORT = process.env.PORT || process.env.CIRCUIT_BREAKER_PORT || 6970;
+const PORT = process.env.PORT || 6969;
 const STATUS_FILE = path.join(__dirname, '..', 'maintenance-status.json');
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'bambi-admin-2025';
 
@@ -77,42 +77,76 @@ const executeGitCommand = (command, callback) => {
     });
 };
 
-// Process management
+// Process management with port conflict handling
 const manageMainServer = (action, callback) => {
     console.log(`🔧 Managing main server: ${action}`);
     
+    // Helper function to kill process on port
+    const killProcessOnPort = (port, callback) => {
+        const killCommand = process.platform === 'win32' 
+            ? `netstat -ano | findstr :${port} && for /f "tokens=5" %a in ('netstat -ano ^| findstr :${port}') do taskkill /PID %a /F`
+            : `lsof -ti:${port} | xargs kill -9`;
+            
+        exec(killCommand, (error, stdout, stderr) => {
+            if (error) {
+                console.log(`No process found on port ${port} or error killing: ${error.message}`);
+            } else {
+                console.log(`✅ Killed process on port ${port}`);
+            }
+            callback();
+        });
+    };
+    
     switch (action) {
         case 'start':
-            if (adminState.childProcess) {
-                callback({ success: false, message: 'Server already running' });
-                return;
-            }
-            adminState.childProcess = spawn('node', ['src/server.js'], {
-                cwd: path.join(__dirname, '..'),
-                stdio: 'pipe'
+            // First, kill any existing process on port 6969
+            killProcessOnPort(6969, () => {
+                if (adminState.childProcess) {
+                    adminState.childProcess.kill('SIGTERM');
+                    adminState.childProcess = null;
+                }
+                
+                // Wait a moment for port to be freed
+                setTimeout(() => {
+                    adminState.childProcess = spawn('node', ['src/server.js'], {
+                        cwd: path.join(__dirname, '..'),
+                        stdio: 'pipe',
+                        env: { ...process.env, PORT: '6969' }
+                    });
+                    
+                    adminState.childProcess.on('error', (err) => {
+                        console.error('❌ Server process error:', err);
+                        adminState.childProcess = null;
+                    });
+                    
+                    adminState.childProcess.on('exit', (code, signal) => {
+                        console.log(`🔧 Server process exited with code ${code}, signal ${signal}`);
+                        adminState.childProcess = null;
+                    });
+                    
+                    callback({ success: true, message: 'Server started on port 6969' });
+                }, 2000);
             });
-            adminState.childProcess.on('error', (err) => {
-                console.error('❌ Server process error:', err);
-                adminState.childProcess = null;
-            });
-            callback({ success: true, message: 'Server started' });
             break;
             
         case 'stop':
-            if (adminState.childProcess) {
-                adminState.childProcess.kill('SIGTERM');
-                adminState.childProcess = null;
-                callback({ success: true, message: 'Server stopped' });
-            } else {
-                callback({ success: false, message: 'Server not running' });
-            }
+            // Kill both our child process and any process on port 6969
+            killProcessOnPort(6969, () => {
+                if (adminState.childProcess) {
+                    adminState.childProcess.kill('SIGTERM');
+                    adminState.childProcess = null;
+                    callback({ success: true, message: 'Server stopped' });
+                } else {
+                    callback({ success: true, message: 'Server processes terminated' });
+                }
+            });
             break;
             
         case 'restart':
             manageMainServer('stop', () => {
                 setTimeout(() => {
                     manageMainServer('start', callback);
-                }, 2000);
+                }, 3000); // Longer delay for restart
             });
             break;
             
@@ -205,17 +239,30 @@ app.get('/api/admin/status', (req, res) => {
         routeSwitched: adminState.routeSwitched,
         serverRunning: !!adminState.childProcess,
         gitOperations: adminState.gitOperations.slice(-10),
-        maintenanceState
-    });
+        maintenanceState    });
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'ok', 
-        service: 'circuit-breaker',
-        uptime: process.uptime(),
-        connections: io.engine.clientsCount
+// Help route handling
+app.get('/help*', (req, res) => {
+    // If route is switched (admin bypass), return a simple response
+    if (adminState.routeSwitched) {
+        return res.status(200).json({ 
+            message: 'Circuit breaker bypassed - help route not available',
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    // Otherwise, show maintenance page for help routes too
+    const elapsed = Math.floor((Date.now() - maintenanceState.startTime) / 1000);
+    const remaining = Math.max(0, maintenanceState.countdown - elapsed);
+    
+    res.status(503).render('circuit-breaker', {
+        title: 'BambiSleep.Chat - Help Unavailable',
+        message: maintenanceState.message,
+        currentIssue: 'Help system temporarily unavailable during maintenance',
+        countdown: remaining,
+        estimatedCompletion: new Date(maintenanceState.estimatedCompletion).toLocaleTimeString(),
+        startTime: new Date(maintenanceState.startTime).toLocaleTimeString()
     });
 });
 
@@ -277,8 +324,7 @@ adminNamespace.on('connection', (socket) => {
             console.log(`❌ Admin auth failed: ${socket.id}`);
         }
     });
-    
-    // Admin commands
+      // Admin commands with automatic main server termination
     socket.on('serverCommand', (data) => {
         if (!authenticated) {
             socket.emit('commandResult', { success: false, message: 'Not authenticated' });
@@ -287,6 +333,11 @@ adminNamespace.on('connection', (socket) => {
         
         const { action } = data;
         console.log(`🔧 Admin command: ${action}`);
+        
+        // Auto-terminate main server for any admin server command
+        if (action === 'start' || action === 'restart') {
+            console.log('🛑 Auto-terminating main server for admin override...');
+        }
         
         manageMainServer(action, (result) => {
             socket.emit('commandResult', result);
@@ -381,17 +432,38 @@ setInterval(() => {
     }
 }, 1000);
 
-// Health check endpoint
+// Health check endpoint with admin controls
 app.get('/health', (req, res) => {
-    res.json({ 
-        status: 'ok', 
-        service: 'circuit-breaker',
-        uptime: process.uptime(),
-        connections: io.engine.clientsCount
-    });
+    // Check if this is the admin control panel request
+    if (req.headers.accept && req.headers.accept.includes('text/html')) {
+        // Return the enhanced health dashboard with admin controls
+        res.render('health', {
+            title: 'Circuit Breaker Health Monitor',
+            health: {
+                status: 'Circuit Breaker Active',
+                service: 'circuit-breaker',
+                uptime: process.uptime(),
+                connections: io.engine.clientsCount,
+                adminState: adminState,
+                maintenanceState: maintenanceState
+            },
+            footer: { links: [] },
+            req: req
+        });
+    } else {
+        // Return JSON for API requests
+        res.json({ 
+            status: 'ok', 
+            service: 'circuit-breaker',
+            uptime: process.uptime(),
+            connections: io.engine.clientsCount,
+            adminState: adminState,
+            maintenanceState: maintenanceState
+        });
+    }
 });
 
-// Start server
+// Start server with automatic main server takeover
 server.listen(PORT, () => {
     console.log(`🔧 Circuit Breaker Server running on port ${PORT}`);
     console.log(`🌐 Maintenance mode active for BambiSleep.Chat`);
@@ -400,6 +472,31 @@ server.listen(PORT, () => {
     console.log(`🔌 Admin Socket: /admin namespace`);
     console.log(`🔑 Admin Token: ${ADMIN_TOKEN}`);
     console.log(`❤️  Health check: http://localhost:${PORT}/health`);
+    
+    // Automatically terminate any existing main server process on this port
+    console.log('🛑 Checking for existing processes on port 6969...');
+    const killCommand = process.platform === 'win32' 
+        ? `netstat -ano | findstr :6969`
+        : `lsof -ti:6969`;
+        
+    exec(killCommand, (error, stdout, stderr) => {
+        if (stdout && stdout.trim()) {
+            console.log('🛑 Found existing process on port 6969, terminating...');
+            const killCmd = process.platform === 'win32' 
+                ? `for /f "tokens=5" %a in ('netstat -ano ^| findstr :6969') do taskkill /PID %a /F`
+                : `lsof -ti:6969 | xargs kill -9`;
+                
+            exec(killCmd, (killError) => {
+                if (killError) {
+                    console.log('⚠️  Could not kill existing process, may cause conflicts');
+                } else {
+                    console.log('✅ Circuit breaker now has full control of port 6969');
+                }
+            });
+        } else {
+            console.log('✅ No existing processes found - circuit breaker has control');
+        }
+    });
 });
 
 // Graceful shutdown
