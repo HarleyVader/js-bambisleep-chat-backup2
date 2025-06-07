@@ -1,0 +1,31 @@
+[Unit]
+Description=BambiSleep.Chat - Hypnotic AI Girlfriend
+After=network.target mongodb.service
+Wants=mongodb.service
+
+[Service]
+Type=simple
+User=brandynette
+WorkingDirectory=/home/brandynette/web/bambisleep.chat/js-bambisleep-chat
+ExecStart=/usr/bin/node src/server.js
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=SERVER_PORT=6969
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=bambisleep-chat
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/brandynette/web/bambisleep.chat/js-bambisleep-chat
+ReadWritePaths=/tmp
+
+[Install]
+WantedBy=multi-user.target
