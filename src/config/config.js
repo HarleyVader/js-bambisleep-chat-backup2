@@ -34,10 +34,10 @@ const configSchemas = {
   MAX_UPLOAD_SIZE: { type: 'number', default: 10485760, min: 1024 },
   TTS_TIMEOUT: { type: 'number', default: 300000, min: 100000 },
   ALLOWED_ORIGINS: { type: 'array', default: ['https://bambisleep.chat', 'https://fickdichselber.com'] },
-  MAX_WORKER_THREADS: { type: 'number', default: 4, min: 1, max: 16 },  WORKER_TIMEOUT: { type: 'number', default: 60000, min: 1000 },
+  MAX_WORKER_THREADS: { type: 'number', default: 4, min: 1, max: 16 },
+  WORKER_TIMEOUT: { type: 'number', default: 60000, min: 1000 },
   LOG_LEVEL: { type: 'string', default: 'info', enum: ['error', 'warn', 'info', 'debug'] },
-  RUNPOD_API_KEY: { type: 'string', default: '', sensitive: true },
-  RUNPOD_API_URL: { type: 'string', default: 'https://api.runpod.ai/v2/ttz08s667h5t9r/run' },
+  GIT_WEBHOOK_SECRET: { type: 'string', default: '', sensitive: true },
 };
 
 /**

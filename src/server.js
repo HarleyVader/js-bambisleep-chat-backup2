@@ -575,7 +575,41 @@ async function initializeApp() {
           error: error.message
         });
       }
-    });// Set up middleware
+    });
+
+    // Git webhook endpoint for automatic reboot on push
+    app.post('/api/webhook/git-push', async (req, res) => {
+      try {
+        // Basic security check - verify webhook secret if configured
+        const webhookSecret = process.env.GIT_WEBHOOK_SECRET || config.GIT_WEBHOOK_SECRET;
+        if (webhookSecret) {
+          const providedSecret = req.headers['x-hub-signature-256'] || req.headers['x-secret'] || req.body.secret;
+          if (!providedSecret || providedSecret !== webhookSecret) {
+            logger.warning('Git webhook: Invalid or missing secret');
+            return res.status(401).json({ error: 'Unauthorized webhook request' });
+          }
+        }
+
+        logger.info('🔄 Git webhook received - initiating automatic reboot...');
+        
+        // Use existing reboot functionality
+        await rebootServer(600); // 10 minute maintenance window
+        
+        res.status(200).json({ 
+          success: true, 
+          message: 'Server reboot initiated via git webhook',
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        logger.error(`Git webhook reboot failed: ${error.message}`);
+        res.status(500).json({ 
+          error: 'Failed to initiate reboot',
+          details: error.message 
+        });
+      }
+    });
+
+    // Set up middleware
     setupMiddleware(app);
 
     // Set up routes
@@ -1124,7 +1158,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
       socket.on('authenticate', async (token) => {
         try {
           // Verify token against circuit breaker server
-          const response = await axios.post(`http://localhost:6970/api/admin/authenticate`, 
+          const response = await axios.post(`http://localhost:6969/api/admin/authenticate`, 
             { token }, 
             { timeout: 5000 }
           );
@@ -1151,7 +1185,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
         }
 
         try {
-          const response = await axios.post(`http://localhost:6970/api/admin/server/${data.action}`, 
+          const response = await axios.post(`http://localhost:6969/api/admin/server/${data.action}`, 
             { token: process.env.ADMIN_TOKEN }, 
             { timeout: 10000 }
           );
@@ -1186,7 +1220,8 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
           return;
         }
 
-        try {          const response = await axios.post(`http://localhost:6970/api/admin/git`, 
+        try {
+          const response = await axios.post(`http://localhost:6969/api/admin/git`, 
             { command: `git commit -m "${data.message}"`, token: process.env.ADMIN_TOKEN }, 
             { timeout: 15000 }
           );
@@ -1771,6 +1806,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
   } catch (error) {
     logger.error('Error in setupSocketHandlers:', error);
   }
+
 }
 
 /**
