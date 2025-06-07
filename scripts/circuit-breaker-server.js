@@ -20,7 +20,7 @@ const io = new SocketIOServer(server, {
     }
 });
 
-const PORT = process.env.SERVER_PORT || 6969;
+const PORT = process.env.CIRCUIT_BREAKER_PORT || process.env.SERVER_PORT || 6970;
 const STATUS_FILE = path.join(__dirname, '..', 'maintenance-status.json');
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'bambi-admin-2025';
 
