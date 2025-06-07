@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff69b4, #ff1493, #dc143c, #8b008b);
+            background-size: 400% 400%;
+            animation: hypnoticGradient 8s ease-in-out infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow: hidden;
+        }
+
+        @keyframes hypnoticGradient {
+            0%, 100% { background-position: 0% 50%; }
+            25% { background-position: 100% 50%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+        }
+
+        .maintenance-container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            max-width: 600px;
+            position: relative;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); }
+            50% { transform: scale(1.02); box-shadow: 0 25px 50px rgba(255, 105, 180, 0.4); }
+        }
+
+        .spiral-bg {
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            right: -50px;
+            bottom: -50px;
+            background: conic-gradient(from 0deg, transparent, rgba(255, 105, 180, 0.1), transparent);
+            animation: spiral 20s linear infinite;
+            border-radius: 20px;
+            z-index: -1;
+        }
+
+        @keyframes spiral {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #ff69b4, #ffffff, #ff1493);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: bold;
+            animation: shimmer 2s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .message {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .current-issue {
+            background: rgba(255, 105, 180, 0.2);
+            border: 1px solid rgba(255, 105, 180, 0.5);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .countdown-container {
+            margin-bottom: 2rem;
+        }
+
+        .countdown-label {
+            font-size: 1rem;
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+        }
+
+        .countdown {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ff69b4;
+            text-shadow: 0 0 20px rgba(255, 105, 180, 0.8);
+            margin-bottom: 0.5rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .estimated-time {
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .status-indicators {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .status-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 0.8rem;
+            min-width: 120px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .status-item:nth-child(2) { animation-delay: 1s; }
+        .status-item:nth-child(3) { animation-delay: 2s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .status-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-bottom: 0.3rem;
+        }
+
+        .status-value {
+            font-weight: bold;
+            color: #ff69b4;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: 1px solid;
+        }
+
+        .connected {
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .disconnected {
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        @media (max-width: 768px) {
+            .maintenance-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            .countdown {
+                font-size: 2.5rem;
+            }
+            
+            .status-indicators {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">
+        🔌 Connecting...
+    </div>
+
+    <div class="maintenance-container">
+        <div class="spiral-bg"></div>
+        
+        <h1 class="title">BambiSleep.Chat</h1>
+        <div class="message" id="mainMessage"><%= message %></div>
+        
+        <div class="current-issue" id="currentIssue">
+            <strong>Current Task:</strong> <span id="issueText"><%= currentIssue %></span>
+        </div>
+        
+        <div class="countdown-container">
+            <div class="countdown-label">Estimated completion in:</div>
+            <div class="countdown" id="countdown"><%= Math.floor(countdown / 60) %>:<%= String(countdown % 60).padStart(2, '0') %></div>
+            <div class="estimated-time" id="estimatedTime">Target: <%= estimatedCompletion %></div>
+        </div>
+        
+        <div class="status-indicators">
+            <div class="status-item">
+                <div class="status-label">Service Status</div>
+                <div class="status-value">🔧 Maintenance</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Started</div>
+                <div class="status-value" id="startTime"><%= startTime %></div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Progress</div>
+                <div class="status-value" id="progress">🔄 Active</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let countdownValue = <%= countdown %>;
+        
+        // Connection status
+        const connectionStatus = document.getElementById('connectionStatus');
+        
+        socket.on('connect', () => {
+            connectionStatus.textContent = '🟢 Connected';
+            connectionStatus.className = 'connection-status connected';
+        });
+        
+        socket.on('disconnect', () => {
+            connectionStatus.textContent = '🔴 Disconnected';
+            connectionStatus.className = 'connection-status disconnected';
+        });
+        
+        // Status updates
+        socket.on('statusUpdate', (data) => {
+            document.getElementById('mainMessage').textContent = data.message;
+            document.getElementById('issueText').textContent = data.currentIssue;
+            
+            if (data.estimatedCompletion) {
+                const estimatedTime = new Date(data.estimatedCompletion).toLocaleTimeString();
+                document.getElementById('estimatedTime').textContent = `Target: ${estimatedTime}`;
+            }
+        });
+        
+        // Countdown updates
+        socket.on('countdownUpdate', (data) => {
+            countdownValue = data.remaining;
+            updateCountdown();
+        });
+        
+        function updateCountdown() {
+            const minutes = Math.floor(countdownValue / 60);
+            const seconds = countdownValue % 60;
+            const display = `${minutes}:${String(seconds).padStart(2, '0')}`;
+            
+            document.getElementById('countdown').textContent = display;
+            
+            // Update progress indicator
+            const progressElement = document.getElementById('progress');
+            if (countdownValue <= 0) {
+                progressElement.textContent = '✅ Complete';
+            } else if (countdownValue < 60) {
+                progressElement.textContent = '🔥 Final';
+            } else if (countdownValue < 300) {
+                progressElement.textContent = '⚡ Almost';
+            } else {
+                progressElement.textContent = '🔄 Active';
+            }
+            
+            countdownValue = Math.max(0, countdownValue - 1);
+        }
+        
+        // Update countdown every second
+        setInterval(updateCountdown, 1000);
+        
+        // Request status update every 30 seconds
+        setInterval(() => {
+            socket.emit('requestStatus');
+        }, 30000);
+        
+        // Page visibility change handler
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                socket.emit('requestStatus');
+            }
+        });
+    </script>
+</body>
+</html>
