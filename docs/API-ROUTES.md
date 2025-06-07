@@ -3,7 +3,7 @@
 **Updated:** June 7, 2025  
 **Version:** 2.0  
 **Base URL:** `https://bambisleep.chat`  
-**Completion:** <span class="checkmark-indicator checked">100% Implementation</span>
+**Completion:** <span class="checkmark-indicator">85% Implementation</span>
 
 ## 📋 Overview
 
@@ -480,15 +480,45 @@ All routes integrate with the Socket.IO real-time system for:
 }
 ```
 
-### Error Pages
-- **404**: `views/error.ejs` - Page not found
-- **500**: `views/error.ejs` - Internal server error
+### Error Pages Status
 
-### Circuit Breaker
-**Template:** `views/circuit-breaker.ejs`
-- Activates during service failures
-- Real-time status monitoring
-- Automatic recovery detection
+<div class="health-card">
+  <h4><span class="status-indicator off">Error Handling Integration</span></h4>
+  <div class="health-metrics">
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator off">Not Integrated</span>
+      </div>
+      <div class="metric-label">error.ejs (200 lines)</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator off">Not Integrated</span>
+      </div>
+      <div class="metric-label">circuit-breaker.ejs (546 lines)</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">0%</div>
+      <div class="metric-label">Express Integration</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator off">Pending</span>
+      </div>
+      <div class="metric-label">Implementation Status</div>
+    </div>
+  </div>
+</div>
+
+**Current State:**
+- **404/500**: `views/error.ejs` - **🔧 REQUIRES INTEGRATION** with Express error middleware
+- **Circuit Breaker**: `views/circuit-breaker.ejs` - **🔧 REQUIRES INTEGRATION** with service failure detection
+
+**Integration Requirements:**
+1. Add Express error handling middleware in `server.js`
+2. Connect error.ejs to 404/500 routes
+3. Implement circuit-breaker.ejs activation logic
+4. Add error monitoring and recovery systems
 
 ### Maintenance Mode
 **Template:** `views/maintenance.ejs`
@@ -583,6 +613,98 @@ Each route module can export:
 - <span class="checkmark-indicator checked">Authentication checks where needed</span>
 - <span class="checkmark-indicator checked">Input validation and sanitization</span>
 - <span class="checkmark-indicator checked">Logging for debugging and monitoring</span>
+
+---
+
+## 🚧 Server.js Upgrade Requirements
+
+### Error Handling Integration - **PENDING**
+
+Based on views-routes architecture analysis, the following server.js upgrades are required:
+
+<div class="health-card">
+  <h4><span class="status-indicator off">Server Integration Status</span></h4>
+  <div class="health-metrics">
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator off">Missing</span>
+      </div>
+      <div class="metric-label">Express Error Middleware</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator off">Missing</span>
+      </div>
+      <div class="metric-label">404 Handler Route</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator off">Missing</span>
+      </div>
+      <div class="metric-label">500 Error Handler</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">15%</div>
+      <div class="metric-label">Error Integration</div>
+    </div>
+  </div>
+</div>
+
+### Required Server.js Additions
+
+**1. 404 Error Handler (Missing)**
+```javascript
+// Add AFTER all routes
+app.use('*', (req, res) => {
+  res.status(404).render('error', {
+    title: 'Page Not Found - BambiSleep.Chat',
+    error: {
+      status: 404,
+      message: 'The page you are looking for does not exist.'
+    }
+  });
+});
+```
+
+**2. Global Error Handler (Missing)**
+```javascript
+// Add as LAST middleware
+app.use((error, req, res, next) => {
+  console.error('Global error handler:', error);
+  
+  const status = error.status || 500;
+  const message = status === 500 ? 'Internal Server Error' : error.message;
+  
+  res.status(status).render('error', {
+    title: 'Error - BambiSleep.Chat',
+    error: {
+      status: status,
+      message: message
+    }
+  });
+});
+```
+
+**3. Circuit Breaker Integration (Missing)**
+```javascript
+// Circuit breaker middleware for service failures
+const circuitBreakerMiddleware = (req, res, next) => {
+  // Add circuit breaker logic here
+  if (systemFailureDetected) {
+    return res.render('circuit-breaker', {
+      title: 'Service Temporarily Unavailable - BambiSleep.Chat',
+      status: 'Circuit breaker activated due to system failures'
+    });
+  }
+  next();
+};
+```
+
+### Integration Priority
+1. **HIGH**: Add 404 handler to connect error.ejs (200 lines)
+2. **HIGH**: Add global error middleware for 500 errors
+3. **MEDIUM**: Implement circuit-breaker.ejs activation (546 lines)
+4. **LOW**: Add error monitoring and recovery systems
 
 ---
 

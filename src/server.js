@@ -728,9 +728,11 @@ function setupMiddleware(app) {
   app.use(fileUpload({
     limits: { fileSize: 50 * 1024 * 1024 }
   }));
-
   // Add the service availability check middleware
   app.use(checkServiceAvailability);
+  
+  // Add circuit breaker middleware for system failure detection
+  app.use(circuitBreakerMiddleware);
 
   // Serve static files with correct MIME types
   app.use('/css', express.static(path.join(__dirname, 'public/css'), {
@@ -1810,14 +1812,133 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
 }
 
 /**
+ * Circuit breaker middleware for service failures
+ * 
+ * @param {Request} req - Express request object
+ * @param {Response} res - Express response object  
+ * @param {Function} next - Express next function
+ */
+function circuitBreakerMiddleware(req, res, next) {
+  // Check for system failure conditions
+  const systemFailureDetected = checkSystemFailures();
+  
+  if (systemFailureDetected.active) {
+    logger.warning(`Circuit breaker activated: ${systemFailureDetected.reason}`);
+    
+    // Check if client prefers JSON response
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.status(503).json({
+        success: false,
+        error: {
+          message: 'Service temporarily unavailable due to system failures',
+          status: 503,
+          retryAfter: 30,
+          circuitBreaker: true
+        }
+      });
+    }
+    
+    // Render circuit-breaker.ejs for HTML requests
+    return res.status(503).render('circuit-breaker', {
+      title: 'Service Temporarily Unavailable - BambiSleep.Chat',
+      status: 'Circuit breaker activated due to system failures',
+      reason: systemFailureDetected.reason,
+      retryAfter: 30,
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  next();
+}
+
+/**
+ * Check for system failure conditions that should trigger circuit breaker
+ * 
+ * @returns {Object} - Object with active status and reason
+ */
+function checkSystemFailures() {
+  // Add your system failure detection logic here
+  // This is a placeholder implementation
+  
+  // Example conditions that could trigger circuit breaker:
+  // - Database connection failures
+  // - High error rates
+  // - External service failures
+  // - Memory/CPU threshold breaches
+  
+  return {
+    active: false,
+    reason: null
+  };
+}
+
+/**
  * Set up error handlers for the application
  * 
  * @param {Express} app - Express application instance
  */
 function setupErrorHandlers(app) {
-  app.use(errorHandler);
+  // 404 handler - must come AFTER all other routes
+  app.use('*', (req, res) => {
+    logger.warning(`404 Not Found: ${req.method} ${req.originalUrl}`);
+    
+    // Check if client prefers JSON response
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          message: 'The requested resource was not found',
+          status: 404
+        }
+      });
+    }
+    
+    // Render error.ejs for HTML requests
+    res.status(404).render('error', {
+      title: 'Page Not Found - BambiSleep.Chat',
+      error: {
+        status: 404,
+        message: 'The page you are looking for does not exist.',
+        description: 'Please check the URL and try again, or return to the homepage.'
+      }
+    });
+  });
 
-  logger.info('Error handlers configured');
+  // Global error handler - must be LAST middleware
+  app.use((error, req, res, next) => {
+    logger.error(`Global error handler: ${error.message}`, error.stack);
+    
+    const status = error.status || error.statusCode || 500;
+    const message = status === 500 ? 'Internal Server Error' : error.message;
+    
+    // Check if client prefers JSON response
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.status(status).json({
+        success: false,
+        error: {
+          message: process.env.NODE_ENV === 'production' && status >= 500 
+            ? 'Server error occurred' 
+            : message,
+          status: status,
+          timestamp: new Date().toISOString()
+        }
+      });
+    }
+    
+    // Render error.ejs for HTML requests
+    res.status(status).render('error', {
+      title: 'Error - BambiSleep.Chat',
+      error: {
+        status: status,
+        message: message,
+        description: status === 500 
+          ? 'An unexpected error occurred. Please try again later.'
+          : 'Please check your request and try again.'
+      }
+    });
+  });
+
+  logger.info('Error handlers configured - 404 and global error handlers with error.ejs integration');
 }
 
 /**
