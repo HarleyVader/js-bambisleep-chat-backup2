@@ -24,8 +24,6 @@ ProtectHome=false
 ReadWritePaths=/home/brandynette/web/bambisleep.chat/js-bambisleep-chat
 
 # Environment variables
-Environment=NODE_ENV=production
-Environment=ADMIN_TOKEN=bambi-admin-2025
 EnvironmentFile=-/home/brandynette/web/bambisleep.chat/js-bambisleep-chat/.env
 
 [Install]
