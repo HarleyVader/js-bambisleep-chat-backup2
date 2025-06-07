@@ -8,10 +8,6 @@ WorkingDirectory=/home/brandynette/web/bambisleep.chat/js-bambisleep-chat
 ExecStart=/home/brandynette/.nvm/versions/node/v24.1.0/bin/node /home/brandynette/web/bambisleep.chat/js-bambisleep-chat/scripts/circuit-breaker-server.js
 Restart=always
 RestartSec=5
-Environment=CIRCUIT_BREAKER_PORT=6970
-
-# Environment variables
-EnvironmentFile=-/home/brandynette/web/bambisleep.chat/js-bambisleep-chat/.env
 
 [Install]
 WantedBy=default.target

@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
 import express from 'express';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
@@ -11,6 +11,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Load .env from parent directory (where it's located)
+config({ path: path.join(__dirname, '..', '.env') });
+
 const app = express();
 const server = createServer(app);
 const io = new SocketIOServer(server, {
@@ -20,9 +23,14 @@ const io = new SocketIOServer(server, {
     }
 });
 
-const PORT = process.env.CIRCUIT_BREAKER_PORT || process.env.SERVER_PORT || 6970;
+const PORT = process.env.SERVER_PORT || 6969;
 const STATUS_FILE = path.join(__dirname, '..', 'maintenance-status.json');
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'bambi-admin-2025';
+
+// Debug: Log the admin token being used
+console.log('🔑 Admin token loaded:', ADMIN_TOKEN ? '***[SET]***' : 'NOT SET');
+console.log('🔑 Admin token first 10 chars:', ADMIN_TOKEN ? ADMIN_TOKEN.substring(0, 10) + '...' : 'NOT SET');
+console.log('🔑 Admin token length:', ADMIN_TOKEN ? ADMIN_TOKEN.length : 0);
 
 // Circuit breaker state
 let maintenanceState = {
@@ -614,9 +622,11 @@ const adminNamespace = io.of('/admin');
 adminNamespace.on('connection', (socket) => {
     console.log(`🔧 Admin connected: ${socket.id}`);
     let authenticated = false;
-    
-    // Authentication
+      // Authentication
     socket.on('authenticate', (token) => {
+        console.log(`🔍 Auth attempt: received token length=${token ? token.length : 0}, first 10 chars=${token ? token.substring(0, 10) + '...' : 'NONE'}`);
+        console.log(`🔍 Expected token length=${ADMIN_TOKEN.length}, first 10 chars=${ADMIN_TOKEN.substring(0, 10)}...`);
+        
         if (token === ADMIN_TOKEN) {
             authenticated = true;
             socket.emit('authenticated', { success: true });

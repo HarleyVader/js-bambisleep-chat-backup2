@@ -122,14 +122,149 @@
         .estimated-time {
             font-size: 0.9rem;
             opacity: 0.7;
-        }
-
-        .status-indicators {
+        }        .status-indicators {
             display: flex;
             justify-content: space-around;
             margin-top: 2rem;
             flex-wrap: wrap;
             gap: 1rem;
+        }
+
+        /* Status Grid - Enhanced for real-time display */
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 105, 180, 0.3);
+        }
+
+        .status-grid .status-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px;
+            min-width: auto;
+        }
+
+        .status-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-bottom: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-value {
+            font-weight: bold;
+            color: #ff69b4;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Status Indicators */
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status-indicator.online {
+            background: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-indicator.connecting {
+            background: #ffaa00;
+            box-shadow: 0 0 10px #ffaa00;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .status-indicator.offline {
+            background: #ff4444;
+            box-shadow: 0 0 10px #ff4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Progress bar */
+        .progress-container {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff69b4, #ff1493);
+            border-radius: 10px;
+            transition: width 1s ease-in-out;
+            width: 0%;
+            position: relative;
+            box-shadow: 0 0 10px rgba(255, 105, 180, 0.5);
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: progressShine 2s ease-in-out infinite;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
+            z-index: 1;
+        }
+
+        @keyframes progressShine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Timer Styles */
+        .timer-display {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .timer-warning {
+            color: #ff4444;
+            animation: textGlow 1s ease-in-out infinite alternate;
+        }
+
+        @keyframes textGlow {
+            0% { text-shadow: 0 0 10px currentColor; }
+            100% { text-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
         }
 
         .status-item {
@@ -178,9 +313,7 @@
         .disconnected {
             border-color: #ff0000;
             color: #ff0000;
-        }
-
-        @media (max-width: 768px) {
+        }        @media (max-width: 768px) {
             .maintenance-container {
                 padding: 2rem;
                 margin: 1rem;
@@ -190,13 +323,13 @@
                 font-size: 2rem;
             }
             
-            .countdown {
-                font-size: 2.5rem;
+            .status-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
             }
-            
-            .status-indicators {
-                flex-direction: column;
-                align-items: center;
+
+            .status-grid .status-item {
+                padding: 10px;
             }
         }
     </style>
@@ -211,103 +344,202 @@
         
         <h1 class="title">BambiSleep.Chat</h1>
         <div class="message" id="mainMessage"><%= message %></div>
-        
-        <div class="current-issue" id="currentIssue">
+          <div class="current-issue" id="currentIssue">
             <strong>Current Task:</strong> <span id="issueText"><%= currentIssue %></span>
         </div>
         
-        <div class="countdown-container">
-            <div class="countdown-label">Estimated completion in:</div>
-            <div class="countdown" id="countdown"><%= Math.floor(countdown / 60) %>:<%= String(countdown % 60).padStart(2, '0') %></div>
-            <div class="estimated-time" id="estimatedTime">Target: <%= estimatedCompletion %></div>
+        <!-- Real-time Status Display -->
+        <div class="status-grid">
+            <div class="status-item">
+                <span class="status-label">Time Remaining:</span>
+                <span class="status-value" id="timeRemaining">Calculating...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Elapsed Time:</span>
+                <span class="status-value" id="elapsedTime">Calculating...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Expected Finish:</span>
+                <span class="status-value" id="expectedFinish">Calculating...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Server Status:</span>
+                <span class="status-value" id="serverStatus">
+                    <span class="status-indicator online"></span>
+                    Circuit Breaker Active
+                </span>
+            </div>
         </div>
         
-        <div class="status-indicators">
-            <div class="status-item">
-                <div class="status-label">Service Status</div>
-                <div class="status-value">🔧 Maintenance</div>
-            </div>
-            <div class="status-item">
-                <div class="status-label">Started</div>
-                <div class="status-value" id="startTime"><%= startTime %></div>
-            </div>
-            <div class="status-item">
-                <div class="status-label">Progress</div>
-                <div class="status-value" id="progress">🔄 Active</div>
-            </div>
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar"></div>
+            <div class="progress-text" id="progressText">0%</div>
         </div>
-    </div>
-
-    <script>
+    </div>    <script>
         const socket = io();
-        let countdownValue = <%= countdown %>;
         
-        // Connection status
-        const connectionStatus = document.getElementById('connectionStatus');
+        // State variables
+        let maintenanceData = {
+            startTime: Date.now(),
+            countdown: <%= countdown %>,
+            estimatedCompletion: Date.now() + (<%= countdown %> * 1000),
+            message: '<%= message %>',
+            currentIssue: '<%= currentIssue %>'
+        };
         
+        let connected = false;
+        let timerInterval;
+
+        // DOM elements
+        const timeRemainingEl = document.getElementById('timeRemaining');
+        const elapsedTimeEl = document.getElementById('elapsedTime');
+        const expectedFinishEl = document.getElementById('expectedFinish');
+        const serverStatusEl = document.getElementById('serverStatus');
+        const progressBarEl = document.getElementById('progressBar');
+        const progressTextEl = document.getElementById('progressText');
+        const connectionStatusEl = document.getElementById('connectionStatus');
+        const mainMessageEl = document.getElementById('mainMessage');
+        const issueTextEl = document.getElementById('issueText');
+
+        // Format time duration
+        function formatDuration(seconds) {
+            if (seconds <= 0) return '00:00';
+            
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+            
+            if (hours > 0) {
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+            return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Format time
+        function formatTime(timestamp) {
+            return new Date(timestamp).toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        // Update display
+        function updateDisplay() {
+            const now = Date.now();
+            const elapsed = Math.floor((now - maintenanceData.startTime) / 1000);
+            const remaining = Math.max(0, maintenanceData.countdown - elapsed);
+            
+            // Update time displays
+            const remainingClass = remaining < 60 ? 'timer-warning' : '';
+            timeRemainingEl.innerHTML = `<span class="timer-display ${remainingClass}">${formatDuration(remaining)}</span>`;
+            elapsedTimeEl.innerHTML = `<span class="timer-display">${formatDuration(elapsed)}</span>`;
+            expectedFinishEl.innerHTML = `<span class="timer-display">${formatTime(maintenanceData.estimatedCompletion)}</span>`;
+            
+            // Calculate and update progress
+            const totalDuration = maintenanceData.countdown;
+            const progress = totalDuration > 0 ? Math.min(100, (elapsed / totalDuration) * 100) : 0;
+            
+            progressBarEl.style.width = `${progress}%`;
+            progressTextEl.textContent = `${Math.round(progress)}%`;
+            
+            // Update progress bar color based on completion
+            if (progress > 90) {
+                progressBarEl.style.background = 'linear-gradient(90deg, #00ff00, #17dbd8)';
+            } else if (progress > 75) {
+                progressBarEl.style.background = 'linear-gradient(90deg, #ffaa00, #ff1493)';
+            }
+        }
+
+        // Socket event handlers
         socket.on('connect', () => {
-            connectionStatus.textContent = '🟢 Connected';
-            connectionStatus.className = 'connection-status connected';
+            connected = true;
+            connectionStatusEl.textContent = '🟢 Connected';
+            connectionStatusEl.className = 'connection-status connected';
+            serverStatusEl.innerHTML = '<span class="status-indicator online"></span>Circuit Breaker Active';
+            
+            // Request current status
+            socket.emit('requestStatus');
         });
-        
+
         socket.on('disconnect', () => {
-            connectionStatus.textContent = '🔴 Disconnected';
-            connectionStatus.className = 'connection-status disconnected';
+            connected = false;
+            connectionStatusEl.textContent = '🔴 Disconnected';
+            connectionStatusEl.className = 'connection-status disconnected';
+            serverStatusEl.innerHTML = '<span class="status-indicator offline"></span>Circuit Breaker Offline';
         });
-        
-        // Status updates
+
         socket.on('statusUpdate', (data) => {
-            document.getElementById('mainMessage').textContent = data.message;
-            document.getElementById('issueText').textContent = data.currentIssue;
+            console.log('Received status update:', data);
             
-            if (data.estimatedCompletion) {
-                const estimatedTime = new Date(data.estimatedCompletion).toLocaleTimeString();
-                document.getElementById('estimatedTime').textContent = `Target: ${estimatedTime}`;
+            // Update maintenance data
+            if (data.startTime) maintenanceData.startTime = data.startTime;
+            if (data.countdown) maintenanceData.countdown = data.countdown;
+            if (data.estimatedCompletion) maintenanceData.estimatedCompletion = data.estimatedCompletion;
+            if (data.message) {
+                maintenanceData.message = data.message;
+                mainMessageEl.textContent = data.message;
             }
+            if (data.currentIssue) {
+                maintenanceData.currentIssue = data.currentIssue;
+                issueTextEl.textContent = data.currentIssue;
+            }
+            
+            updateDisplay();
         });
-        
-        // Countdown updates
+
         socket.on('countdownUpdate', (data) => {
-            countdownValue = data.remaining;
-            updateCountdown();
-        });
-        
-        function updateCountdown() {
-            const minutes = Math.floor(countdownValue / 60);
-            const seconds = countdownValue % 60;
-            const display = `${minutes}:${String(seconds).padStart(2, '0')}`;
-            
-            document.getElementById('countdown').textContent = display;
-            
-            // Update progress indicator
-            const progressElement = document.getElementById('progress');
-            if (countdownValue <= 0) {
-                progressElement.textContent = '✅ Complete';
-            } else if (countdownValue < 60) {
-                progressElement.textContent = '🔥 Final';
-            } else if (countdownValue < 300) {
-                progressElement.textContent = '⚡ Almost';
-            } else {
-                progressElement.textContent = '🔄 Active';
+            // Real-time countdown updates
+            if (data.remaining !== undefined) {
+                const now = Date.now();
+                const elapsed = data.elapsed || Math.floor((now - maintenanceData.startTime) / 1000);
+                
+                // Update our local state
+                maintenanceData.countdown = data.remaining + elapsed;
+                updateDisplay();
             }
+        });
+
+        // Start the display update timer
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateDisplay, 1000);
+            updateDisplay(); // Initial update
+        }
+
+        // Initialize
+        startTimer();
+        
+        // Auto-refresh if maintenance is complete
+        function checkForCompletion() {
+            const now = Date.now();
+            const elapsed = Math.floor((now - maintenanceData.startTime) / 1000);
+            const remaining = Math.max(0, maintenanceData.countdown - elapsed);
             
-            countdownValue = Math.max(0, countdownValue - 1);
+            if (remaining <= 0 && elapsed > 10) {
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 5000);
+            }
         }
         
-        // Update countdown every second
-        setInterval(updateCountdown, 1000);
-        
-        // Request status update every 30 seconds
-        setInterval(() => {
-            socket.emit('requestStatus');
-        }, 30000);
-        
-        // Page visibility change handler
+        setInterval(checkForCompletion, 5000);
+
+        // Handle page visibility changes
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden) {
+            if (!document.hidden && connected) {
                 socket.emit('requestStatus');
+                updateDisplay();
             }
         });
+
+        // Request status update every 30 seconds
+        setInterval(() => {
+            if (connected) {
+                socket.emit('requestStatus');
+            }
+        }, 30000);
     </script>
 </body>
 </html>
