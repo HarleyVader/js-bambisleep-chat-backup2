@@ -1,9 +1,9 @@
 {
   "isActive": true,
-  "message": "Bambi is upgrading the hypnotic experience",
+  "message": "Test message",
   "currentIssue": "Installing new triggers and spirals",
-  "countdown": 420,
+  "countdown": 60,
   "startTime": 1749264972406,
-  "estimatedCompletion": 1749265423609,
+  "estimatedCompletion": 1749265368964,
   "lastBroadcast": 270
 }
