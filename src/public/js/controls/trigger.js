@@ -44,10 +44,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearAll = document.getElementById('clear-all-triggers');
     const activateAll = document.getElementById('activate-all');
     const playTriggers = document.getElementById('play-triggers');
-    
-    if (activateAll) {
+      if (activateAll) {
       activateAll.addEventListener('click', function() {
-        document.querySelectorAll('.toggle-input').forEach(t => t.checked = !t.checked);
+        const toggles = document.querySelectorAll('.toggle-input');
+        const anyChecked = Array.from(toggles).some(t => t.checked);
+        toggles.forEach(t => t.checked = !anyChecked);
         saveTriggerState();
       });
     }

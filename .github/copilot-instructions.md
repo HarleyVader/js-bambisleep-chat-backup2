@@ -12,8 +12,8 @@
 - [ONLY] FINISHED you will run the command <git add .>
 - [ONLY] FINISHED you will run the command <git commit -m "copilot: [description of changes]">
 - [ONLY] FINISHED you will run the command <git push>
-- IF git push was successful you are allowed to <git pull> the codebase on <ssh brandynette@192.168.0.72> `cd ~/web/bambisleep.chat/js-bambisleep-chat`
-- ALLWAYS MAKE SURE TO RESTART THE WEBSERVER AFTER CHANGES
+- [ONLY] IF git push was successful you are allowed to <git pull> the codebase on <ssh brandynette@192.168.0.72> `cd ~/web/bambisleep.chat/js-bambisleep-chat`
+
 - [CURL] the codebase on <bambisleep.chat> to check if the changes are live
 
 ### RULE: Think More, Code Less

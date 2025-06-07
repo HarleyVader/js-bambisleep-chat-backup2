@@ -40,10 +40,7 @@
 
 > - **BambiSleep.Chat** is an AI-powered interactive platform designed to provide a hypnotic AIGF (AI Girlfriend) experience tailored to the BambiSleep community.
 > - This guide will help you navigate and make the most of all features available on the platform.
-
 > - BambiSleep.Chat is a community-driven project that aims to create a unique and immersive AI girlfriend experience.
-> - It combines advanced AI models, real-time chat, and hypnotic triggers to create a personalized interaction.
-> - The platform is built with a focus on user privacy, security, and community engagement.
 
 </details>
 
