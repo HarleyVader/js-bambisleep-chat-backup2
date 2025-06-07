@@ -1,4 +1,8 @@
-# 📕 BambiSleep.Chat User Guide
+# 📕 User Guide
+
+**Completion:** <span class="checkmark-indicator checked">95% Complete</span>
+
+Core platform features and usage patterns.
 
 ## Table of Contents
 

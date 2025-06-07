@@ -1,6 +1,8 @@
-# Debug Instructions for BambiSleep Chat
+# 🐛 Debug Guide
 
-This document provides information on how to run and debug the BambiSleep Chat application.
+**Completion:** <span class="checkmark-indicator checked">100% Ready</span>
+
+Debugging workflows and troubleshooting logic.
 
 ## Prerequisites
 

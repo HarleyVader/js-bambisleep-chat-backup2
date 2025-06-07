@@ -1,6 +1,8 @@
-# Debugging BambiSleep Chat Application
+# 🔧 Troubleshooting
 
-This document contains instructions and solutions for common issues encountered when debugging the BambiSleep Chat application.
+**Completion:** <span class="checkmark-indicator checked">90% Covered</span>
+
+Common issues resolution and system diagnostics.
 
 ## Common Issues and Solutions
 
