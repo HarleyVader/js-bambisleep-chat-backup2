@@ -426,13 +426,14 @@ async function initializeApp() {
           error: error.message
         });
       }
-    });
-
-    // Set up middleware
+    });    // Set up middleware
     setupMiddleware(app);
 
     // Set up routes
     setupRoutes(app);
+
+    // Set up TTS routes
+    setupTTSRoutes(app);
 
     // Add route for memory monitoring script
     app.get('/js/memory-monitoring.js', (req, res) => {

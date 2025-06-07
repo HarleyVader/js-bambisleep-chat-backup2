@@ -3,7 +3,7 @@
 services:
   app:
     build: .
-    container_name: bambisleep-chat-app
+    container_name: bambisleep-chat
     restart: always
     ports:
       - '6969:6969'
