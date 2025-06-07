@@ -278,7 +278,7 @@ This document provides comprehensive documentation for all API routes in the Bam
 - Automatic file discovery
 - Category organization
 
-**Template:** `views/docs/index.ejs`
+**Template:** `views/docs/docs-index.ejs`
 
 ### Individual Document
 **Route:** `/docs/:filename`  
@@ -288,7 +288,7 @@ This document provides comprehensive documentation for all API routes in the Bam
 **Parameters:**
 - `filename` (string): Markdown file name (without .md extension)
 
-**Template:** `views/docs/document.ejs`
+**Template:** `views/docs/docs-view.ejs`
 
 ---
 
@@ -368,7 +368,6 @@ All routes integrate with the Socket.IO real-time system for:
 ### Error Pages
 - **404**: `views/error.ejs` - Page not found
 - **500**: `views/error.ejs` - Internal server error
-- **503**: `views/service-unavailable.ejs` - Service unavailable
 
 ### Circuit Breaker
 **Template:** `views/circuit-breaker.ejs`
