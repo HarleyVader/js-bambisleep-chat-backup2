@@ -15,7 +15,8 @@ const DOCS_DIR = join(ROOT_DIR, 'docs');
 
 // Additional documentation directories to check
 const ADDITIONAL_DOC_PATHS = [
-  { dir: ROOT_DIR, category: 'Debug & Troubleshooting', pattern: /^(DEBUG|TROUBLESHOOTING)\.md$/i }
+  { dir: ROOT_DIR, category: 'Debug & Troubleshooting', pattern: /^(DEBUG|TROUBLESHOOTING)\.md$/i },
+  { dir: join(ROOT_DIR, 'src', 'public', 'docs'), category: 'Help & Guides', pattern: /\.md$/i }
 ];
 
 // Configure marked with highlight.js for syntax highlighting
@@ -615,45 +616,7 @@ router.get('/search', async (req, res) => {
   }
 });
 
-/**
- * Search documentation and return HTML results
- */
-router.get('/search/html', async (req, res) => {
-  try {
-    const query = req.query.q;
-    if (!query || query.trim().length < 2) {
-      return res.render('docs/docs-search', {
-        title: 'Documentation Search',
-        description: 'Search documentation',
-        query: '',
-        results: [],
-        groupedResults: {},
-        totalResults: 0
-      });
-    }
-    
-    // Reuse the JSON search endpoint
-    const searchUrl = `/docs/search?q=${encodeURIComponent(query)}`;
-    const response = await fetch(`http://localhost:${process.env.PORT || 3000}${searchUrl}`);
-    const searchData = await response.json();
-    
-    res.render('docs/docs-search', {
-      title: `Search Results for "${query}"`,
-      description: `Documentation search results for "${query}"`,
-      query,
-      results: searchData.results,
-      groupedResults: searchData.groupedResults,
-      totalResults: searchData.totalResults
-    });
-  } catch (error) {
-    console.error('Error rendering search results:', error.message);
-    res.status(500).render('error', {
-      title: 'Search Error',
-      error: 'Error searching documentation',
-      message: error.message
-    });
-  }
-});
+// HTML search route removed - use JSON search endpoint instead
 
 /**
  * Get document list as JSON (for API usage)

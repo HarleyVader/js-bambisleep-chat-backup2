@@ -315,3 +315,168 @@
 .error-button.primary:hover {
   background-color: var(--color-accent-dark);
 }
+
+/* Status Indicator Styles */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.status-indicator.active,
+.status-indicator.operational,
+.status-indicator.connected,
+.status-indicator.on {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.status-indicator.inactive,
+.status-indicator.offline,
+.status-indicator.disconnected,
+.status-indicator.off {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.status-indicator.warning,
+.status-indicator.degraded {
+  background-color: #fefce8;
+  color: #ca8a04;
+  border: 1px solid #fde047;
+}
+
+.status-indicator::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-indicator.active::before,
+.status-indicator.operational::before,
+.status-indicator.connected::before,
+.status-indicator.on::before {
+  background-color: #16a34a;
+  box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.2);
+}
+
+.status-indicator.inactive::before,
+.status-indicator.offline::before,
+.status-indicator.disconnected::before,
+.status-indicator.off::before {
+  background-color: #dc2626;
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.2);
+}
+
+.status-indicator.warning::before,
+.status-indicator.degraded::before {
+  background-color: #eab308;
+  box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.2);
+}
+
+/* Checkmark Indicators */
+.checkmark-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 500;
+}
+
+.checkmark-indicator.checked::before {
+  content: '✓';
+  color: #16a34a;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.checkmark-indicator.unchecked::before {
+  content: '✗';
+  color: #dc2626;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.checkmark-indicator.partial::before {
+  content: '~';
+  color: #eab308;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+/* API Response Status Styling */
+.markdown-body .api-status {
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin: 0.5rem 0;
+  background-color: var(--color-bg-card);
+  border-left: 3px solid var(--color-border);
+}
+
+.markdown-body .api-status.success {
+  background-color: #f0fdf4;
+  border-left-color: #16a34a;
+}
+
+.markdown-body .api-status.error {
+  background-color: #fef2f2;
+  border-left-color: #dc2626;
+}
+
+.markdown-body .api-status.warning {
+  background-color: #fefce8;
+  border-left-color: #eab308;
+}
+
+/* System Health Card Styling */
+.health-card {
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: var(--spacing-md);
+  margin: var(--spacing-sm) 0;
+}
+
+.health-card h4 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.health-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.metric-item {
+  text-align: center;
+  padding: var(--spacing-xs);
+  background-color: var(--color-bg);
+  border-radius: 4px;
+}
+
+.metric-value {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: var(--color-accent);
+}
+
+.metric-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}

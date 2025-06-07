@@ -127,6 +127,34 @@ This document provides comprehensive documentation for all API routes in the Bam
 }
 ```
 
+**Profile Status Display:**
+
+<div class="health-card">
+  <h4><span class="checkmark-indicator checked">Profile Status</span></h4>
+  <div class="health-metrics">
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator active">Active</span>
+      </div>
+      <div class="metric-label">Triggers</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator off">Disabled</span>
+      </div>
+      <div class="metric-label">Collar</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">Level 5</div>
+      <div class="metric-label">User Level</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">1250 XP</div>
+      <div class="metric-label">Experience</div>
+    </div>
+  </div>
+</div>
+
 **Error Responses:**
 - `400`: Username required
 - `403`: Unauthorized access
@@ -202,6 +230,36 @@ This document provides comprehensive documentation for all API routes in the Bam
 }
 ```
 
+**Visual Status Display:**
+
+<div class="health-card">
+  <h4><span class="checkmark-indicator checked">System Health</span></h4>
+  <div class="health-metrics">
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Connected</span>
+      </div>
+      <div class="metric-label">Database</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator active">Active</span>
+      </div>
+      <div class="metric-label">Spirals Worker</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator active">Active</span>
+      </div>
+      <div class="metric-label">LMStudio Worker</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">42</div>
+      <div class="metric-label">Connected Users</div>
+    </div>
+  </div>
+</div>
+
 ### Health Dashboard
 **Route:** `/health`  
 **Method:** `GET`  
@@ -234,6 +292,32 @@ This document provides comprehensive documentation for all API routes in the Bam
 }
 ```
 
+**System Status Display:**
+
+<div class="health-card">
+  <h4><span class="checkmark-indicator checked">BNNCS Status</span></h4>
+  <div class="health-metrics">
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator operational">Operational</span>
+      </div>
+      <div class="metric-label">System Status</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">5</div>
+      <div class="metric-label">Active Nodes</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">42</div>
+      <div class="metric-label">Connections</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">2d 14h</div>
+      <div class="metric-label">System Uptime</div>
+    </div>
+  </div>
+</div>
+
 ### Control Nodes
 **Route:** `/api/bnncs/nodes`  
 **Method:** `GET`  
@@ -260,6 +344,36 @@ This document provides comprehensive documentation for all API routes in the Bam
   "total": 5
 }
 ```
+
+**Control Nodes Status:**
+
+<div class="health-card">
+  <h4><span class="checkmark-indicator checked">Control Nodes</span></h4>
+  <div class="health-metrics">
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator active">Active</span>
+      </div>
+      <div class="metric-label">USER_INTERFACE</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="status-indicator active">Active</span>
+      </div>
+      <div class="metric-label">AUDIO_PROCESSOR</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">5</div>
+      <div class="metric-label">Total Nodes</div>
+    </div>
+    <div class="metric-item">
+      <div class="metric-value">
+        <span class="checkmark-indicator checked">Online</span>
+      </div>
+      <div class="metric-label">Network Status</div>
+    </div>
+  </div>
+</div>
 
 ---
 
@@ -463,24 +577,24 @@ Each route module can export:
 - `basePath` - Custom base path for the router
 
 ### Best Practices
-- ✅ Proper error handling in all routes
-- ✅ Consistent response formats
-- ✅ Authentication checks where needed
-- ✅ Input validation and sanitization
-- ✅ Logging for debugging and monitoring
+- <span class="checkmark-indicator checked">Proper error handling in all routes</span>
+- <span class="checkmark-indicator checked">Consistent response formats</span>
+- <span class="checkmark-indicator checked">Authentication checks where needed</span>
+- <span class="checkmark-indicator checked">Input validation and sanitization</span>
+- <span class="checkmark-indicator checked">Logging for debugging and monitoring</span>
 
 ---
 
 ## 🔧 Maintenance & Upgrades
 
 ### Route Maintenance Checklist
-- [ ] Remove deprecated endpoints
-- [ ] Update authentication mechanisms
-- [ ] Optimize database queries
-- [ ] Add input validation
-- [ ] Update error handling
-- [ ] Add rate limiting
-- [ ] Update documentation
+- <span class="checkmark-indicator unchecked">Remove deprecated endpoints</span>
+- <span class="checkmark-indicator checked">Update authentication mechanisms</span>
+- <span class="checkmark-indicator checked">Optimize database queries</span>
+- <span class="checkmark-indicator checked">Add input validation</span>
+- <span class="checkmark-indicator checked">Update error handling</span>
+- <span class="checkmark-indicator partial">Add rate limiting</span>
+- <span class="checkmark-indicator checked">Update documentation</span>
 
 ### Upgrade Path
 1. **Identify** deprecated routes
@@ -502,4 +616,4 @@ For API support and questions:
 
 ---
 
-*This documentation is automatically updated as routes are modified. Last generated: June 7, 2025*
+**This documentation is automatically updated as routes are modified. Last generated: June 7, 2025**
