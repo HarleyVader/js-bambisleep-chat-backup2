@@ -13,7 +13,7 @@ const app = express();
 const server = createServer(app);
 const io = new SocketIOServer(server, {
     cors: {
-        origin: "*",
+        origin: "https://bambisleep.chat",
         methods: ["GET", "POST"]
     }
 });
