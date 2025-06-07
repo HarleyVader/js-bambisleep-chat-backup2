@@ -14,6 +14,7 @@
 - [ONLY] FINISHED you will run the command <git push>
 - [ONLY] IF git push was successful you are allowed to <git pull>
 - [ONLY] <ssh brandynette@192.168.0.72> `cd ~/web/bambisleep.chat/js-bambisleep-chat`
+- [INTERACTIVE] inteactive sudo password request
 
 - [CURL] the codebase on <bambisleep.chat> to check if the changes are live
 

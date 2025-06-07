@@ -27,4 +27,4 @@ ReadWritePaths=/home/brandynette/web/bambisleep.chat/js-bambisleep-chat
 EnvironmentFile=-/home/brandynette/web/bambisleep.chat/js-bambisleep-chat/.env
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
