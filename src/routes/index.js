@@ -193,16 +193,32 @@ router.get('/api/triggers', async (req, res) => {
     const triggerData = await fs.readFile(triggersPath, 'utf8');
     const triggers = JSON.parse(triggerData).triggers;
     
-    res.json({ triggers });
+    // Return consistent response format
+    res.json({
+      success: true,
+      data: {
+        triggers: triggers,
+        total: triggers.length
+      },
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     logger.error('Error loading triggers:', error);
     
-    // Return fallback triggers
-    res.json({
-      triggers: [
-        { name: "BAMBI SLEEP", description: "triggers deep trance and receptivity", category: "core" },
-        { name: "GOOD GIRL", description: "reinforces obedience and submission", category: "core" }
-      ]
+    // Return fallback triggers with consistent error format
+    const fallbackTriggers = [
+      { name: "BAMBI SLEEP", description: "triggers deep trance and receptivity", category: "core" },
+      { name: "GOOD GIRL", description: "reinforces obedience and submission", category: "core" }
+    ];
+    
+    res.status(500).json({
+      success: false,
+      data: {
+        triggers: fallbackTriggers,
+        total: fallbackTriggers.length
+      },
+      error: 'Error loading triggers from config',
+      timestamp: new Date().toISOString()
     });
   }
 });
@@ -212,53 +228,23 @@ router.get('/api/profile/:username/data', async (req, res) => {
   try {
     const username = req.params.username;
     
-    if (!username) {
-      return res.status(400).json({ error: 'Username is required' });
+    if (!username || typeof username !== 'string' || username.length < 1) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Valid username is required',
+        timestamp: new Date().toISOString()
+      });
     }
     
     // Verify that this is the user's own profile using the cookie
-    const cookie = req.cookies?.bambiid;
     const bambinameCookie = req.cookies?.bambiname;
     
     if (bambinameCookie && decodeURIComponent(bambinameCookie) !== username) {
-      return res.status(403).json({ error: 'Unauthorized access to profile' });
-    }
-    
-    // Get profile by username
-    const Profile = getModel('Profile');
-    const profile = await withDbConnection(async () => {
-      return await Profile.findOne({ username });
-    });
-    
-    if (!profile) {
-      return res.status(404).json({ error: 'Profile not found' });
-    }
-    
-    // Return sanitized profile data
-    res.json({
-      username: profile.username,
-      displayName: profile.displayName || profile.username,
-      level: profile.level || 0,
-      xp: profile.xp || 0,
-      activeTriggers: profile.activeTriggers || [],
-      systemControls: profile.systemControls || { 
-        activeTriggers: [],
-        collarEnabled: false,
-        collarText: ''
-      }
-    });
-  } catch (error) {
-    logger.error(`Error fetching profile data for ${req.params.username}:`, error);
-    res.status(500).json({ error: 'Error fetching profile data' });
-  }
-});
-
-router.get('/api/profile/:username/system-controls', async (req, res) => {
-  try {
-    const username = req.params.username;
-    
-    if (!username) {
-      return res.status(400).json({ error: 'Username is required' });
+      return res.status(403).json({ 
+        success: false,
+        error: 'Unauthorized access to profile',
+        timestamp: new Date().toISOString()
+      });
     }
     
     // Get profile by username
@@ -269,24 +255,89 @@ router.get('/api/profile/:username/system-controls', async (req, res) => {
     
     if (!profile) {
       return res.status(404).json({ 
-        activeTriggers: [],
-        level: 0,
-        xp: 0
+        success: false,
+        error: 'Profile not found',
+        timestamp: new Date().toISOString()
       });
     }
     
-    // Return system controls data
+    // Return sanitized profile data with consistent format
     res.json({
-      activeTriggers: profile.activeTriggers || [],
-      systemControls: profile.systemControls || {},
-      level: profile.level || 0,
-      xp: profile.xp || 0
+      success: true,
+      data: {
+        username: profile.username,
+        displayName: profile.displayName || profile.username,
+        level: profile.level || 0,
+        xp: profile.xp || 0,
+        activeTriggers: profile.activeTriggers || [],
+        systemControls: profile.systemControls || { 
+          activeTriggers: [],
+          collarEnabled: false,
+          collarText: ''
+        }
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error(`Error fetching profile data for ${req.params.username}:`, error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+router.get('/api/profile/:username/system-controls', async (req, res) => {
+  try {
+    const username = req.params.username;
+    
+    if (!username || typeof username !== 'string' || username.length < 1) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Valid username is required',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Get profile by username
+    const Profile = getModel('Profile');
+    const profile = await withDbConnection(async () => {
+      return await Profile.findOne({ username });
+    });
+    
+    if (!profile) {
+      return res.status(404).json({ 
+        success: false,
+        data: {
+          activeTriggers: [],
+          level: 0,
+          xp: 0
+        },
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // Return system controls data with consistent format
+    res.json({
+      success: true,
+      data: {
+        activeTriggers: profile.activeTriggers || [],
+        systemControls: profile.systemControls || {},
+        level: profile.level || 0,
+        xp: profile.xp || 0
+      },
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     logger.error(`Error fetching system controls for ${req.params.username}:`, error);
     res.status(500).json({ 
-      error: 'Error fetching system controls',
-      activeTriggers: []
+      success: false,
+      error: 'Internal server error',
+      data: {
+        activeTriggers: []
+      },
+      timestamp: new Date().toISOString()
     });
   }
 });
