@@ -33,7 +33,7 @@ import footerConfig from './config/footer.config.js';
 
 // Import routes
 import indexRoute from './routes/index.js';
-import psychodelicTriggerManiaRouter from './routes/psychodelic-trigger-mania.js';
+import psychodelicTriggerManiaRouter from './routes/psychodelic.js';
 import helpRoute from './routes/help.js';
 import chatRouter, { basePath as chatBasePath } from './routes/chat.js';
 import healthRoute from './routes/health.js';
@@ -672,10 +672,8 @@ async function initializeApp() {
     });
 
     // Set up middleware
-    setupMiddleware(app);
-
-    // Set up routes
-    setupRoutes(app);
+    setupMiddleware(app);    // Set up routes
+    await setupRoutes(app);
 
     // Set up TTS routes
     setupTTSRoutes(app);
@@ -791,29 +789,48 @@ function setupMiddleware(app) {
  * 
  * @param {Express} app - Express application instance
  */
-async function setupRoutes(app) {
-  try {
+async function setupRoutes(app) {  try {
     logger.info('🛤️ Setting up routes...');
-    
-    // TEST: Add a simple direct route for comparison
-    app.get('/test-direct', (req, res) => {
-      res.send('Direct route works!');
+    app.get('/', (req, res) => {
+      try {
+        // Simplified data for the main page
+        res.render('index', { 
+          profile: null,
+          username: req.cookies?.bambiname ? decodeURIComponent(req.cookies.bambiname) : '',
+          footerLinks: [],
+          footer: { links: [] },
+          chatMessages: [],
+          triggers: [
+            { name: "BAMBI SLEEP", description: "triggers deep trance and receptivity", category: "core" },
+            { name: "GOOD GIRL", description: "reinforces obedience and submission", category: "core" }
+          ],
+          title: 'BambiSleep.Chat - Hypnotic AI Chat',
+          controlNetworkStatus: null,
+          controlNetworkMetrics: null
+        });    } catch (error) {
+        res.status(500).send('Error rendering page: ' + error.message);
+      }
     });
-    logger.info('✅ Test direct route registered at /test-direct');
     
-    // Routes that don't strictly require database access
+    app.get('/health', (req, res) => {
+      res.send('Health route works!');
+    });// Routes that don't strictly require database access
     const basicRoutes = [
-      { path: '/', handler: indexRoute, dbRequired: false },
       { path: '/psychodelic-trigger-mania', handler: psychodelicTriggerManiaRouter, dbRequired: false },
-      { path: '/help', handler: helpRoute, dbRequired: false },
-      { path: '/health', handler: healthRoute, dbRequired: false },
       { path: chatBasePath, handler: chatRouter, dbRequired: true }
     ];
-    
-    // Import and setup docs router
+      // Import and setup docs router
     const docsRouter = await import('./routes/docs.js');
     app.use('/docs', dbFeatureCheck(false), docsRouter.default);
     logger.info('✅ Docs routes registered at /docs');
+    
+    // Setup help router
+    app.use('/help', dbFeatureCheck(false), helpRoute);
+    logger.info('✅ Help routes registered at /help');
+    
+    // TEST: Register psychodelic route directly without middleware
+    app.use('/psychodelic-trigger-mania', psychodelicTriggerManiaRouter);
+    logger.info('✅ TEST: Psychodelic route registered directly at /psychodelic-trigger-mania');
     
     // Setup basic routes with appropriate database checks
     if (Array.isArray(basicRoutes)) {

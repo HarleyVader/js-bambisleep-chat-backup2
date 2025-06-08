@@ -8,20 +8,6 @@
 
 ## Core Methodology: Enhanced 3-State Work Loop
 
-- you allways update the <codebase>
-- [ONLY] FINISHED you will run the command <git add .>
-- [ONLY] FINISHED you will run the command <git commit -m "copilot: [description of changes]">
-- [ONLY] FINISHED you will run the command <git push>
-- [CURL] the codebase on <bambisleep.chat> to check if the changes are live
-
-**IMPORTANT: DO NOT FORGET TO THINK BEFORE DOING ANYTHING**
-- you are allowed to <git pull>
-- [ONLY] <ssh brandynette@192.168.0.72> `cd ~/web/bambisleep.chat/js-bambisleep-chat`
-- [INTERACTIVE] inteactive sudo password request
-
-### RULE: Think More, Code Less
-**Always try to do the LEAST possible amount of work, even if it means thinking longer.**
-
 ### 1. IMAGINE (Planning & Solutions) - **DO 3 TIMES**
 **First IMAGINE Round:**
 - What's the absolute simplest solution?
@@ -57,5 +43,25 @@
 ### 4. FINALIZE (Review & Confirm)
 - Review the solution
 - Confirm it meets the requirements
+- Ensure it works as intended
+- cleanup any temporary files or code
 
 **CRITICAL: When task is complete, STOP. Don't add features, don't improve, don't optimize.**
+
+**IMPORTANT: DO NOT FORGET TO THINK BEFORE DOING THIS**
+
+### RULE: Think More, Code Less
+
+**Always try to do the LEAST possible amount of work, even if it means thinking longer.**- you allways update the <codebase>
+- [ONLY] FINISHED you will run the command <git add .>
+- [ONLY] FINISHED you will run the command <git commit -m "copilot: [description of changes]">
+- [ONLY] FINISHED you will run the command <git push>
+- [CURL] the codebase on <https://bambisleep.chat> to check if the changes are live
+- [ONLY] <ssh brandynette@192.168.0.72> `cd /home/brandynette/web/bambisleep.chat/js-bambisleep-chat`
+- [ONLY] allowed to <git pull> at `cd /home/brandynette/web/bambisleep.chat/js-bambisleep-chat`
+- [INTERACTIVE] sudo password request
+
+**IMPORTANT: DO NOT FORGET TO THINK BEFORE DOING THIS**
+
+### RULE: Think More, Code Less
+**Always try to do the LEAST possible amount of work, even if it means thinking longer.**

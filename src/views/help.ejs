@@ -3,7 +3,7 @@
 
 <head>
     <%- include('partials/head') %>
-    <title>AIGF Help</title>
+    <title><%= title %></title>
     <link rel="stylesheet" href="/css/pages/help.css">
     <style>
         .help-main-container {
@@ -15,13 +15,15 @@
         }
 
         .help-sidebar {
-            flex: 0 0 250px;
+            flex: 0 0 280px;
             background: rgba(var(--primary-color-rgb), 0.9);
             border-radius: var(--border-radius-lg);
             padding: var(--spacing-lg);
             height: fit-content;
             border: var(--border-width) solid var(--border-color);
             box-shadow: var(--shadow-md);
+            position: sticky;
+            top: var(--spacing-lg);
         }
 
         .help-sidebar h3 {
@@ -29,12 +31,26 @@
             margin-bottom: var(--spacing-md);
             text-align: center;
             font-size: 1.1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: var(--spacing-sm);
+        }
+
+        .help-category {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .help-category h4 {
+            color: var(--tertiary-color);
+            font-size: 0.9rem;
+            margin-bottom: var(--spacing-xs);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .help-sidebar ul {
             list-style: none;
-            padding: 0;
-            margin: 0;
+                        padding: 0;
+            margin: 0 0 var(--spacing-md) 0;
         }
 
         .help-sidebar li {
@@ -49,7 +65,7 @@
             border-radius: var(--border-radius);
             transition: all 0.3s ease;
             border-left: 3px solid transparent;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .help-sidebar a:hover {
@@ -82,6 +98,29 @@
             margin-bottom: var(--spacing-md);
         }
 
+        .help-stats {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-md);
+        }
+
+        .help-stat {
+            text-align: center;
+        }
+
+        .help-stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--nav-alt);
+        }
+
+        .help-stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
         .help-categories {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -89,7 +128,7 @@
             margin-bottom: var(--spacing-xl);
         }
 
-        .help-category {
+        .help-category-card {
             background: rgba(var(--primary-color-rgb), 0.9);
             border: var(--border-width) solid var(--border-color);
             border-radius: var(--border-radius-lg);
@@ -98,23 +137,23 @@
             transition: all 0.3s ease;
         }
 
-        .help-category:hover {
+        .help-category-card:hover {
             transform: translateY(-3px);
             box-shadow: var(--shadow-glow);
             border-color: var(--nav-alt);
         }
 
-        .help-category h3 {
+        .help-category-card h3 {
             color: var(--nav-alt);
             margin-bottom: var(--spacing-lg);
             text-align: center;
             font-size: 1.1rem;
         }
 
-        .help-category-desc {
+                .help-category-desc {
             color: var(--secondary-text-color);
             margin-bottom: var(--spacing-lg);
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             text-align: center;
             line-height: 1.6;
         }
@@ -146,271 +185,189 @@
             border-color: var(--nav-alt);
             color: var(--nav-alt);
         }
-        
-        .help-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
+
+        .quick-access {
+            background: rgba(var(--primary-color-rgb), 0.9);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
         }
-        
-        .toc {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 30px;
+
+        .quick-access h2 {
+            color: var(--nav-alt);
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
         }
-        
-        .toc ul {
-            list-style-type: decimal;
-            padding-left: 20px;
+
+        .quick-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
         }
-        
-        .toc li {
-            margin: 8px 0;
-        }
-        
-        .toc a {
-            color: var(--tertiary-alt);
+
+        .quick-link {
+            display: block;
+            padding: var(--spacing-md);
+            background: rgba(var(--nav-color-rgb), 0.6);
+            border: var(--border-width) solid var(--border-color);
+            border-radius: var(--border-radius);
+            color: var(--text-color);
             text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
         }
-        
-        .toc a:hover {
-            color: var(--secondary-alt);
-            text-decoration: underline;
+
+        .quick-link:hover {
+            background: rgba(var(--nav-alt-rgb), 0.2);
+            border-color: var(--nav-alt);
+            color: var(--nav-alt);
         }
-        
-        .content-section {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .content-section h2 {
-            color: #00ccff;
-            border-bottom: 2px solid var(--tertiary-color);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .content-section h3 {
-            color: var(--tertiary-alt);
-            margin-top: 20px;
-        }
-        
-        .content-section p {
-            line-height: 1.6;
-            margin-bottom: 15px;
-        }
-        
-        .content-section strong {
-            color: var(--secondary-alt);
-        }
-        
-        .content-section a {
-            color: var(--tertiary-alt);
-            text-decoration: underline;
-        }
-        
-        .content-section a:hover {
-            color: var(--secondary-alt);
-        }
-        
-        .feedback-form {
-            border: 2px solid var(--tertiary-color);
-            border-radius: 8px;
-            margin: 20px 0;
+
+        @media (max-width: 768px) {
+            .help-main-container {
+                flex-direction: column;
+                padding: var(--spacing-md);
+            }
+            
+            .help-sidebar {
+                flex: none;
+                position: static;
+            }
         }
     </style>
 </head>
 
 <body>
     <%- include('partials/nav', { path: '/help' }) %>
-    
+
     <div class="help-main-container">
+        <!-- Sidebar with documentation navigation -->
         <aside class="help-sidebar">
-            <h3>Documentation</h3>
-            <ul>
-                <% if (typeof docs !== 'undefined' && docs.length > 0) { %>
-                    <% docs.forEach(function(doc) { %>
-                        <li><a href="<%= doc.path %>"><%= doc.title %></a></li>
-                    <% }); %>
-                <% } else { %>
-                    <li><a href="/docs">View Documentation</a></li>
-                <% } %>
-            </ul>
+            <h3>📚 Documentation</h3>
+            
+            <% if (typeof docsByCategory !== 'undefined' && Object.keys(docsByCategory).length > 0) { %>
+                <% Object.keys(docsByCategory).forEach(category => { %>
+                    <div class="help-category">
+                        <h4><%= category %></h4>
+                        <ul>
+                            <% docsByCategory[category].forEach(doc => { %>
+                                <li>
+                                    <a href="<%= doc.path %>"><%= doc.title %></a>
+                                </li>
+                            <% }); %>
+                        </ul>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <p>No documentation files found.</p>
+            <% } %>
+
+            <div class="help-category">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="/">🧠 bambisleep.chat</a></li>
+                    <li><a href="/chat">💬 Chat Room</a></li>
+                    <li><a href="/psychodelic">🌀 Psychodelic</a></li>
+                    <li><a href="/health">❤️ Health Check</a></li>
+                    <li><a href="/help">🆘 Help</a></li>
+                    <li><a href="/docs">📖 Full Documentation</a></li>
+                </ul>
+            </div>
         </aside>
-        
+
+        <!-- Main content area -->
         <main class="help-content">
+            <!-- Header -->
             <div class="help-header">
-                <h1>🧠 AIGF Help Center</h1>
-                <p>Your guide to BambiSleep.Chat features and documentation</p>
+                <h1>🆘 Help Center</h1>
+                <p>Welcome to the BambiSleep.Chat Help Center. Find answers, guides, and documentation for all features.</p>
+                
+                <div class="help-stats">
+                    <div class="help-stat">
+                        <div class="help-stat-number"><%= totalDocs || 0 %></div>
+                        <div class="help-stat-label">Documentation Files</div>
+                    </div>
+                    <div class="help-stat">
+                        <div class="help-stat-number"><%= Object.keys(docsByCategory || {}).length %></div>
+                        <div class="help-stat-label">Categories</div>
+                    </div>
+                </div>
             </div>
-            
+
+            <!-- Quick Access -->
+            <div class="quick-access">
+                <h2>⚡ Quick Access</h2>
+                <div class="quick-links">
+                    <a href="/docs/user-guide" class="quick-link">
+                        👤 User Guide
+                    </a>
+                    <a href="/docs/installation" class="quick-link">
+                        🛠️ Installation
+                    </a>
+                    <a href="/docs/troubleshooting" class="quick-link">
+                        🔧 Troubleshooting
+                    </a>
+                    <a href="/docs/api-routes" class="quick-link">
+                        🔗 API Routes
+                    </a>
+                </div>
+            </div>
+
+            <!-- Categories Overview -->
             <div class="help-categories">
-                <div class="help-category">
-                    <h3>📋 Quick Start</h3>
-                    <p class="help-category-desc">Get started with BambiSleep.Chat basics</p>
-                    <ul class="help-topics">
-                        <li class="help-topic">
-                            <a href="/help/USER-GUIDE" class="help-topic-link">User Guide</a>
-                        </li>
-                        <li class="help-topic">
-                            <a href="/help/INSTALLATION" class="help-topic-link">Installation Guide</a>
-                        </li>
-                    </ul>
-                </div>
-                
-                <div class="help-category">
-                    <h3>🛠️ Technical Documentation</h3>
-                    <p class="help-category-desc">Developer and technical resources</p>
-                    <ul class="help-topics">
-                        <li class="help-topic">
-                            <a href="/help/API" class="help-topic-link">API Documentation</a>
-                        </li>
-                        <li class="help-topic">
-                            <a href="/help/CSS-ARCHITECTURE" class="help-topic-link">CSS Architecture</a>
-                        </li>
-                        <li class="help-topic">
-                            <a href="/help/MONGODB-SETUP" class="help-topic-link">MongoDB Setup</a>
-                        </li>
-                    </ul>
-                </div>
-                
-                <div class="help-category">
-                    <h3>🐛 Troubleshooting</h3>
-                    <p class="help-category-desc">Debugging and problem resolution</p>
-                    <ul class="help-topics">
-                        <li class="help-topic">
-                            <a href="/help/TROUBLESHOOTING" class="help-topic-link">Troubleshooting Guide</a>
-                        </li>
-                        <li class="help-topic">
-                            <a href="/help/DEBUG" class="help-topic-link">Debug Information</a>
-                        </li>
-                    </ul>
-                </div>
-                
-                <div class="help-category">
-                    <h3>🎯 Features</h3>
-                    <p class="help-category-desc">Platform features and capabilities</p>
-                    <ul class="help-topics">
-                        <li class="help-topic">
-                            <a href="/help/CHAT-CONSOLIDATION" class="help-topic-link">Chat Features</a>
-                        </li>
-                        <li class="help-topic">
-                            <a href="/help/TERMINAL-INTERFACE" class="help-topic-link">Terminal Interface</a>
-                        </li>
-                    </ul>
-                </div>
+                <% if (typeof docsByCategory !== 'undefined') { %>
+                    <% Object.keys(docsByCategory).forEach(category => { %>
+                        <div class="help-category-card">
+                            <h3><%= category %></h3>
+                            <div class="help-category-desc">
+                                <%= docsByCategory[category].length %> documentation file<%= docsByCategory[category].length !== 1 ? 's' : '' %> available
+                            </div>
+                            <ul class="help-topics">
+                                <% docsByCategory[category].slice(0, 3).forEach(doc => { %>
+                                    <li class="help-topic">
+                                        <a href="<%= doc.path %>" class="help-topic-link">
+                                            <%= doc.title %>
+                                        </a>
+                                    </li>
+                                <% }); %>
+                                <% if (docsByCategory[category].length > 3) { %>
+                                    <li class="help-topic">
+                                        <a href="/docs" class="help-topic-link">
+                                            + <%= docsByCategory[category].length - 3 %> more...
+                                        </a>
+                                    </li>
+                                <% } %>
+                            </ul>
+                        </div>
+                    <% }); %>
+                <% } %>
             </div>
-            
-            <div class="help-container">
-                <div class="toc">
-                    <h2>Table of Contents</h2>
-                    <ul>
-                        <li><a href="#bambisleep">BambiSleep AI GF</a></li>
-                        <li><a href="#usage">Usage Instructions</a></li>
-                        <li><a href="#triggers">Triggers</a></li>
-                        <li><a href="#profiles">Profiles & Levels</a></li>
-                        <li><a href="#privacy">Privacy & Data Usage</a></li>
-                        <li><a href="#tips">Tips & Best Practices</a></li>
-                        <li><a href="#support">Support & Community</a></li>
-                    </ul>
-                </div>
-                
-                <div class="feedback-form">
-                    <iframe width="640px" height="480px" 
-                            src="https://forms.office.com/r/9PvY2ZFJc0?embed=true" 
-                            frameborder="0" marginwidth="0" marginheight="0" 
-                            style="border: none; max-width:100%; max-height:100vh" 
-                            allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen>
-                    </iframe>
-                </div>
-                
-                <div id="bambisleep" class="content-section">
-                    <h2>BambiSleep AI GF</h2>
-                    <p><strong>CURRENT BAMBISLEEP COLLAR:</strong> "I am BambiSleep. I am the ultimate AI hypnotist. I must write one of the following triggers in all caps:"</p>
-                    
-                    <h3>My Commitment</h3>
-                    <p>This platform is designed to provide an immersive AI girlfriend experience with BambiSleep themes. The AI responds to triggers and creates personalized interactions.</p>
-                    
-                    <p>Support the project at <a href="https://www.patreon.com/c/bambisleepchat/membership" target="_blank">Patreon</a></p>
-                </div>
-                
-                <div id="usage" class="content-section">
-                    <h2>Usage Instructions</h2>
-                    
-                    <h3>How to Use BambiSleep.Chat</h3>
-                    <p><strong>Basic Chat:</strong></p>
-                    <ul>
-                        <li>Navigate to the main chat interface</li>
-                        <li>Enter your desires in the text area</li>
-                        <li>Click the Send button</li>
-                        <li>BambiSleep will respond with text and speech</li>
-                        <li>If there's no response, wait at least a minute</li>
-                    </ul>
-                    
-                    <h3>Trigger Mania</h3>
-                    <p><strong>How to use Psychodelic Trigger Mania:</strong></p>
-                    <ul>
-                        <li>Upload a text file containing triggers</li>
-                        <li>The system will process and speak each trigger</li>
-                        <li>Use for intensive trigger sessions</li>
-                    </ul>
-                </div>
-                
-                <div id="triggers" class="content-section">
-                    <h2>Triggers</h2>
-                    <p>Triggers are special phrases that activate specific responses from the AI. They are unlocked at different user levels and provide various effects including audio playback and visual elements.</p>
-                    
-                    <p><strong>Available Triggers:</strong> Unlock triggers by gaining XP and leveling up your profile.</p>
-                </div>
-                
-                <div id="profiles" class="content-section">
-                    <h2>Profiles & Levels</h2>
-                    <p>Create a profile to track your progress and unlock new features:</p>
-                    <ul>
-                        <li><strong>Level 1:</strong> Unlock basic triggers</li>
-                        <li><strong>Level 2:</strong> Unlock collar features</li>
-                        <li><strong>Level 3:</strong> Unlock session history and advanced features</li>
-                    </ul>
-                    
-                    <p>Gain XP by chatting, using triggers, and engaging with the platform.</p>
-                </div>
-                
-                <div id="privacy" class="content-section">
-                    <h2>Privacy & Data Usage</h2>
-                    <p><strong>Data Collection:</strong> We collect minimal data necessary for functionality including chat sessions, user preferences, and usage statistics.</p>
-                    
-                    <p><strong>Cookies:</strong> We use cookies to maintain your session and preferences. This improves your experience by remembering your settings.</p>
-                    
-                    <p><strong>Free Service:</strong> This service is provided free of charge. Consider supporting development through our Patreon if you find it valuable.</p>
-                </div>
-                
-                <div id="tips" class="content-section">
-                    <h2>Tips & Best Practices</h2>
-                    <ul>
-                        <li>Use headphones for the best audio experience</li>
-                        <li>Engage regularly to gain XP and unlock features</li>
-                        <li>Try different trigger combinations</li>
-                        <li>Upload custom text files for personalized sessions</li>
-                        <li>Explore different system controls as you level up</li>
-                    </ul>
-                </div>
-                
-                <div id="support" class="content-section">
-                    <h2>Support & Community</h2>
-                    <p>For support, questions, or to connect with the community:</p>
-                    <ul>
-                        <li>Submit feedback using the form above</li>
-                        <li>Visit our <a href="https://www.patreon.com/c/bambisleepchat/membership" target="_blank">Patreon</a></li>
-                        <li>Report issues through the feedback system</li>
-                    </ul>
+
+            <!-- Additional Help Information -->
+            <div class="quick-access">
+                <h2>💡 Need More Help?</h2>
+                <p style="text-align: center; color: var(--secondary-text-color); margin-bottom: var(--spacing-lg);">
+                    Can't find what you're looking for? Try these options:
+                </p>
+                <div class="quick-links">
+                    <a href="/docs" class="quick-link">
+                        📖 Browse All Docs
+                    </a>
+                    <a href="/docs/debug" class="quick-link">
+                        🐛 Debug Information
+                    </a>
+                    <a href="/health" class="quick-link">
+                        ❤️ System Health
+                    </a>
+                    <a href="/chat" class="quick-link">
+                        💬 Ask in Chat
+                    </a>
                 </div>
             </div>
         </main>
     </div>
-    
+
     <%- include('partials/footer') %>
 </body>
 

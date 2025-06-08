@@ -81,103 +81,38 @@ export async function loadAllRoutes(app) {
  */
 router.get('/', async (req, res) => {
   try {
-    // Get profile from cookie
-    const cookie = req.cookies?.bambiid;
+    // Simplified route for debugging - minimal database calls
     let profile = null;
     let username = '';
     
-    // Check for a bambiname cookie first
+    // Get username from cookie if available
     if (req.cookies?.bambiname) {
       username = decodeURIComponent(req.cookies.bambiname);
-      
-      // Try to fetch the profile by username
-      const Profile = getModel('Profile');
-      try {
-        profile = await withDbConnection(async () => {
-          return await Profile.findOrCreateByUsername(username);
-        });
-      } catch (error) {
-        logger.error(`Error getting profile by username ${username}: ${error.message}`);
-        // Fall back to cookie-based lookup if username lookup fails
-        if (cookie) {
-          profile = await withDbConnection(async () => {
-            return await Profile.findOrCreateByCookie(cookie);
-          });
-        }
-      }
-    } 
-    // Otherwise use the bambiid cookie
-    else if (cookie) {
-      const Profile = getModel('Profile');
-      profile = await withDbConnection(async () => {
-        return await Profile.findOrCreateByCookie(cookie);
-      });
-      
-      // Set username from profile
-      if (profile && profile.username) {
-        username = profile.username;
-      }
     }
-      // Fetch recent chat messages
-    const chatMessages = await sessionService.ChatMessage.getRecentMessages(50);
     
-    // Load trigger data for client
-    let triggers = [];
-    try {
-      // Define __dirname for this scope
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = path.dirname(__filename);
-      
-      // Read triggers from config file
-      const triggersPath = path.resolve(path.dirname(__dirname), 'config', 'triggers.json');
-      const triggerData = await fs.readFile(triggersPath, 'utf8');
-      triggers = JSON.parse(triggerData).triggers;
-    } catch (error) {
-      logger.error('Error loading triggers:', error);
-      // Use fallback triggers
-      triggers = [
-        { name: "BAMBI SLEEP", description: "triggers deep trance and receptivity", category: "core" },
-        { name: "GOOD GIRL", description: "reinforces obedience and submission", category: "core" }
-      ];
-    }
-      // Get footer links from config, with fallback to imported footerConfig
+    // Simplified data for testing
     const footerLinks = config?.FOOTER_LINKS || footerConfig?.links || [];
+    const triggers = [
+      { name: "BAMBI SLEEP", description: "triggers deep trance and receptivity", category: "core" },
+      { name: "GOOD GIRL", description: "reinforces obedience and submission", category: "core" }
+    ];
     
-    // Get control network status
-    let controlNetworkStatus = null;
-    let controlNetworkMetrics = null;
-    try {      controlNetworkStatus = await bambiControlNetwork.getSystemStatus();
-      controlNetworkMetrics = await bambiControlNetwork.getMetrics();
-    } catch (error) {
-      logger.error('Error fetching control network data:', error);
-    }
-    
-    // Render the index view with profile data and chat messages
+    // Render the index view with minimal data
     res.render('index', { 
       profile,
       username,
       footerLinks,
-      footer: footerConfig, // Add full footer config
-      chatMessages,
-      triggers,
-      title: 'BambiSleep.Chat - Hypnotic AI Chat',
-      controlNetworkStatus,
-      controlNetworkMetrics
-    });
-  } catch (error) {
-    logger.error('Error rendering home page:', error);
-      // Fallback with minimal data
-    res.render('index', { 
-      profile: null, 
-      username: '',
-      footerLinks: config?.FOOTER_LINKS || footerConfig?.links || [],
-      footer: footerConfig, // Add full footer config here too
+      footer: footerConfig,
       chatMessages: [],
-      triggers: [],
+      triggers,
       title: 'BambiSleep.Chat - Hypnotic AI Chat',
       controlNetworkStatus: null,
       controlNetworkMetrics: null
     });
+  } catch (error) {
+    logger.error('Error rendering home page:', error);
+    // Send simple error if view rendering fails
+    res.status(500).send('Server Error: ' + error.message);
   }
 });
 
