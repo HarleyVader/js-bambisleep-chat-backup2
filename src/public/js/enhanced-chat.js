@@ -222,12 +222,11 @@ function setupAudioTriggers(socket) {
     
     function playNextTrigger() {
       if (triggerQueue.length === 0) return;
-      
-      const trigger = triggerQueue.shift();
+        const trigger = triggerQueue.shift();
       const triggerName = trigger.name.toLowerCase().replace(/\s+/g, '-');
       
       // Play audio if available
-      audio.src = `/audio/triggers/${triggerName}.mp3`;
+      audio.src = `/audio/${triggerName}.mp3`;
       audio.onended = playNextTrigger;
       audio.onerror = playNextTrigger; // Skip if audio doesn't exist
       audio.play().catch(error => {
