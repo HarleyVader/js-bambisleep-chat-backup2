@@ -584,7 +584,6 @@ function setupTTSRoutes(app) {
     
     return;
   }
-
   // Get voice list
   app.get('/api/tts/voices', async (req, res) => {
     try {
@@ -600,6 +599,16 @@ function setupTTSRoutes(app) {
       res.json(response.data);
     } catch (error) {
       logger.error(`Voice listing error: ${error.message}`);
+      
+      // Return 503 Service Unavailable for connection errors (when Kokoro is down)
+      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
+        return res.status(503).json({
+          error: 'TTS service temporarily unavailable',
+          message: 'Please try again later'
+        });
+      }
+      
+      // Return 500 for other errors
       res.status(500).json({
         error: 'Error fetching voice list',
         details: process.env.NODE_ENV === 'production' ? null : error.message
