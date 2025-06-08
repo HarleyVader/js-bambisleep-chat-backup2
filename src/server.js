@@ -586,10 +586,9 @@ function setupTTSRoutes(app) {
   }
   // Get voice list
   app.get('/api/tts/voices', async (req, res) => {
-    try {
-      const response = await axios({
+    try {      const response = await axios({
         method: 'get',
-        url: `${config.KOKORO_API_URL}/voices`,
+        url: `${config.KOKORO_API_URL}/audio/voices`,
         headers: {
           'Authorization': `Bearer ${config.KOKORO_API_KEY}`
         },
