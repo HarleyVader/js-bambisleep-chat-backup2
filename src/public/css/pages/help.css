@@ -265,6 +265,140 @@
     display: block;
 }
 
+/* =============================================================================
+   Bubbly AIGF Guide Styles
+   ============================================================================= */
+
+/* Bubbly Help Card Container */
+.help-bambi-guide {
+    background: rgba(var(--nav-alt-rgb), 0.05);
+    border-radius: 20px;
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+    border: 2px solid rgba(var(--nav-alt-rgb), 0.2);
+    box-shadow: var(--shadow-md), 0 0 20px rgba(var(--nav-alt-rgb), 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.help-bambi-guide::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(var(--nav-alt-rgb), 0.03) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.help-bambi-guide > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* Bubbly Help Topic Cards */
+.help-topic-bubbly {
+    background: rgba(var(--nav-alt-rgb), 0.08);
+    border: 2px solid rgba(var(--nav-alt-rgb), 0.15);
+    border-radius: 15px;
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    cursor: default;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+}
+
+.help-topic-bubbly:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md), 0 0 15px rgba(var(--nav-alt-rgb), 0.2);
+    background: rgba(var(--nav-alt-rgb), 0.12);
+    border-color: rgba(var(--nav-alt-rgb), 0.25);
+}
+
+.help-topic-bubbly::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, rgba(var(--nav-alt-rgb), 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.help-topic-bubbly strong {
+    color: var(--nav-alt);
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: var(--spacing-sm);
+}
+
+.help-topic-bubbly small {
+    color: var(--secondary-text-color);
+    line-height: 1.5;
+    font-size: 0.95rem;
+}
+
+/* Bubbly Summary Card */
+.help-summary-bubbly {
+    background: rgba(var(--nav-alt-rgb), 0.06);
+    border: 2px solid rgba(var(--nav-alt-rgb), 0.2);
+    border-radius: 18px;
+    padding: var(--spacing-lg);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.help-summary-bubbly::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(var(--nav-alt-rgb), 0.03) 0%, transparent 60%);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.help-summary-bubbly p {
+    color: var(--nav-alt);
+    font-size: 0.9rem;
+    margin: 0;
+    position: relative;
+    z-index: 2;
+}
+
+/* Guide Header Styling */
+.help-bambi-guide h2 {
+    text-align: center;
+    color: var(--nav-alt);
+    margin-bottom: var(--spacing-lg);
+    font-size: 1.8rem;
+    text-shadow: 0 0 10px rgba(var(--nav-alt-rgb), 0.3);
+}
+
+.help-guide-intro {
+    text-align: center;
+    color: var(--secondary-text-color);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.6;
+    font-style: italic;
+}
+
+/* Help Section Description */
+.help-description {
+    text-align: center;
+    color: var(--secondary-text-color);
+    margin-bottom: var(--spacing-lg);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .help-container {
@@ -287,5 +421,20 @@
     .help-nav-btn {
         width: 100%;
         text-align: center;
+    }
+
+    .help-bambi-guide {
+        border-radius: 15px;
+        padding: var(--spacing-lg);
+    }
+    
+    .help-topic-bubbly {
+        border-radius: 12px;
+        padding: var(--spacing-md);
+    }
+    
+    .help-summary-bubbly {
+        border-radius: 12px;
+        padding: var(--spacing-md);
     }
 }

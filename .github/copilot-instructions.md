@@ -52,7 +52,8 @@
 
 ### RULE: Think More, Code Less
 
-**Always try to do the LEAST possible amount of work, even if it means thinking longer.**- you allways update the <codebase>
+**Always try to do the LEAST possible amount of work, even if it means thinking longer.**
+- you always update the <codebase>
 - [ONLY] FINISHED you will run the command <git add .>
 - [ONLY] FINISHED you will run the command <git commit -m "copilot: [description of changes]">
 - [ONLY] FINISHED you will run the command <git push>
