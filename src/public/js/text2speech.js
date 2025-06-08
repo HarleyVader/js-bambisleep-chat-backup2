@@ -46,6 +46,7 @@ async function do_tts(array) {
     if (!currentURL) return;
     
     let retries = 2; // Number of retry attempts
+    let audioUrl = null; // Track the blob URL for cleanup
     
     while (retries >= 0) {
         try {
@@ -71,7 +72,7 @@ async function do_tts(array) {
             const audioBlob = await response.blob();
             
             // Create object URL from blob
-            const audioUrl = URL.createObjectURL(audioBlob);
+            audioUrl = URL.createObjectURL(audioBlob);
             
             // Set audio source to blob URL
             if (window.audio) {
@@ -87,6 +88,17 @@ async function do_tts(array) {
                     window.audio.play().catch(e => {
                         console.error("Error playing audio:", e);
                         if (messageEl) messageEl.textContent = "Error playing audio: " + e.message;
+                        
+                        // Cleanup on play error
+                        if (audioUrl) {
+                            URL.revokeObjectURL(audioUrl);
+                            audioUrl = null;
+                        }
+                        
+                        // Process next item in queue if any
+                        if (array.length > 0) {
+                            do_tts(array);
+                        }
                     });
                 };
                 
@@ -95,7 +107,10 @@ async function do_tts(array) {
                     if (messageEl) messageEl.textContent = "Finished!";
                     
                     // Release the blob URL to free memory
-                    URL.revokeObjectURL(audioUrl);
+                    if (audioUrl) {
+                        URL.revokeObjectURL(audioUrl);
+                        audioUrl = null;
+                    }
                     
                     // Process next item in queue if any
                     if (array.length > 0) {
@@ -111,7 +126,10 @@ async function do_tts(array) {
                         (window.audio.error ? window.audio.error.message : "Unknown error");
                     
                     // Release the blob URL on error
-                    URL.revokeObjectURL(audioUrl);
+                    if (audioUrl) {
+                        URL.revokeObjectURL(audioUrl);
+                        audioUrl = null;
+                    }
                     
                     // Process next item in queue if any
                     if (array.length > 0) {
@@ -126,6 +144,12 @@ async function do_tts(array) {
             if (retries <= 0) {
                 console.error("Fetch error:", error);
                 if (messageEl) messageEl.textContent = "Error fetching audio: " + error.message;
+                
+                // Cleanup on fetch error
+                if (audioUrl) {
+                    URL.revokeObjectURL(audioUrl);
+                    audioUrl = null;
+                }
                 
                 // Process next item in queue if any
                 if (array.length > 0) {

@@ -430,6 +430,8 @@ async function initializeApp() {
     // Set up routes
     setupRoutes(app);
 
+    setupTTSRoutes(app);
+
     // Add route for memory monitoring script
     app.get('/js/memory-monitoring.js', (req, res) => {
       res.type('text/javascript').send(memoryMonitor.getClientScript());
@@ -446,6 +448,9 @@ async function initializeApp() {
     scheduledTasks.initialize();
     global.scheduledTasks = scheduledTasks;
 
+    // TEXT2SPEECH (TTS) routes
+    setupTTSRoutes(app);
+
     // Initialize the spirals worker for advanced hypnotic spiral controls
     try {
       logger.info('Initializing spirals worker...');
@@ -454,6 +459,7 @@ async function initializeApp() {
     } catch (error) {
       logger.error('Failed to initialize spirals worker:', error);
     }
+
 
     return { app, server, io, socketStore };
   } catch (error) {
@@ -570,6 +576,22 @@ async function setupRoutes(app) {  // Routes that don't strictly require databas
  * @param {Express} app - Express application instance
  */
 function setupTTSRoutes(app) {
+  // Check if Kokoro API is configured
+  if (!config.KOKORO_API_URL) {
+    logger.warning('Kokoro API URL not configured, TTS routes will return 503');
+    
+    // Return service unavailable for all TTS endpoints
+    app.get('/api/tts/voices', (req, res) => {
+      res.status(503).json({ error: 'TTS service not configured' });
+    });
+    
+    app.get('/api/tts', (req, res) => {
+      res.status(503).json({ error: 'TTS service not configured' });
+    });
+    
+    return;
+  }
+
   // Get voice list
   app.get('/api/tts/voices', async (req, res) => {
     try {
@@ -578,7 +600,8 @@ function setupTTSRoutes(app) {
         url: `${config.KOKORO_API_URL}/voices`,
         headers: {
           'Authorization': `Bearer ${config.KOKORO_API_KEY}`
-        }
+        },
+        timeout: config.TTS_TIMEOUT
       });
 
       res.json(response.data);
@@ -605,7 +628,6 @@ function setupTTSRoutes(app) {
 
       // Set appropriate headers
       res.setHeader('Content-Type', 'audio/mpeg');
-      res.setHeader('Content-Length', response.data.length);
       res.setHeader('Cache-Control', 'no-cache');
 
       // Send the audio data
@@ -643,6 +665,24 @@ function handleTTSError(error, res) {
     }
   }
 
+  // Handle connection errors specifically
+  if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+    logger.error('TTS service is unavailable - connection refused');
+    return res.status(503).json({
+      error: 'TTS service temporarily unavailable',
+      details: process.env.NODE_ENV === 'production' ? null : 'Connection to Kokoro API failed'
+    });
+  }
+
+  // Handle timeout errors
+  if (error.code === 'ECONNABORTED') {
+    logger.error('TTS request timed out');
+    return res.status(504).json({
+      error: 'TTS request timed out',
+      details: process.env.NODE_ENV === 'production' ? null : 'Request took too long to complete'
+    });
+  }
+
   return res.status(500).json({
     error: 'Unexpected error in TTS service',
     details: process.env.NODE_ENV === 'production' ? null : error.message
@@ -658,7 +698,7 @@ function handleTTSError(error, res) {
  */
 async function fetchTTSFromKokoro(text, voice = config.KOKORO_DEFAULT_VOICE) {
   let attempts = 0;
-  const maxAttempts = 3;
+  let maxAttempts = 3;
 
   // Increase timeout incrementally with each attempt
   while (attempts < maxAttempts) {
@@ -670,10 +710,8 @@ async function fetchTTSFromKokoro(text, voice = config.KOKORO_DEFAULT_VOICE) {
         voice: voice,
         input: text,
         response_format: "mp3"
-      };
-
-      // Increase timeout with each retry
-      const timeout = 10000 + (attempts * 5000); // 10s, 15s, 20s
+      };      // Use configured timeout with incremental increases
+      const timeout = config.TTS_TIMEOUT + (attempts * 5000);
 
       const response = await axios({
         method: 'post',
@@ -690,6 +728,11 @@ async function fetchTTSFromKokoro(text, voice = config.KOKORO_DEFAULT_VOICE) {
       return response;
     } catch (error) {
       attempts++;
+
+      // For connection errors, reduce retry attempts (service likely down)
+      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+        maxAttempts = Math.min(maxAttempts, 1); // Only one attempt for connection errors
+      }
 
       // For timeout errors specifically, increase wait time
       const waitTime = error.code === 'ECONNABORTED' ? 2000 * attempts : 1000 * attempts;
