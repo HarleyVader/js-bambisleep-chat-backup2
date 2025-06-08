@@ -289,8 +289,13 @@ function dbFeatureCheck(required) {
     if (required) {
       const db = await import('./config/db.js');
       if (!db.default.hasConnection()) {
-        return res.render('db-unavailable', {
-          message: 'This feature requires database connectivity which is currently unavailable.'
+        return res.status(503).render('error', {
+          title: 'Database Unavailable - BambiSleep.Chat',
+          error: {
+            status: 503,
+            message: 'This feature requires database connectivity which is currently unavailable.',
+            description: 'Please try again later or contact support if the problem persists.'
+          }
         });
       }
     }
@@ -493,6 +498,60 @@ logger.info('Starting BambiSleep.chat server...');
  */
 async function initializeApp() {
   try {
+    // ========== BAMBI CONTROL NETWORK - PRIMARY INITIALIZATION ==========
+    // Initialize the control network FIRST before anything non-essential
+    logger.info('🌀 PRIORITY: Initializing Bambi Control Network as PRIMARY control system...');
+    try {
+      await bambiControlNetwork.initialize();
+      logger.success('✅ Bambi Control Network initialized successfully as CONTROL NODE');
+      
+      // Set up BDICS (Bambi Distributed Industrial Control System) event handlers
+      bambiControlNetwork.on('automationAction', (action) => {
+        if (action.type === 'CASCADE_TRIGGER' && action.targetTriggers) {
+          // Emit cascade triggers to all connected clients
+          setTimeout(() => {
+            if (global.io) {
+              global.io.emit('automation trigger', {
+                triggers: action.targetTriggers,
+                source: 'BDICS_AUTOMATION',
+                type: 'CASCADE'
+              });
+              logger.info(`🔄 BDICS automation: Cascading triggers ${action.targetTriggers.join(', ')}`);
+            }
+          }, action.delay || 0);
+        }
+      });
+
+      // Industrial control event handlers
+      bambiControlNetwork.on('alarmEscalation', (data) => {
+        logger.warning(`🚨 SCADA Alarm escalated to workstation ${data.workstationId}: ${data.alarm?.description || 'Unknown alarm'}`);
+      });
+
+      bambiControlNetwork.on('scadaUpdate', (data) => {
+        logger.debug(`🖥️ SCADA update for workstation ${data.workstationId}`);
+      });
+
+      bambiControlNetwork.on('siteRegistered', (site) => {
+        logger.info(`🏭 Remote industrial site registered: ${site.name} (${site.protocol})`);
+      });
+
+      bambiControlNetwork.on('nodeRegistered', (node) => {
+        logger.debug(`🔗 Industrial node registered: ${node.type} (${node.id})`);
+      });
+
+      bambiControlNetwork.on('nodeDisconnected', (node) => {
+        logger.debug(`🔌 Industrial node disconnected: ${node.type} (${node.id})`);
+      });
+      
+      // Make control network globally available
+      global.bambiControlNetwork = bambiControlNetwork;
+      
+    } catch (error) {
+      logger.error('❌ CRITICAL: Failed to initialize Bambi Control Network:', error);
+      throw error;
+    }
+    // ===================================================================
+    
     // Create Express app and HTTP server
     const app = express();
     const server = http.createServer(app);
@@ -511,6 +570,9 @@ async function initializeApp() {
         credentials: true
       }
     });
+    
+    // Make io globally available for control network
+    global.io = io;
 
     // Load filtered words for content moderation
     const filteredWords = JSON.parse(await fsPromises.readFile(
@@ -657,55 +719,7 @@ async function initializeApp() {
       
       logger.info('Spirals worker integrated with controls system');
     } catch (error) {
-      logger.error('Failed to initialize spirals worker:', error);
-    }// Initialize BNNCS (Bambi Neural Network Control System)
-    logger.info('🧠 Starting Bambi Neural Network Control System...');
-      // Initialize BDICS (Bambi Distributed Industrial Control System)
-    try {      logger.info('🌀 Initializing Bambi Control Network...');
-      await bambiControlNetwork.initialize();
-      logger.info('✅ Bambi Control Network initialized successfully');
-    } catch (error) {
-      logger.error('❌ Failed to initialize BDICS:', error);
-      throw error;
-    }
-    
-    // Set up BDICS (Bambi Distributed Industrial Control System) event handlers
-    bambiControlNetwork.on('automationAction', (action) => {
-      if (action.type === 'CASCADE_TRIGGER' && action.targetTriggers) {
-        // Emit cascade triggers to all connected clients
-        setTimeout(() => {
-          io.emit('automation trigger', {
-            triggers: action.targetTriggers,
-            source: 'BDICS_AUTOMATION',
-            type: 'CASCADE'
-          });
-          logger.info(`🔄 BDICS automation: Cascading triggers ${action.targetTriggers.join(', ')}`);
-        }, action.delay || 0);
-      }
-    });
-
-    // Industrial control event handlers
-    bambiControlNetwork.on('alarmEscalation', (data) => {
-      logger.warning(`🚨 SCADA Alarm escalated to workstation ${data.workstationId}: ${data.alarm?.description || 'Unknown alarm'}`);
-      // Could emit to specific SCADA clients if implemented
-    });
-
-    bambiControlNetwork.on('scadaUpdate', (data) => {
-      logger.debug(`🖥️ SCADA update for workstation ${data.workstationId}`);
-      // Could emit SCADA data to specific clients if implemented
-    });
-
-    bambiControlNetwork.on('siteRegistered', (site) => {
-      logger.info(`🏭 Remote industrial site registered: ${site.name} (${site.protocol})`);
-    });
-
-    bambiControlNetwork.on('nodeRegistered', (node) => {
-      logger.debug(`🔗 Industrial node registered: ${node.type} (${node.id})`);
-    });
-
-    bambiControlNetwork.on('nodeDisconnected', (node) => {
-      logger.debug(`🔌 Industrial node disconnected: ${node.type} (${node.id})`);
-    });
+      logger.error('Failed to initialize spirals worker:', error);    }
 
     return { app, server, io, socketStore };
   } catch (error) {
@@ -777,43 +791,68 @@ function setupMiddleware(app) {
  * 
  * @param {Express} app - Express application instance
  */
-async function setupRoutes(app) {  // Routes that don't strictly require database access
-  const basicRoutes = [
-    { path: '/', handler: indexRoute, dbRequired: false },
-    { path: '/psychodelic-trigger-mania', handler: psychodelicTriggerManiaRouter, dbRequired: false },
-    { path: '/help', handler: helpRoute, dbRequired: false },
-    { path: '/health', handler: healthRoute, dbRequired: false },
-    { path: chatBasePath, handler: chatRouter, dbRequired: true }
-  ];
-  // Import and setup docs router
-  const docsRouter = await import('./routes/docs.js');
-  app.use('/docs', dbFeatureCheck(false), docsRouter.default);
-  
-  // Setup routes with appropriate database checks
-  if (Array.isArray(basicRoutes)) {
-    basicRoutes.forEach(route => {
-      if (route && route.path && route.handler) {
-        app.use(route.path, dbFeatureCheck(route.dbRequired), route.handler);
-      }
+async function setupRoutes(app) {
+  try {
+    logger.info('🛤️ Setting up routes...');
+    
+    // TEST: Add a simple direct route for comparison
+    app.get('/test-direct', (req, res) => {
+      res.send('Direct route works!');
     });
+    logger.info('✅ Test direct route registered at /test-direct');
+    
+    // Routes that don't strictly require database access
+    const basicRoutes = [
+      { path: '/', handler: indexRoute, dbRequired: false },
+      { path: '/psychodelic-trigger-mania', handler: psychodelicTriggerManiaRouter, dbRequired: false },
+      { path: '/help', handler: helpRoute, dbRequired: false },
+      { path: '/health', handler: healthRoute, dbRequired: false },
+      { path: chatBasePath, handler: chatRouter, dbRequired: true }
+    ];
+    
+    // Import and setup docs router
+    const docsRouter = await import('./routes/docs.js');
+    app.use('/docs', dbFeatureCheck(false), docsRouter.default);
+    logger.info('✅ Docs routes registered at /docs');
+    
+    // Setup basic routes with appropriate database checks
+    if (Array.isArray(basicRoutes)) {
+      basicRoutes.forEach(route => {
+        if (route && route.path && route.handler) {
+          app.use(route.path, dbFeatureCheck(route.dbRequired), route.handler);
+          logger.info(`✅ Route registered: ${route.path} (DB required: ${route.dbRequired})`);
+        }
+      });
+    }
+    
+    // Setup database-specific routes
+    if (Array.isArray(dbRoutes) && dbRoutes.length > 0) {
+      dbRoutes.forEach(route => {
+        if (route && typeof route === 'object' && route.path && route.handler) {
+          app.use(route.path, dbFeatureCheck(true), route.handler);
+          logger.info(`✅ DB Route registered: ${route.path}`);
+        } else if (route && typeof route === 'string') {
+          // For string-only routes, they might be handled elsewhere
+          logger.debug(`String route path found: ${route}`);
+        }
+      });
+    } else {
+      logger.info('No database-specific routes to register');
+    }
+
+    // Add BNNCS routes for Bambi Control Network
+    app.use('/bnncs', bnncsRoutes);
+    logger.info('✅ BNNCS routes registered at /bnncs');
+
+    // BNNCS API routes for Bambi Control Network
+    app.use('/api/bnncs', bnncsRoutes);
+    logger.info('✅ BNNCS API routes registered at /api/bnncs');
+    
+    logger.success('🛤️ All routes configured successfully');
+  } catch (error) {
+    logger.error('❌ Error setting up routes:', error);
+    throw error;
   }
-
-  if (Array.isArray(dbRoutes)) {
-    dbRoutes.forEach(route => {
-      if (route && typeof route === 'object' && route.path && route.handler) {
-        app.use(route.path, dbFeatureCheck(true), route.handler);
-      } else if (route && typeof route === 'string') {
-        // For string-only routes, they might be handled elsewhere
-        logger.debug(`String route path found: ${route}`);
-      }
-    });
-  }
-
-  // Add BNNCS routes
-  app.use('/bnncs', bnncsRoutes);
-
-  // BNNCS API routes
-  app.use('/api/bnncs', bnncsRoutes);
 }
 
 /**

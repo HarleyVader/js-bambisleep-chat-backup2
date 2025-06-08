@@ -1,8 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <%- include('./partials/head') %>
-    <title>Error - <%= error.status || 500 %> | BambiSleep</title>
+    <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="BambiSleep.Chat will reinstall your OS if you let her">
+  <meta name="keywords"
+    content="BambiSleep, AIGF, AI, LLM, Chat, Hypno, Brainwash, Mindfuck, Bambi, Bambi Sleep, BambiSleep, BambiSleep.chat, Bambi Profile">
+  <meta name="author" content="Brandynette">  <link href="/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/controls.css">
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <title>
+    Page Not Found - BambiSleep.Chat
+  </title>
+</head>
+    <title>Error - 404 | BambiSleep</title>
     <style>
         .error-container {
             max-width: 800px;
@@ -112,51 +129,105 @@
     </style>
 </head>
 <body>
-    <%- include('./partials/nav', { path: (typeof req !== 'undefined' ? req.originalUrl : null) || '/error' }) %>
+    <!-- Main navigation -->
+<nav class="main-nav">
+  <ul>
+    <li><a href="/" class="">Home</a></li>
+    <li><a href="/chat" class="">Chat</a></li>
+    <li><a href="/psychodelic-trigger-mania" class="">Trigger Mania</a></li>
+    <li><a href="/help" class="">Help</a></li>
+  </ul>
+</nav>
     
     <div class="container">
         <div class="error-container">
-            <div class="error-status"><%= error.status || 500 %></div>
-            <div class="error-message"><%= error.message %></div>
+            <div class="error-status">404</div>
+            <div class="error-message">The page you are looking for does not exist.</div>
             
-            <% if (error.status === 403) { %>
-                <p>You must set a BambiName in order to access this feature.</p>
-                <p>Return to the home page and set your BambiName by clicking the "Set BambiName" button.</p>
-            <% } else if (error.status === 404) { %>
+            
                 <p>Oops! The page you're looking for can't be found.</p>
                 <p>Maybe it's gone deeper into the forest...</p>
-            <% } else if (error.status === 401) { %>
-                <p>Authentication required to access this resource.</p>
-            <% } else { %>
-                <p>Something went wrong. Please try again later.</p>
-                <p>Our brain fog is clearing, and we'll be back to normal soon.</p>
-            <% } %>
+            
             
             <div class="error-actions">
                 <a href="/" class="back-button">Back to Home</a>
                 <button onclick="history.back()" class="retry-button">Go Back</button>
             </div>
             
-            <% if (error.stack && error.stack.length > 0 && process.env.NODE_ENV !== 'production') { %>
-                <div class="error-stack">
-                    <pre><%= error.stack %></pre>
-                </div>
-            <% } %>
+            
         </div>
     </div>
     
     <div class="notification-area" id="notification-area"></div>
     
-    <%- include('./partials/footer', { 
-        footer: {
-            logo: {
-                url: "https://brandynette.xxx/",
-                image: "/gif/brandynette.gif",
-                alt: "Brandynette.xxx"
-            },
-            tagline: "Oops! Something went wrong. Let's get you back on track."
-        }
-    }) %>
+    <footer class="site-footer">
+  <div class="footer-container">
+    <div class="footer-main">
+      <h5 class="footer-heading"><strong><em>FOOTER</em></strong></h5>
+      <hr class="divider">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <div class="site-logo">
+            
+              <a href="https://brandynette.xxx/" class="logo-link">
+                <img src="/gif/brandynette.gif" alt="Brandynette.xxx" width="256" height="256" loading="lazy" class="logo-image">
+              </a>
+            
+          </div>
+          
+            <h6 class="site-tagline">Oops! Something went wrong. Let&#39;s get you back on track.</h6>
+          
+        </div>
+        <div class="footer-nav-container">
+          <div class="footer-column">
+            <nav class="footer-nav" aria-label="Primary Footer">
+              <p>CONTROL</p>
+              <ul class="nav-list">
+                
+              </ul>
+            </nav>
+          </div>
+          <div class="footer-column">
+            <nav class="footer-nav" aria-label="Secondary Footer">
+              <p>CORE</p>
+              <ul class="nav-list">
+                
+              </ul>
+            </nav>
+          </div>
+          <div class="footer-column">
+            <nav class="footer-nav" aria-label="Tertiary Footer">
+              <p>COMMUNITY</p>
+              <ul class="nav-list">
+                
+              </ul>
+            </nav>
+          </div>
+          <div class="footer-column">
+            <nav class="footer-nav" aria-label="Quaternary Footer">
+              <p>SPECIAL THANKS</p>
+              <ul class="nav-list">
+                
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+      <hr class="divider">
+      <div class="footer-bottom">
+        
+          <p class="copyright">
+            <a href="https://brandynette.xxx/">Brandynette.xxx</a> ® 2025
+          </p>
+        
+        <p class="credits">
+          <a href="https://en.wikipedia.org/wiki/Solution_stack" target="_blank">Solution Stack</a> by 
+          <a href="https://www.youtube.com/@Melkanea" target="_blank">MELKANEA</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</footer>
     
     <script>
         // Notification system from form-handler.js
@@ -184,8 +255,8 @@
         
         // Show error notification when page loads
         document.addEventListener('DOMContentLoaded', function() {
-            const errorStatus = "<%= error.status || 500 %>";
-            const errorMessage = "<%= error.message %>";
+            const errorStatus = "404";
+            const errorMessage = "The page you are looking for does not exist.";
             
             // Show notification for the error
             showNotification(`Error ${errorStatus}: ${errorMessage}`, 'error', 10000);
