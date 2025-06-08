@@ -251,7 +251,6 @@ function handleAudioEnded() {
 function handleAudioPlay() {
     console.log('Audio is playing');
     const duration = audio.duration * 1000;
-    new Promise(resolve => setTimeout(resolve, duration));
     flashTrigger(text, duration);
     const messageElement = document.createElement('p');
     messageElement.textContent = text;
