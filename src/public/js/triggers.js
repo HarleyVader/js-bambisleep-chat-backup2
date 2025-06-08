@@ -39,11 +39,10 @@ function loadTriggerData() {
       // Use fallback trigger data
       triggerData = fallbackTriggerData;
       createToggleButtons();
-      
-      // Try loading from localStorage if available
+        // Try loading from localStorage if available
       try {
         const storedTriggers = localStorage.getItem('bambiActiveTriggers');
-        if (storedTriggers) {
+        if (storedTriggers && storedTriggers !== 'null' && storedTriggers !== '[object Object]') {
           const parsedTriggers = JSON.parse(storedTriggers);
           if (Array.isArray(parsedTriggers) && parsedTriggers.length > 0) {
             console.log('Loaded triggers from localStorage:', parsedTriggers);
@@ -62,12 +61,11 @@ function createToggleButtons() {
   if (!container) return;
   
   container.innerHTML = '';
-  
-  // Check if we have active triggers in localStorage
+    // Check if we have active triggers in localStorage
   let activeTriggerNames = [];
   try {
     const storedActiveTriggers = localStorage.getItem('bambiActiveTriggers');
-    if (storedActiveTriggers) {
+    if (storedActiveTriggers && storedActiveTriggers !== 'null' && storedActiveTriggers !== '[object Object]') {
       activeTriggerNames = JSON.parse(storedActiveTriggers);
       // Ensure it's an array
       if (!Array.isArray(activeTriggerNames)) {
@@ -829,11 +827,10 @@ window.bambiAudio = {
   loadTriggerAudio: loadTriggerAudio,
   getAllTriggers: () => triggerData,
   refreshTriggers: loadTriggerData,
-  toggleAllTriggers: toggleAllToggles,
-  refreshTriggerUI: function() {
+  toggleAllTriggers: toggleAllToggles,  refreshTriggerUI: function() {
     try {
       const storedTriggers = localStorage.getItem('bambiActiveTriggers');
-      if (storedTriggers) {
+      if (storedTriggers && storedTriggers !== 'null' && storedTriggers !== '[object Object]') {
         const activeTriggerNames = JSON.parse(storedTriggers);
         
         // Update all toggle inputs based on stored trigger names

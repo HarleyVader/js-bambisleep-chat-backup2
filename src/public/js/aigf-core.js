@@ -217,9 +217,17 @@ function applyUppercaseStyle() {
     // Apply uppercase to trigger words
     paragraphs.forEach(p => {
         if (!p) return;
-        
-        // Get triggers from localStorage
-        const triggers = JSON.parse(localStorage.getItem('bambiActiveTriggers') || '[]');
+          // Get triggers from localStorage
+        let triggers = [];
+        try {
+            const stored = localStorage.getItem('bambiActiveTriggers');
+            if (stored && stored !== 'null' && stored !== '[object Object]') {
+                triggers = JSON.parse(stored);
+            }
+        } catch (e) {
+            console.log('Error parsing triggers from localStorage:', e);
+            triggers = [];
+        }
         if (!triggers || triggers.length === 0) return;
         
         // Replace trigger words with uppercase versions

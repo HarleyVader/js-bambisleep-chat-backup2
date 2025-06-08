@@ -83,11 +83,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (window.bambiSystem?.state?.triggers) {
       triggers = window.bambiSystem.state.triggers;
-    } else {
-      // Fallback to localStorage
+    } else {      // Fallback to localStorage
       try {
         const saved = localStorage.getItem('bambiActiveTriggers');
-        if (saved) {
+        if (saved && saved !== 'null' && saved !== '[object Object]') {
           const parsed = JSON.parse(saved);
           triggers = Array.isArray(parsed) ? parsed : [];
         }

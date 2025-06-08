@@ -35,12 +35,13 @@ window.bambiSystem = (function() {
     loadState();
     listenForEvents();
   }
-
   // Load saved state from storage
   function loadState() {
     try {
       const saved = localStorage.getItem('bambiSystemState');
-      if (saved) Object.assign(state, JSON.parse(saved));
+      if (saved && saved !== 'null' && saved !== '[object Object]') {
+        Object.assign(state, JSON.parse(saved));
+      }
     } catch (e) {
       console.error('Error loading system state:', e);
     }
