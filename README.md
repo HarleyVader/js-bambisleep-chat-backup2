@@ -47,7 +47,8 @@
 ```js
 Running Version: MK-XI
 Monetization: Patreon
-Last Updated: May 2025
+Last Updated: June 2025
+Recent Fixes: Audio trigger stability, performance optimizations, systemd service
 ```
 
 ## 📖 Quick Links
