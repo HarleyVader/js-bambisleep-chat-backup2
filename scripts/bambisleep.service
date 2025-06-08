@@ -1,0 +1,16 @@
+[Unit]
+Description=BambiSleep Chat Node.js Application
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=brandynette
+WorkingDirectory=/home/brandynette/web/bambisleep.chat/js-bambisleep-chat
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
