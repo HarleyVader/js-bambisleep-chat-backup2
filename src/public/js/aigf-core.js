@@ -207,12 +207,13 @@ socket.on('response', async (message) => {
     const messageText = message;
     const sentences = messageText.split(/(?<=[:;,.!?]["']?)\s+/g);
     for (let sentence of sentences) {
-        _textArray.push(sentence);
-        console.log('Text array:', _textArray);
-        if (state) {
-            handleAudioEnded();
+        if (sentence.trim()) { // Only push non-empty sentences
+            _textArray.push(sentence);
+            console.log('Text array:', _textArray);
+            if (state) {
+                handleAudioEnded();
+            }
         }
-        sentence = '';
     }
     applyUppercaseStyle();
 });
