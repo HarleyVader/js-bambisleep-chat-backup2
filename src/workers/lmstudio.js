@@ -631,17 +631,67 @@ async function syncSessionWithDatabase(socketId) {
 }
 
 async function getLoadedModels() {
-  const response = await axios.get(`http://${process.env.LMS_HOST}:${process.env.LMS_PORT}/v1/models`);
-  const modelIds = response.data.data.map(model => model.id);
-  const firstModelId = modelIds.length > 0 ? modelIds[0] : null;
-  return firstModelId;
+  try {
+    const apiUrl = `http://${process.env.LMS_HOST}:${process.env.LMS_PORT}/v1/models`;
+    logger.debug(`Checking LMStudio models at: ${apiUrl}`);
+    const response = await axios.get(apiUrl);
+    const modelIds = response.data.data.map(model => model.id);
+    const firstModelId = modelIds.length > 0 ? modelIds[0] : null;
+    logger.info(`LMStudio connection successful. Found ${modelIds.length} models.`);
+    return firstModelId;
+  } catch (error) {
+    logger.error(`Failed to connect to LMStudio API: ${error.message}`);
+    if (error.code === 'ECONNREFUSED') {
+      logger.error(`Connection refused to ${process.env.LMS_HOST}:${process.env.LMS_PORT} - Is LMStudio running?`);
+    }
+    throw error;
+  }
 }
 
 async function selectLoadedModels(modelName) {
-  const response = await axios.get(`http://${process.env.LMS_HOST}:${process.env.LMS_PORT}/v1/models`);
-  const models = response.data.data;
-  const selectedModel = models.find(model => model.id.toLowerCase().includes(modelName.toLowerCase()));
-  return selectedModel ? selectedModel.id : models[0].id;
+  try {
+    const apiUrl = `http://${process.env.LMS_HOST}:${process.env.LMS_PORT}/v1/models`;
+    const response = await axios.get(apiUrl);
+    const models = response.data.data;
+    
+    // Filter out embedding models - they can't be used for chat completions
+    const chatModels = models.filter(model => 
+      !model.id.toLowerCase().includes('embedding') && 
+      !model.id.toLowerCase().includes('embed')
+    );
+    
+    logger.debug(`Found ${chatModels.length} chat models out of ${models.length} total models`);
+    
+    // First try exact match
+    let selectedModel = chatModels.find(model => model.id.toLowerCase() === modelName.toLowerCase());
+    
+    // If no exact match, try partial match (removing quantization suffix)
+    if (!selectedModel) {
+      const baseModelName = modelName.split('@')[0]; // Remove @q2_k, @q4_0, etc.
+      selectedModel = chatModels.find(model => model.id.toLowerCase().includes(baseModelName.toLowerCase()));
+      logger.debug(`Trying base model name: ${baseModelName}`);
+    }
+    
+    // If still no match, try any partial match
+    if (!selectedModel) {
+      selectedModel = chatModels.find(model => model.id.toLowerCase().includes(modelName.toLowerCase()));
+    }
+    
+    // Fallback to first available chat model
+    const result = selectedModel ? selectedModel.id : (chatModels.length > 0 ? chatModels[0].id : models[0].id);
+    
+    logger.info(`Selected model: ${result} from ${chatModels.length} available chat models`);
+    if (selectedModel) {
+      logger.info(`✅ Model selection successful: ${result}`);
+    } else {
+      logger.warning(`⚠️ Target model '${modelName}' not found, using fallback: ${result}`);
+    }
+    
+    return result;
+  } catch (error) {
+    logger.error(`Failed to select model from LMStudio: ${error.message}`);
+    throw error;
+  }
 }
 
 async function checkRole(collar, username, triggers) {  // Load all trigger details from config
@@ -808,23 +858,22 @@ async function handleMessage(userPrompt, socketId, username) {
         socketId,
         triggers: triggerDetails
       });
-    }
-
-    // Call the API
-    const response = await axios.post(
-      `http://${process.env.LMS_HOST}:${process.env.LMS_PORT}/v1/chat/completions`,
-      {
-        model: modelId,
-        messages: formattedMessages,
-        max_tokens: 4096,
-        temperature: 0.87,
-        top_p: 0.91,
-        frequency_penalty: 0,
-        presence_penalty: 0,
-        top_k: 40,
-        stream: false
-      }
-    );
+    }    // Call the API with enhanced error logging
+    const apiUrl = `http://${process.env.LMS_HOST}:${process.env.LMS_PORT}/v1/chat/completions`;
+    logger.info(`Making API call to LMStudio: ${apiUrl}`);
+    logger.debug(`Model: ${modelId}, Messages count: ${formattedMessages.length}`);
+    
+    const response = await axios.post(apiUrl, {
+      model: modelId,
+      messages: formattedMessages,
+      max_tokens: 4096,
+      temperature: 0.87,
+      top_p: 0.91,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+      top_k: 40,
+      stream: false
+    });
 
     // Get and store response
     finalContent = response.data.choices[0].message.content;
@@ -845,10 +894,29 @@ async function handleMessage(userPrompt, socketId, username) {
 
     // Send response to client
     handleResponse(finalContent, socketId, username, wordCount);
-
   } catch (error) {
+    // Enhanced error logging for debugging
     logger.error(`Error in handleMessage: ${error.message}`);
-    handleResponse("I'm sorry, I encountered an error processing your request. Please try again.", socketId, username, 0);
+    
+    if (error.response) {
+      // HTTP error response from LMStudio
+      logger.error(`LMStudio API responded with status: ${error.response.status}`);
+      logger.error(`LMStudio API response data: ${JSON.stringify(error.response.data)}`);
+    } else if (error.request) {
+      // Network error - request was made but no response received
+      logger.error(`No response from LMStudio API at ${process.env.LMS_HOST}:${process.env.LMS_PORT}`);
+      logger.error(`Network error details: ${error.code || 'Unknown network error'}`);
+    } else {
+      // Something else went wrong
+      logger.error(`Unexpected error: ${error.message}`);
+    }
+    
+    // Check if it's a connection error specifically
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+      handleResponse("Sorry, I can't connect to the AI service. Please make sure LMStudio is running and try again.", socketId, username, 0);
+    } else {
+      handleResponse("I'm sorry, I encountered an error processing your request. Please try again.", socketId, username, 0);
+    }
   }
 }
 
