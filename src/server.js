@@ -529,21 +529,14 @@ function setupMiddleware(app) {
  * 
  * @param {Express} app - Express application instance
  */
-async function setupRoutes(app) {  // Routes that don't strictly require database access
+async function setupRoutes(app) {
+  // Routes that don't strictly require database access
   const basicRoutes = [
     { path: '/', handler: indexRoute, dbRequired: false },
     { path: '/psychodelic-trigger-mania', handler: psychodelicTriggerManiaRouter, dbRequired: false },
-    { path: '/help', handler: helpRoute, dbRequired: false },    { path: '/health', handler: healthRoute, dbRequired: false },
-    { path: chatBasePath, handler: chatRouter, dbRequired: true },
-    { path: '/circuit-breaker', handler: (req, res) => {
-        res.render('circuit-breaker', {
-          title: 'AIGF Circuit Breaker - Maintenance Mode',
-          message: 'System is currently under maintenance for updates and improvements',
-          currentIssue: 'Deployment in progress',
-          countdown: 300,
-          footer: footerConfig
-        });
-      }, dbRequired: false }
+    { path: '/help', handler: helpRoute, dbRequired: false },
+    { path: '/health', handler: healthRoute, dbRequired: false },
+    { path: chatBasePath, handler: chatRouter, dbRequired: true }
   ];
   // Import and setup docs router
   const docsRouter = await import('./routes/docs.js');
@@ -1438,10 +1431,9 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
               success: false,
               error: 'Server error processing settings'
             });
-          }
-        });
+          }        });
 
-        // Circuit Breaker Admin Command Handler
+        // Admin Command Handler
         socket.on('adminCommand', async (data) => {
           try {
             const { command } = data;
@@ -1655,9 +1647,8 @@ ${diskUsage.stdout}`;
             if (mode === 'maintenance') {
               enableMaintenanceMode(300); // 5 minutes
               
-              io.emit('modeChanged', { mode: 'maintenance' });
-              io.emit('statusUpdate', {
-                frontend: { status: 'maintenance', info: 'Circuit Breaker Active', details: 'Serving maintenance page' },
+              io.emit('modeChanged', { mode: 'maintenance' });              io.emit('statusUpdate', {
+                frontend: { status: 'maintenance', info: 'Maintenance Mode Active', details: 'Serving maintenance page' },
                 backend: { status: 'offline', info: 'Under Maintenance', details: 'Server updating...' },
                 database: { status: 'online', info: 'Online', details: 'Data preserved' },
                 system: { status: 'maintenance', info: 'Maintenance Mode', details: 'Manual maintenance activated' }
@@ -1698,10 +1689,9 @@ ${diskUsage.stdout}`;
         socket.on('requestStatus', () => {
           try {
             const isMaintenanceMode = global.maintenanceMode || false;
-            
-            if (isMaintenanceMode) {
+              if (isMaintenanceMode) {
               socket.emit('statusUpdate', {
-                frontend: { status: 'maintenance', info: 'Circuit Breaker Active', details: 'Serving maintenance page' },
+                frontend: { status: 'maintenance', info: 'Maintenance Mode Active', details: 'Serving maintenance page' },
                 backend: { status: 'offline', info: 'Under Maintenance', details: 'Server updating...' },
                 database: { status: 'online', info: 'Online', details: 'Data preserved' },
                 system: { status: 'maintenance', info: 'Maintenance Mode', details: 'System maintenance in progress' }

@@ -477,10 +477,7 @@
             <div class="nav-item active" data-view="overview">📊 System Overview</div>
             <div class="nav-item" data-view="users">👥 Connected Users</div>
             <div class="nav-item" data-view="database">🗄️ Database Status</div>
-            <div class="nav-item" data-view="workers">⚙️ Worker Status</div>
-            <div class="nav-item" data-view="logs">📋 System Logs</div>
-            <div class="nav-item" data-view="admin">🔧 Circuit Breaker Admin</div>
-            <div class="nav-item" data-view="admin">🔧 Circuit Breaker Admin</div>
+            <div class="nav-item" data-view="workers">⚙️ Worker Status</div>            <div class="nav-item" data-view="logs">📋 System Logs</div>
 
             <h3 style="margin-top: 20px;">Quick Actions</h3>
             <div class="nav-item" onclick="refreshData()">🔄 Refresh Now</div>
@@ -685,9 +682,8 @@
             </div>
 
             <!-- Admin Section -->
-            <div id="admin-section" class="view-section" style="display: none;">
-                <div class="admin-panel">
-                    <div class="admin-header">🔧 Circuit Breaker Admin Control Panel</div>
+            <div id="admin-section" class="view-section" style="display: none;">                <div class="admin-panel">
+                    <div class="admin-header">🔧 Admin Control Panel</div>
                     
                     <!-- Authentication -->
                     <div class="auth-section" id="auth-section">
@@ -711,22 +707,7 @@
                                     <button class="admin-btn danger" onclick="serverCommand('stop')">Stop</button>
                                     <button class="admin-btn warning" onclick="serverCommand('restart')">Restart</button>
                                 </div>
-                            </div>
-
-                            <!-- Circuit Breaker -->
-                            <div class="control-section">
-                                <h4>🔌 Circuit Breaker</h4>
-                                <div class="status-lights">
-                                    <div class="status-light warning" id="breaker-status-light"></div>
-                                    <span class="status-text">Route: <span id="breaker-status-text">Active</span></span>
-                                </div>
-                                <div class="control-buttons">
-                                    <button class="admin-btn warning" onclick="toggleRoute(true)">Switch OFF</button>
-                                    <button class="admin-btn success" onclick="toggleRoute(false)">Switch ON</button>
-                                </div>
-                            </div>
-
-                            <!-- Git Operations -->
+                            </div>                            <!-- Git Operations -->
                             <div class="control-section">
                                 <h4>📁 Git Operations</h4>
                                 <div class="status-lights">
@@ -1003,12 +984,10 @@
                 adminSocket.emit('gitCommit', { message: message.trim() });
                 addAdminLog(`Git commit: ${message}`, 'warning');
             }
-        }
-
-        function showMaintenanceDialog() {
+        }        function showMaintenanceDialog() {
             const message = prompt('Enter maintenance message:');
             if (message && message.trim()) {
-                // This would update the circuit breaker maintenance message
+                // Update maintenance message
                 fetch('/api/maintenance/status', {
                     method: 'POST',
                     headers: {

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# BambiSleep.Chat Environment Setup & Circuit Breaker Installation
-# Comprehensive environment check and setup script with circuit-breaker infrastructure
+# BambiSleep.Chat Environment Setup
+# Comprehensive environment check and setup script
 # This script checks first, does later, ignores steps if correctly setup
 
 set -e  # Exit on any error
@@ -18,7 +18,6 @@ NC='\033[0m' # No Color
 # Configuration
 PROJECT_DIR="/home/brandynette/web/bambisleep.chat/js-bambisleep-chat"
 NODE_VERSION="v24.1.0"
-CIRCUIT_BREAKER_PORT="6970"
 MAIN_APP_PORT="6969"
 
 # Logging function
@@ -245,12 +244,6 @@ log "🔌 Checking port availability..."
 if port_in_use "$MAIN_APP_PORT" && ! pgrep -f "node.*server.js" >/dev/null; then
     warning "Port $MAIN_APP_PORT is in use by another process"
     lsof -i ":$MAIN_APP_PORT"
-fi
-
-# Check if circuit breaker port is free
-if port_in_use "$CIRCUIT_BREAKER_PORT" && ! pgrep -f "circuit-breaker" >/dev/null; then
-    warning "Port $CIRCUIT_BREAKER_PORT is in use by another process"
-    lsof -i ":$CIRCUIT_BREAKER_PORT"
 fi
 
 # ============================================================================
