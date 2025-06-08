@@ -1,11 +1,7 @@
-<!<%- include('../views/partials/head.ejs') %>
-  <title>BambiSleep.Chat AIGF</title>
-  <body data-username="<%= locals.username || '' %>">"PE html>
+<!DOCTYPE html>
 <html lang="en">
 <%- include('../views/partials/head.ejs') %>
   <title>BambiSleep.Chat AIGF</title>
-  <!-- SVG ViewBox Fix - Load early to prevent browser extension errors -->
-  <script src="/js/svg-viewbox-fix.js"></script>
   <body data-username="<%= locals.username || '' %>">
     <%- include('../views/partials/nav.ejs', { path: '/' }) %>
       <div id="chat-container">

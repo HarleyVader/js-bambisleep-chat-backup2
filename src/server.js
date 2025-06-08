@@ -1,4 +1,5 @@
 import { promises as fsPromises } from 'fs';
+import fs from 'fs';
 import dotenv from 'dotenv';
 import express from 'express';
 import http from 'http';
@@ -356,6 +357,31 @@ const __dirname = path.dirname(__filename);
 const logger = new Logger('Server');
 logger.info('Starting BambiSleep.chat server...');
 
+// Git pull detection and auto-restart functionality
+function setupGitPullDetection() {
+  const gitFetchHeadPath = path.join(path.dirname(__dirname), '.git', 'FETCH_HEAD');
+  
+  if (fs.existsSync(gitFetchHeadPath)) {
+    logger.info('🔍 Watching for git pull changes...');
+    
+    fs.watchFile(gitFetchHeadPath, (curr, prev) => {
+      if (curr.mtime !== prev.mtime) {
+        logger.info('🔄 Git pull detected! Restarting server in 3 seconds...');
+        
+        // Give git pull time to complete and log the restart
+        setTimeout(() => {
+          logger.info('🌟 Server restarting due to git pull...');
+          process.exit(0);
+        }, 3000);
+      }
+    });
+    
+    logger.success('✅ Git pull detection active');
+  } else {
+    logger.warning('⚠️  Git repository not found - auto-restart on git pull disabled');
+  }
+}
+
 /**
  * Main application setup
  * 
@@ -584,11 +610,13 @@ function setupTTSRoutes(app) {
     
     return;
   }
+
   // Get voice list
   app.get('/api/tts/voices', async (req, res) => {
-    try {      const response = await axios({
+    try {
+      const response = await axios({
         method: 'get',
-        url: `${config.KOKORO_API_URL}/audio/voices`,
+        url: `${config.KOKORO_API_URL}/voices`,
         headers: {
           'Authorization': `Bearer ${config.KOKORO_API_KEY}`
         },
@@ -598,16 +626,6 @@ function setupTTSRoutes(app) {
       res.json(response.data);
     } catch (error) {
       logger.error(`Voice listing error: ${error.message}`);
-      
-      // Return 503 Service Unavailable for connection errors (when Kokoro is down)
-      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
-        return res.status(503).json({
-          error: 'TTS service temporarily unavailable',
-          message: 'Please try again later'
-        });
-      }
-      
-      // Return 500 for other errors
       res.status(500).json({
         error: 'Error fetching voice list',
         details: process.env.NODE_ENV === 'production' ? null : error.message
@@ -1877,6 +1895,9 @@ async function startServer() {
 
     // Increase max listeners to prevent warning during rapid shutdown signals
     server.setMaxListeners(25);
+
+    // Setup git pull detection
+    setupGitPullDetection();
 
     return server;
   } catch (error) {
