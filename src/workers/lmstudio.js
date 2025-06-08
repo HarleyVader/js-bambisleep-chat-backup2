@@ -886,12 +886,10 @@ async function handleMessage(userPrompt, socketId, username) {
       logger.warning(`Received invalid prompt from ${username || 'unknown'}: ${JSON.stringify(userPrompt)}`);
       handleResponse("Sorry, I couldn't understand your message. Please try again with a valid prompt.", socketId, username, 0);
       return;
-    }
-
-    // Get model ID with error handling
+    }    // Get model ID with error handling
     let modelId;
     try {
-      modelId = await selectLoadedModels('l3-sthenomaidblackroot-8b-v1@q2_k');
+      modelId = await selectLoadedModels('l3-sthenomaidblackroot-8b-v1');
       if (!modelId) {
         throw new Error('No models loaded');
       }
