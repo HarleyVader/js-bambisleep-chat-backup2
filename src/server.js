@@ -527,9 +527,17 @@ async function setupRoutes(app) {  // Routes that don't strictly require databas
   const basicRoutes = [
     { path: '/', handler: indexRoute, dbRequired: false },
     { path: '/psychodelic-trigger-mania', handler: psychodelicTriggerManiaRouter, dbRequired: false },
-    { path: '/help', handler: helpRoute, dbRequired: false },
-    { path: '/health', handler: healthRoute, dbRequired: false },
-    { path: chatBasePath, handler: chatRouter, dbRequired: true }
+    { path: '/help', handler: helpRoute, dbRequired: false },    { path: '/health', handler: healthRoute, dbRequired: false },
+    { path: chatBasePath, handler: chatRouter, dbRequired: true },
+    { path: '/circuit-breaker', handler: (req, res) => {
+        res.render('circuit-breaker', {
+          title: 'AIGF Circuit Breaker - Maintenance Mode',
+          message: 'System is currently under maintenance for updates and improvements',
+          currentIssue: 'Deployment in progress',
+          countdown: 300,
+          footer: footerConfig
+        });
+      }, dbRequired: false }
   ];
   // Import and setup docs router
   const docsRouter = await import('./routes/docs.js');
@@ -1343,9 +1351,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
           } catch (error) {
             logger.error('Error in disconnect handler:', error);
           }
-        });
-
-        // Handle settings updates from client to worker
+        });        // Handle settings updates from client to worker
         socket.on('worker:settings:update', (data) => {
           try {
             if (!data || !data.section) {
@@ -1389,6 +1395,298 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
               success: false,
               error: 'Server error processing settings'
             });
+          }
+        });
+
+        // Circuit Breaker Admin Command Handler
+        socket.on('adminCommand', async (data) => {
+          try {
+            const { command } = data;
+            logger.info(`Admin command received: ${command} from ${socket.id}`);
+
+            let result = { command, success: false, output: '' };
+
+            switch (command) {
+              case 'git-pull':
+                try {
+                  const { exec } = await import('child_process');
+                  const { promisify } = await import('util');
+                  const execAsync = promisify(exec);
+                  
+                  const { stdout, stderr } = await execAsync('git pull origin MK-XI');
+                  result.success = true;
+                  result.output = stdout || 'Git pull completed successfully';
+                  
+                  // Broadcast to all clients about update
+                  io.emit('statusUpdate', {
+                    system: { status: 'maintenance', info: 'Code Updated', details: 'Latest changes pulled from repository' }
+                  });
+                } catch (error) {
+                  result.output = `Git pull failed: ${error.message}`;
+                  logger.error('Git pull error:', error);
+                }
+                break;
+
+              case 'npm-install':
+                try {
+                  const { exec } = await import('child_process');
+                  const { promisify } = await import('util');
+                  const execAsync = promisify(exec);
+                  
+                  const { stdout, stderr } = await execAsync('npm install');
+                  result.success = true;
+                  result.output = 'NPM install completed successfully';
+                  
+                  // Broadcast status update
+                  io.emit('statusUpdate', {
+                    system: { status: 'maintenance', info: 'Dependencies Updated', details: 'Package installation completed' }
+                  });
+                } catch (error) {
+                  result.output = `NPM install failed: ${error.message}`;
+                  logger.error('NPM install error:', error);
+                }
+                break;
+
+              case 'restart-server':
+                try {
+                  result.success = true;
+                  result.output = 'Server restart initiated';
+                  
+                  // Broadcast to all clients
+                  io.emit('statusUpdate', {
+                    system: { status: 'maintenance', info: 'Restarting', details: 'Server restart in progress' }
+                  });
+                  
+                  // Delay restart to allow response to be sent
+                  setTimeout(() => {
+                    process.exit(0);
+                  }, 2000);
+                } catch (error) {
+                  result.output = `Server restart failed: ${error.message}`;
+                  logger.error('Server restart error:', error);
+                }
+                break;
+
+              case 'full-deploy':
+                try {
+                  const { exec } = await import('child_process');
+                  const { promisify } = await import('util');
+                  const execAsync = promisify(exec);
+                  
+                  // Start deployment sequence
+                  socket.emit('commandResult', {
+                    command: 'full-deploy-start',
+                    success: true,
+                    output: 'Starting full deployment sequence...'
+                  });
+
+                  // Step 1: Git pull
+                  io.emit('countdownUpdate', { remaining: 180, progress: 20 });
+                  const gitResult = await execAsync('git pull origin MK-XI');
+                  
+                  // Step 2: NPM install
+                  io.emit('countdownUpdate', { remaining: 120, progress: 60 });
+                  const npmResult = await execAsync('npm install');
+                  
+                  // Step 3: Prepare restart
+                  io.emit('countdownUpdate', { remaining: 30, progress: 90 });
+                  
+                  result.success = true;
+                  result.output = 'Full deployment completed, restarting server...';
+                  
+                  // Broadcast completion
+                  io.emit('statusUpdate', {
+                    system: { status: 'maintenance', info: 'Deployment Complete', details: 'Full deployment cycle finished' }
+                  });
+                  
+                  io.emit('countdownUpdate', { remaining: 0, progress: 100 });
+                  
+                  // Restart server
+                  setTimeout(() => {
+                    process.exit(0);
+                  }, 3000);
+                } catch (error) {
+                  result.output = `Full deployment failed: ${error.message}`;
+                  logger.error('Full deployment error:', error);
+                }                break;
+
+              case 'nvm-install':
+                try {
+                  const nodeVersion = process.version;
+                  const { stdout, stderr } = await execAsync('nvm install node');
+                  result.success = true;
+                  result.output = `NVM install completed. Current: ${nodeVersion}, Latest installed via NVM`;
+                  
+                  io.emit('statusUpdate', {
+                    system: { status: 'maintenance', info: 'Node Updated', details: 'Latest Node.js version installed' }
+                  });
+                } catch (error) {
+                  result.output = `NVM install failed: ${error.message}`;
+                  logger.error('NVM install error:', error);
+                }
+                break;
+
+              case 'git-status':
+                try {
+                  const { stdout, stderr } = await execAsync('git status --porcelain');
+                  const branchResult = await execAsync('git branch --show-current');
+                  const currentBranch = branchResult.stdout.trim();
+                  
+                  result.success = true;
+                  result.output = `Branch: ${currentBranch}\nStatus: ${stdout || 'Working tree clean'}`;
+                  
+                  io.emit('statusUpdate', {
+                    system: { status: 'maintenance', info: 'Git Status Check', details: `Branch: ${currentBranch}` }
+                  });
+                } catch (error) {
+                  result.output = `Git status failed: ${error.message}`;
+                  logger.error('Git status error:', error);
+                }
+                break;
+
+              case 'system-check':
+                try {
+                  const uptime = process.uptime();
+                  const memory = process.memoryUsage();
+                  const memoryMB = Math.round(memory.rss / 1024 / 1024);
+                  const diskUsage = await execAsync('df -h | head -n 2');
+                  
+                  result.success = true;
+                  result.output = `System Health Check:
+Uptime: ${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m
+Memory: ${memoryMB}MB RSS
+Node: ${process.version}
+Platform: ${process.platform}
+Disk Usage:
+${diskUsage.stdout}`;
+                  
+                  io.emit('statusUpdate', {
+                    system: { status: 'maintenance', info: 'System Check Complete', details: `Memory: ${memoryMB}MB, Uptime: ${Math.floor(uptime / 3600)}h` }
+                  });
+                } catch (error) {
+                  result.output = `System check failed: ${error.message}`;
+                  logger.error('System check error:', error);
+                }
+                break;
+
+              case 'backup-system':
+                try {
+                  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                  const backupDir = `backup-${timestamp}`;
+                  await execAsync(`mkdir -p ../backups/${backupDir}`);
+                  await execAsync(`cp -r ../js-bambisleep-chat ../backups/${backupDir}/`);
+                  
+                  result.success = true;
+                  result.output = `Backup created: ../backups/${backupDir}`;
+                  
+                  io.emit('statusUpdate', {
+                    system: { status: 'maintenance', info: 'Backup Complete', details: `Backup stored: ${backupDir}` }
+                  });
+                } catch (error) {
+                  result.output = `Backup failed: ${error.message}`;
+                  logger.error('Backup error:', error);
+                }
+                break;
+
+              default:
+                result.output = `Unknown command: ${command}`;
+            }
+
+            socket.emit('commandResult', result);
+          } catch (error) {
+            logger.error('Error in adminCommand handler:', error);
+            socket.emit('commandResult', {
+              command: data.command,
+              success: false,
+              output: `Command failed: ${error.message}`
+            });
+          }
+        });
+
+        // Mode Change Handler
+        socket.on('modeChange', (data) => {
+          try {
+            const { mode } = data;
+            logger.info(`Mode change requested: ${mode} from ${socket.id}`);
+
+            if (mode === 'maintenance') {
+              enableMaintenanceMode(300); // 5 minutes
+              
+              io.emit('modeChanged', { mode: 'maintenance' });
+              io.emit('statusUpdate', {
+                frontend: { status: 'maintenance', info: 'Circuit Breaker Active', details: 'Serving maintenance page' },
+                backend: { status: 'offline', info: 'Under Maintenance', details: 'Server updating...' },
+                database: { status: 'online', info: 'Online', details: 'Data preserved' },
+                system: { status: 'maintenance', info: 'Maintenance Mode', details: 'Manual maintenance activated' }
+              });
+            } else if (mode === 'normal') {
+              disableMaintenanceMode();
+              
+              io.emit('modeChanged', { mode: 'normal' });
+              io.emit('statusUpdate', {
+                frontend: { status: 'online', info: 'Service Active', details: 'All systems operational' },
+                backend: { status: 'online', info: 'Running', details: 'Server operational' },
+                database: { status: 'online', info: 'Connected', details: 'Database available' },
+                system: { status: 'online', info: 'Normal Operation', details: 'All systems green' }
+              });
+            }
+          } catch (error) {
+            logger.error('Error in modeChange handler:', error);
+          }
+        });
+
+        // System Info Handler
+        socket.on('getSystemInfo', () => {
+          try {
+            const uptime = process.uptime();
+            const memory = process.memoryUsage();
+            const memoryMB = Math.round(memory.rss / 1024 / 1024);
+            const cpuUsage = process.cpuUsage();
+
+            socket.emit('systemInfo', {
+              uptime: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m`,
+              memory: `${memoryMB}MB RSS`,
+              cpu: `${Math.round((cpuUsage.user + cpuUsage.system) / 1000)}ms`
+            });
+          } catch (error) {
+            logger.error('Error in getSystemInfo handler:', error);
+          }
+        });        // Status Request Handler
+        socket.on('requestStatus', () => {
+          try {
+            const isMaintenanceMode = global.maintenanceMode || false;
+            
+            if (isMaintenanceMode) {
+              socket.emit('statusUpdate', {
+                frontend: { status: 'maintenance', info: 'Circuit Breaker Active', details: 'Serving maintenance page' },
+                backend: { status: 'offline', info: 'Under Maintenance', details: 'Server updating...' },
+                database: { status: 'online', info: 'Online', details: 'Data preserved' },
+                system: { status: 'maintenance', info: 'Maintenance Mode', details: 'System maintenance in progress' }
+              });
+              
+              // Send countdown update
+              const remaining = global.maintenanceRetryAfter || 300;
+              socket.emit('countdownUpdate', { remaining, progress: 50 });
+            } else {
+              socket.emit('statusUpdate', {
+                frontend: { status: 'online', info: 'Service Active', details: 'All systems operational' },
+                backend: { status: 'online', info: 'Running', details: 'Server operational' },
+                database: { status: 'online', info: 'Connected', details: 'Database available' },
+                system: { status: 'online', info: 'Normal Operation', details: 'All systems green' }
+              });
+            }
+          } catch (error) {
+            logger.error('Error in requestStatus handler:', error);
+          }
+        });
+
+        // Connection Count Handler
+        socket.on('getConnectionCount', () => {
+          try {
+            const connectionCount = socketStore ? socketStore.size : 0;
+            socket.emit('connectionCount', { count: connectionCount });
+          } catch (error) {
+            logger.error('Error in getConnectionCount handler:', error);
           }
         });
       } catch (error) {
