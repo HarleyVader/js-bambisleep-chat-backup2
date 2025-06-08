@@ -1039,9 +1039,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
       setTimeout(() => {
         setupSocketHandlers(io, socketStore, filteredWords);
       }, 1000);
-    });
-
-    // Set up worker message handlers
+    });    // Set up worker message handlers
     lmstudio.on("message", async (msg) => {
       try {
         if (msg.type === "log") {
@@ -1052,15 +1050,17 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
 
           // Send response to client
           io.to(msg.socketId).emit("response", responseData);
-            // Log AIGF interaction - get models first
+            // Log AIGF interaction with duration from message or calculate default
+          const duration = msg.duration || 0;
           await logAigfInteraction(
             msg.socketId,
             msg.username,
             'chat',
             msg.prompt || 'Unknown input',
             responseData,
-            processingDuration
-          );        } else if (msg.type === 'error') {
+            duration
+          );
+        } else if (msg.type === 'error') {
           // Provide user-friendly error messages while logging technical details
           logger.error(`Worker error for ${msg.socketId}: ${msg.error}`);
           
@@ -1910,12 +1910,10 @@ async function startServer() {
     server.listen(PORT, () => {
       logger.success(`Server running on http://${getServerAddress()}:${PORT}`);
       logger.success('Server startup completed successfully');
-    });
-
-    startUnifiedDatabaseMonitor();
+    });    startUnifiedDatabaseMonitor();
 
     global.socketStore = socketStore;
-    memoryMonitor.start();
+    
     if (process.env.MEMORY_MONITOR_ENABLED === 'true') {
       const monitorInterval = process.env.MEMORY_MONITOR_INTERVAL
         ? parseInt(process.env.MEMORY_MONITOR_INTERVAL)

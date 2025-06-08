@@ -874,10 +874,8 @@ async function saveSessionToDatabase(socketId, userPrompt, aiResponse, username)
         ? triggers
         : typeof triggers === 'string'
           ? triggers.split(',').map(t => t.trim())
-          : ['BAMBI SLEEP'];
-
-      // Find existing session or create new one
-      let sessionHistory = await SessionHistoryModelInstance.findOne({ socketId });
+          : ['BAMBI SLEEP'];      // Find existing session or create new one  
+      let sessionHistory = await SessionHistoryModelInstance.findOne({ sessionId: socketId });
 
       if (sessionHistory) {
         // Update existing
@@ -888,26 +886,28 @@ async function saveSessionToDatabase(socketId, userPrompt, aiResponse, username)
         sessionHistory.metadata.lastActivity = new Date();
         await sessionHistory.save();
       } else {
-        // Create new session with explicit sessionId
-        sessionHistory = await SessionHistoryModelInstance.create({
-          username,
-          socketId,
-          // Add this line to fix the sessionId validation error
-          sessionId: socketId,
-          title: `${username}'s session on ${new Date().toLocaleDateString()}`,
-          messages: [
-            { role: 'system', content: collarText },
-            { role: 'user', content: userPrompt },
-            { role: 'assistant', content: aiResponse }
-          ],
-          metadata: {
-            lastActivity: new Date(),
-            triggers: triggerList,
-            collarActive: state,
-            collarText: collar,
-            modelName: 'Steno Maid Blackroot'
-          }
-        });
+        // Create new session with upsert to prevent duplicates
+        sessionHistory = await SessionHistoryModelInstance.findOneAndUpdate(
+          { sessionId: socketId },
+          {
+            username,
+            sessionId: socketId,
+            title: `${username}'s session on ${new Date().toLocaleDateString()}`,
+            messages: [
+              { role: 'system', content: collarText },
+              { role: 'user', content: userPrompt },
+              { role: 'assistant', content: aiResponse }
+            ],
+            metadata: {
+              lastActivity: new Date(),
+              triggers: triggerList,
+              collarActive: state,
+              collarText: collar,
+              modelName: 'Steno Maid Blackroot'
+            }
+          },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
 
         // Fix Profile model reference for XP updates
         try {
