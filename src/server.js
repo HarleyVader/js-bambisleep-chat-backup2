@@ -28,7 +28,6 @@ import spiralsWorker from './workers/spirals.js';
 
 // Import configuration
 import config from './config/config.js';
-import footerConfig from './config/footer.config.js';
 // Database module is imported dynamically to prevent circular dependencies
 
 // Import routes
@@ -157,84 +156,73 @@ const scheduledTasks = {
   }
 };
 
-// Define empty arrays for database routes
-const dbRoutes = [];
+// Unified database monitoring function that consolidates startDbHealthMonitor, startConnectionPoolMonitor, and startConnectionMonitoring
+function startUnifiedDatabaseMonitor() {
+  const healthInterval = config.DB_HEALTH_CHECK_INTERVAL || 60000;
+  const poolInterval = config.CONNECTION_POOL_CHECK_INTERVAL || 300000;
+  const connectionInterval = config.CONNECTION_MONITORING_INTERVAL || 30000;
 
-// Function to monitor database health
-function startDbHealthMonitor() {
-  const interval = config.DB_HEALTH_CHECK_INTERVAL || 60000; scheduledTasks.addTask('dbHealthCheck', async () => {
+  // Database health monitoring - runs most frequently for critical health checks
+  scheduledTasks.addTask('dbHealthCheck', async () => {
     try {
-      // Import database module dynamically to prevent circular dependencies
       const db = await import('./config/db.js');
       const { checkAllDatabasesHealth, connectAllDatabases, hasConnection } = db.default;
 
-      // First check if connection is available at all
+      // Check if connection is available first
       if (!hasConnection()) {
-        logger.warning('Database connection is not available, attempting reconnection');
+        logger.warning('Database connection unavailable, attempting reconnection');
         try {
           await connectAllDatabases(1);
         } catch (reconnErr) {
-          logger.error(`Failed to reconnect to database: ${reconnErr.message}`);
+          logger.error(`Reconnection failed: ${reconnErr.message}`);
         }
         return;
       }
 
-      // Safely check health of all database connections with double protection
+      // Check health of all database connections with error protection
       let healthResults;
       try {
         healthResults = await Promise.resolve(checkAllDatabasesHealth()).catch(err => {
-          logger.error(`Failed to check database health: ${err.message}`);
-          return {
-            main: { status: 'error', error: err.message },
-            profiles: { status: 'error', error: err.message }
-          };
+          logger.error(`Health check failed: ${err.message}`);
+          return { main: { status: 'error', error: err.message }, profiles: { status: 'error', error: err.message } };
         });
       } catch (innerError) {
-        logger.error(`Unexpected error during health check: ${innerError.message}`);
-        healthResults = {
-          main: { status: 'error', error: innerError.message },
-          profiles: { status: 'error', error: innerError.message }
-        };
+        logger.error(`Unexpected health check error: ${innerError.message}`);
+        healthResults = { main: { status: 'error', error: innerError.message }, profiles: { status: 'error', error: innerError.message } };
       }
 
-      // Log database health status
+      // Process health results and attempt reconnection if needed
       for (const [type, status] of Object.entries(healthResults)) {
         if (status.status !== 'healthy' && status.status !== 'connected') {
-          logger.warning(`${type} database connection not healthy: ${status.status}`);
-          // Try to reconnect to unhealthy database
-          logger.info(`Attempting to reconnect to ${type} database`);
-          try {            // Import database module dynamically to prevent circular dependencies
-            const db = await import('./config/db.js');
-            const { connectAllDatabases } = db.default;
-
+          logger.warning(`${type} database unhealthy: ${status.status}`);
+          logger.info(`Attempting ${type} database reconnection`);
+          try {
             await Promise.resolve(connectAllDatabases(1)).catch(err => {
-              logger.error(`Failed to reconnect to ${type} database: ${err.message}`);
-              // Continue server operations even if reconnection fails
+              logger.error(`Failed to reconnect ${type} database: ${err.message}`);
             });
           } catch (reconnectError) {
-            logger.error(`Error during database reconnection: ${reconnectError.message}`);
-            // Continue server operations even if reconnection fails
+            logger.error(`Reconnection error for ${type}: ${reconnectError.message}`);
           }
         }
       }
     } catch (error) {
-      // This outer catch provides an additional safety net
-      logger.error(`DB health check critical failure: ${error.message}`);
-      logger.info('Server will continue running with limited database functionality');
+      logger.error(`DB health monitor critical failure: ${error.message}`);
+      logger.info('Server continuing with limited database functionality');
     }
-  }, interval);
-}
+  }, healthInterval);
 
-// Function to monitor connection pool
-function startConnectionPoolMonitor() {
-  const interval = config.CONNECTION_POOL_CHECK_INTERVAL || 300000;
+  // Connection pool monitoring - runs less frequently for resource optimization
   scheduledTasks.addTask('connectionPoolMonitor', async () => {
     try {
-      // First check if we have a connection monitor function available
-      try {        // Dynamically import db to avoid circular dependencies
-        const db = await import('./config/db.js').catch(() => {
-          return { default: { checkDBHealth: null } };
-        });
+      const dbModule = await import('./config/db.js');
+      if (!dbModule.default.hasConnection()) {
+        logger.debug('MongoDB connection not ready, skipping pool check');
+        return;
+      }
+
+      // Use dedicated health check if available, otherwise fallback to manual check
+      try {
+        const db = await import('./config/db.js').catch(() => ({ default: { checkAllDatabasesHealth: null } }));
         if (db.default.checkAllDatabasesHealth) {
           await db.default.checkAllDatabasesHealth();
           return;
@@ -242,41 +230,32 @@ function startConnectionPoolMonitor() {
       } catch (importError) {
         logger.debug(`Could not use dedicated pool monitor: ${importError.message}`);
       }
-      // Fallback: Check if connection exists and is ready
-      const dbModule = await import('./config/db.js');
-      if (!dbModule.default.hasConnection()) {
-        logger.debug('MongoDB connection not ready, skipping pool check');
-        return;
-      }
 
-      // Then check if db and serverConfig are available
+      // Manual pool status check for older MongoDB versions
       if (!mongoose.connection.db || !mongoose.connection.db.serverConfig) {
         logger.debug('MongoDB server configuration not available');
         return;
       }
 
-      // Check if pool exists
       const pool = mongoose.connection.db.serverConfig.s?.pool;
       if (!pool) {
         logger.debug('MongoDB connection pool not available');
         return;
       }
 
-      // Now safely log the pool stats
-      logger.debug(`DB connection pool: ${pool.totalConnectionCount || 0} total, ${pool.availableConnectionCount || 0} available`);
+      logger.debug(`DB pool: ${pool.totalConnectionCount || 0} total, ${pool.availableConnectionCount || 0} available`);
     } catch (error) {
       logger.error(`Connection pool check failed: ${error.message}`);
-      // Error in pool check shouldn't affect server operation
     }
-  }, interval);
-}
+  }, poolInterval);
 
-// Function to start connection monitoring
-function startConnectionMonitoring(interval) {
+  // Active connection monitoring - tracks socket connections for performance insights
   scheduledTasks.addTask('connectionMonitoring', () => {
     const activeConnections = socketStore ? socketStore.size : 0;
-    logger.info(`Active connections: ${activeConnections}`);
-  }, interval);
+    logger.info(`Active socket connections: ${activeConnections}`);
+  }, connectionInterval);
+
+  logger.info('Unified database monitoring started');
 }
 
 // Add this middleware definition that was missing
@@ -428,10 +407,7 @@ async function initializeApp() {
     // Register models after DB connection
     await registerModels();
 
-    // Add a route to check database status
-    dbRoutes.push('/api/db-status');
-    
-    // Define an API route to check DB health
+    // Add a route to check database status    // Define an API route to check DB health
     app.get('/api/db-status', async (req, res) => {
       try {
         const dbHealthCheck = await db.default.checkAllDatabasesHealth();
@@ -573,19 +549,7 @@ async function setupRoutes(app) {
     basicRoutes.forEach(route => {
       if (route && route.path && route.handler) {
         app.use(route.path, dbFeatureCheck(route.dbRequired), route.handler);
-      }
-    });
-  }
-
-  if (Array.isArray(dbRoutes)) {
-    dbRoutes.forEach(route => {
-      if (route && typeof route === 'object' && route.path && route.handler) {
-        app.use(route.path, dbFeatureCheck(true), route.handler);
-      } else if (route && typeof route === 'string') {
-        // For string-only routes, they might be handled elsewhere
-        logger.debug(`String route path found: ${route}`);
-      }
-    });
+      }    });
   }
 }
 
@@ -826,6 +790,230 @@ async function updateProfileXP(username, xp) {
   }
 }
 
+// Helper functions to reduce redundancy in socket handlers
+
+/**
+ * Award XP to a user with consistent logging and validation
+ * Centralizes XP awarding logic to prevent duplication
+ */
+function awardUserXP(socket, xpSystem, amount, reason = 'interaction') {
+  if (!socket?.bambiData || !xpSystem) return false;
+  
+  try {
+    xpSystem.awardXP(socket, amount, reason);
+    return true;
+  } catch (error) {
+    logger.error(`Failed to award XP: ${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * Log AIGF interaction with standardized error handling
+ * Reduces repetitive AIGF logging code throughout socket handlers
+ */
+async function logAigfInteraction(socketId, username, type, inputData, responseData, duration = 0) {
+  try {
+    const AigfInteraction = await modelCache.getModel('AigfInteraction');
+    
+    await aigfLogger.logAigfInteraction(
+      AigfInteraction,
+      username || 'anonymous',
+      type,
+      inputData,
+      responseData,
+      duration,
+      socketId
+    );
+    return true;
+  } catch (logError) {
+    logger.error(`Failed to log AIGF interaction: ${logError.message}`);
+    return false;
+  }
+}
+
+/**
+ * Log AIGF error with standardized error handling
+ * Centralizes error logging to prevent code duplication
+ */
+async function logAigfError(socketId, username, type, inputData, error) {
+  try {
+    const AigfInteraction = await modelCache.getModel('AigfInteraction');
+    
+    await aigfLogger.logAigfError(
+      AigfInteraction,
+      username || 'anonymous',
+      type,
+      inputData,
+      error,
+      socketId
+    );
+    return true;
+  } catch (logError) {
+    logger.error(`Failed to log AIGF error: ${logError.message}`);
+    return false;
+  }
+}
+
+/**
+ * Emit status update with consistent formatting
+ * Reduces repetitive status update emissions
+ */
+function emitStatusUpdate(io, status, info, details) {
+  try {
+    io.emit('statusUpdate', {
+      system: { status, info, details }
+    });
+  } catch (error) {
+    logger.error(`Failed to emit status update: ${error.message}`);
+  }
+}
+
+/**
+ * Execute admin command with standardized error handling and status updates
+ * Consolidates the repetitive pattern of admin command execution
+ */
+async function executeAdminCommand(command, io) {
+  const result = { command, success: false, output: '' };
+  
+  try {
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+    
+    let commandToRun = '';
+    let successMessage = '';
+    let statusInfo = '';
+    let statusDetails = '';
+    
+    switch (command) {
+      case 'git-pull':
+        commandToRun = 'git pull origin MK-XI';
+        successMessage = 'Git pull completed successfully';
+        statusInfo = 'Code Updated';
+        statusDetails = 'Latest changes pulled from repository';
+        break;
+        
+      case 'npm-install':
+        commandToRun = 'npm install';
+        successMessage = 'NPM install completed successfully';
+        statusInfo = 'Dependencies Updated';
+        statusDetails = 'Package installation completed';
+        break;
+        
+      case 'git-status':
+        const branchResult = await execAsync('git branch --show-current');
+        const currentBranch = branchResult.stdout.trim();
+        commandToRun = 'git status --porcelain';
+        result.success = true;
+        result.output = `Branch: ${currentBranch}\nStatus: ${await execAsync(commandToRun).then(r => r.stdout || 'Working tree clean')}`;
+        emitStatusUpdate(io, 'maintenance', 'Git Status Check', `Branch: ${currentBranch}`);
+        return result;
+        
+      default:
+        throw new Error(`Unknown command: ${command}`);
+    }
+    
+    if (commandToRun) {
+      const { stdout } = await execAsync(commandToRun);
+      result.success = true;
+      result.output = stdout || successMessage;
+      
+      if (statusInfo) {
+        emitStatusUpdate(io, 'maintenance', statusInfo, statusDetails);
+      }
+    }
+  } catch (error) {
+    result.output = `${command} failed: ${error.message}`;
+    logger.error(`${command} error:`, error);
+  }
+  
+  return result;
+}
+
+/**
+ * Send error message to socket with consistent formatting
+ * Centralizes socket error emission patterns
+ */
+function emitSocketError(socket, message) {
+  try {
+    socket.emit('error', { message });
+  } catch (error) {
+    logger.error(`Failed to emit socket error: ${error.message}`);
+  }
+}
+
+/**
+ * Manage socket store operations with consistent error handling
+ * Centralizes socket store management patterns
+ */
+const socketStoreManager = {
+  addSocket(socketStore, socketId, socketData) {
+    try {
+      socketStore.set(socketId, socketData);
+      return true;
+    } catch (error) {
+      logger.error(`Failed to add socket to store: ${error.message}`);
+      return false;
+    }
+  },
+
+  updateSocket(socketStore, socketId, updates) {
+    try {
+      const existing = socketStore.get(socketId);
+      if (existing) {
+        socketStore.set(socketId, { ...existing, ...updates });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      logger.error(`Failed to update socket in store: ${error.message}`);
+      return false;
+    }
+  },
+
+  removeSocket(socketStore, socketId) {
+    try {
+      const removed = socketStore.delete(socketId);
+      return removed;
+    } catch (error) {
+      logger.error(`Failed to remove socket from store: ${error.message}`);
+      return false;
+    }
+  }
+};
+
+/**
+ * Cache for dynamically imported models to avoid repeated imports
+ * Reduces redundant model import operations
+ */
+const modelCache = {
+  cache: new Map(),
+  
+  async getModel(modelName) {
+    if (this.cache.has(modelName)) {
+      return this.cache.get(modelName);
+    }
+    
+    try {
+      const module = await import(`./models/${modelName}.js`);
+      const model = module.default;
+      this.cache.set(modelName, model);
+      return model;
+    } catch (error) {
+      logger.error(`Failed to import model ${modelName}: ${error.message}`);
+      return null;
+    }
+  },
+
+  // Pre-load commonly used models
+  async preloadModels() {
+    const modelNames = ['AudioInteraction', 'UserInteraction', 'AigfInteraction'];
+    await Promise.all(modelNames.map(name => this.getModel(name)));
+    logger.info('Common models preloaded');
+  }
+};
+
 /**
  * Set up Socket.io event handlers
  * 
@@ -836,9 +1024,7 @@ async function updateProfileXP(username, xp) {
 function setupSocketHandlers(io, socketStore, filteredWords) {
   try {
     // Initialize the LMStudio worker thread
-    const lmstudio = new Worker(path.join(__dirname, 'workers/lmstudio.js'));
-
-    // Handle worker exit
+    const lmstudio = new Worker(path.join(__dirname, 'workers/lmstudio.js'));    // Restart the worker automatically to maintain AI service availability
     lmstudio.on('exit', (code) => {
       logger.error(`Worker thread exited with code ${code}`);
 
@@ -866,27 +1052,16 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
 
           // Send response to client
           io.to(msg.socketId).emit("response", responseData);
-          
-          // Log AIGF interaction - get models first
-          try {
-            const AigfInteraction = await import('./models/AigfInteraction.js').then(module => module.default);
-            const startTime = msg.startTime || Date.now() - 1000; // Fallback if no start time
-            const processingDuration = Date.now() - startTime;
-            
-            await aigfLogger.logAigfInteraction(
-              AigfInteraction,
-              msg.username || 'anonymous',
-              'chat',
-              msg.prompt || 'Unknown input',
-              responseData,
-              processingDuration,
-              msg.socketId
-            );
-          } catch (logError) {
-            logger.error(`Failed to log AIGF interaction: ${logError.message}`);
-          }
-        } else if (msg.type === 'error') {
-          // Handle error messages from worker
+            // Log AIGF interaction - get models first
+          await logAigfInteraction(
+            msg.socketId,
+            msg.username,
+            'chat',
+            msg.prompt || 'Unknown input',
+            responseData,
+            processingDuration
+          );        } else if (msg.type === 'error') {
+          // Provide user-friendly error messages while logging technical details
           logger.error(`Worker error for ${msg.socketId}: ${msg.error}`);
           
           // Send friendly error message to client
@@ -895,22 +1070,14 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
             : `Error: ${msg.error}`;
             
           io.to(msg.socketId).emit("error", { message: errorMessage });
-          
-          // Log AIGF error
-          try {
-            const AigfInteraction = await import('./models/AigfInteraction.js').then(module => module.default);
-            
-            await aigfLogger.logAigfError(
-              AigfInteraction,
-              msg.username || 'anonymous',
-              'chat',
-              msg.prompt || 'Unknown input',
-              new Error(msg.error),
-              msg.socketId
-            );
-          } catch (logError) {
-            logger.error(`Failed to log AIGF error: ${logError.message}`);
-          }
+            // Log AIGF error
+          await logAigfError(
+            msg.socketId,
+            msg.username,
+            'chat',
+            msg.prompt || 'Unknown input',
+            new Error(msg.error)
+          );
         } else if (msg.type === 'worker:settings:response') {
           // Forward settings response to client
           if (msg.socketId) {
@@ -930,14 +1097,10 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
       } catch (error) {
         logger.error('Error in lmstudio message handler:', error);
       }
-    });
-
-    // Handle worker info messages - moved outside socket handler
+    });    // Log worker information for debugging and monitoring purposes
     lmstudio.on('info', (info) => {
       logger.info('Worker info:', info);
-    });
-
-    // Handle worker errors - moved outside socket handler
+    });    // Recover from worker errors to maintain service availability
     lmstudio.on('error', (err) => {
       logger.error('Worker error:', err);
       
@@ -1029,10 +1192,8 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
 
         const username = cookieObj.bambiname
           ? decodeURIComponent(cookieObj.bambiname)
-          : 'anonBambi';
-
-        // Store socket reference
-        socketStore.set(socket.id, { socket, username });
+          : 'anonBambi';        // Store socket reference with centralized management
+        socketStoreManager.addSocket(socketStore, socket.id, { socket, username });
 
         logger.info(`Socket connected: ${socket.id} - User: ${username}`);
 
@@ -1058,17 +1219,14 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
               });
             }
           });
-        }
-
-        // Add socket to global store
-        socketStore.set(socket.id, { socket, worker: lmstudio, files: [] });
+        }        // Add socket to global store with worker reference  
+        socketStoreManager.addSocket(socketStore, socket.id, { socket, worker: lmstudio, files: [] });
         logger.info(`Client connected: ${socket.id} sockets: ${socketStore.size}`);        // Enhanced chat message handling
         socket.on('chat message', async (msg) => {
-          try {
-            // Validate message format
+          try {            // Validate message format
             if (!msg || !msg.data || typeof msg.data !== 'string') {
               logger.warning('Received invalid message format');
-              socket.emit('error', { message: 'Invalid message format' });
+              emitSocketError(socket, 'Invalid message format');
               return;
             }
 
@@ -1083,10 +1241,9 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
 
             // Broadcast message to all connected clients first for responsiveness
             io.emit('chat message', messageData);            // Process message for enhanced features (URLs, mentions, triggers)
-            try {
-              // Use sessionService for message handling
-              const AudioInteraction = await import('./models/AudioInteraction.js').then(module => module.default);
-              const UserInteraction = await import('./models/UserInteraction.js').then(module => module.default);
+            try {              // Use sessionService for message handling with cached models
+              const AudioInteraction = await modelCache.getModel('AudioInteraction');
+              const UserInteraction = await modelCache.getModel('UserInteraction');
               
               // Load triggers for audio detection
               let triggers = [];
@@ -1184,20 +1341,18 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
                     logger.error(`URL validation error: ${error.message}`);
                   });
                 }
-              }
-
-              // Give XP for chat interactions
-              xpSystem.awardXP(socket, 1, 'chat');            } catch (dbError) {
+              }              // Give XP for chat interactions
+              awardUserXP(socket, xpSystem, 1, 'chat');            } catch (dbError) {
               // Log database error but don't disrupt the user experience
               logger.error(`Failed to save enhanced chat message: ${dbError.message}`, {
                 username: messageData.username,
                 messageLength: messageData.data?.length || 0
               });
-              socket.emit('error', { message: 'Failed to save message' });
+              emitSocketError(socket, 'Failed to save message');
             }
           } catch (error) {
             logger.error('Error in chat message handler:', error);
-            socket.emit('error', { message: 'Failed to process message' });
+            emitSocketError(socket, 'Failed to process message');
           }
         });
 
@@ -1209,13 +1364,8 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
             
             // Update username
             socket.bambiUsername = username;
-            
-            // Update socket store
-            const socketData = socketStore.get(socket.id);
-            if (socketData) {
-              socketData.username = username;
-              socketStore.set(socket.id, socketData);
-            }
+              // Update socket store with new username
+            socketStoreManager.updateSocket(socketStore, socket.id, { username });
             
             // Notify client
             socket.emit('username set', { username });
@@ -1248,9 +1398,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
             logger.error('Error getting profile data:', error);
             callback({ success: false, error: 'Failed to load profile data' });
           }
-        });
-
-        // Message handler for AIGF
+        });        // Route AIGF messages to worker thread for processing
         socket.on("message", (message) => {
           try {
             // Track when the request started for performance monitoring
@@ -1262,39 +1410,27 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
               socketId: socket.id,
               username: socket.bambiUsername,
               startTime: startTime
-            });
-          } catch (error) {
+            });          } catch (error) {
             logger.error('Error in message handler:', error);
-            socket.emit('error', { message: 'Failed to process your message' });
-            
-            // Log the error
+            emitSocketError(socket, 'Failed to process your message');
+              // Log the error
             (async () => {
-              try {
-                const AigfInteraction = await import('./models/AigfInteraction.js').then(module => module.default);
-                
-                await aigfLogger.logAigfError(
-                  AigfInteraction,
-                  socket.bambiUsername || 'anonymous',
-                  'chat',
-                  message,
-                  error,
-                  socket.id
-                );
-              } catch (logError) {
-                logger.error(`Failed to log AIGF error: ${logError.message}`);
-              }
+              await logAigfError(
+                socket.id,
+                socket.bambiUsername,
+                'chat',
+                message,
+                error
+              );
             })();
           }
-        });
-
-        // Handle audio play in chat
+        });        // Allow users to trigger audio for themselves or specific targets
         socket.on('play audio', async (data) => {
           try {
             const audioFile = data.audioFile;
             const targetUsername = data.targetUsername; // Optional
-            
-            if (!audioFile) {
-              return socket.emit('error', { message: 'No audio file specified' });
+              if (!audioFile) {
+              return emitSocketError(socket, 'No audio file specified');
             }
             
             // Broadcast to target or everyone
@@ -1322,10 +1458,9 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
                 sourceUsername: socket.bambiUsername
               });
             }
-            
-            // Log audio interaction
+              // Log audio interaction using cached model
             try {
-              const AudioInteraction = await import('./models/AudioInteraction.js').then(module => module.default);
+              const AudioInteraction = await modelCache.getModel('AudioInteraction');
               
               await audioTriggers.logAudioInteraction(
                 AudioInteraction,
@@ -1337,12 +1472,10 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
             } catch (logError) {
               logger.error(`Failed to log audio interaction: ${logError.message}`);
             }
-            
-            // Award XP
-            xpSystem.awardXP(socket, 1, 'audio');
-          } catch (error) {
+              // Award XP
+            awardUserXP(socket, xpSystem, 1, 'audio');          } catch (error) {
             logger.error('Error in play audio handler:', error);
-            socket.emit('error', { message: 'Failed to play audio' });
+            emitSocketError(socket, 'Failed to play audio');
           }
         });
 
@@ -1353,10 +1486,8 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
             type: 'triggers',
             triggers: data.triggerNames,
             socketId: socket.id
-          });
-
-          // Award XP for using triggers
-          xpSystem.awardXP(socket, 2, 'triggers');
+          });          // Award XP for using triggers
+          awardUserXP(socket, xpSystem, 2, 'triggers');
         });
 
         // Collar text handling - moved outside other handlers
@@ -1372,48 +1503,32 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
             // Emit to target socket if specified
             if (collarData.socketId) {
               io.to(collarData.socketId).emit('collar', filteredCollar);
-            }
-
-            // Award XP for collar usage
-            xpSystem.awardXP(socket, 2, 'collar');
-            
-            // Log AIGF interaction for collar
-            try {
-              const AigfInteraction = await import('./models/AigfInteraction.js').then(module => module.default);
-              
-              await aigfLogger.logAigfInteraction(
-                AigfInteraction,
-                socket.bambiUsername || 'anonymous',
-                'collar',
-                collarData.data,
-                'Collar text set',
-                0,
-                socket.id
-              );
-            } catch (logError) {
-              logger.error(`Failed to log collar interaction: ${logError.message}`);
-            }
+            }            // Award XP for collar usage
+            awardUserXP(socket, xpSystem, 2, 'collar');
+              // Log AIGF interaction for collar
+            await logAigfInteraction(
+              socket.id,
+              socket.bambiUsername,
+              'collar',
+              collarData.data,
+              'Collar text set',
+              0
+            );
           } catch (error) {
             logger.error('Error in collar handler:', error);
           }
-        });
-
-        // Handle client disconnection
+        });        // Clean up resources when users disconnect to prevent memory leaks
         socket.on('disconnect', (reason) => {
           try {
-            logger.info('Client disconnected:', socket.id, 'Reason:', reason);
-
-            // Get socket data and clean up
-            const socketData = socketStore.get(socket.id);
-            if (socketData) {
-              socketStore.delete(socket.id);
-            }
+            logger.info('Client disconnected:', socket.id, 'Reason:', reason);            // Get socket data and clean up using centralized management
+            socketStoreManager.removeSocket(socketStore, socket.id);
             
             logger.info(`Client disconnected: ${socket.id} sockets: ${socketStore.size}`);
           } catch (error) {
             logger.error('Error in disconnect handler:', error);
-          }
-        });        // Handle settings updates from client to worker
+          }        });        
+        
+        // Bridge between client UI and worker thread for real-time settings updates
         socket.on('worker:settings:update', (data) => {
           try {
             if (!data || !data.section) {
@@ -1428,12 +1543,10 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
 
             // Log settings update
             logger.debug(`Settings update for ${data.section} from ${socket.id}`);
-            
-            // Store username with socket if provided
+              // Store username with socket if provided
             if (data.username && !socket.username) {
               socket.username = data.username;
-              socketStore.set(socket.id, {
-                socket,
+              socketStoreManager.updateSocket(socketStore, socket.id, {
                 username: data.username,
                 lastActivity: Date.now()
               });
@@ -1467,56 +1580,16 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
 
             let result = { command, success: false, output: '' };
 
-            switch (command) {
-              case 'git-pull':
-                try {
-                  const { exec } = await import('child_process');
-                  const { promisify } = await import('util');
-                  const execAsync = promisify(exec);
-                  
-                  const { stdout, stderr } = await execAsync('git pull origin MK-XI');
-                  result.success = true;
-                  result.output = stdout || 'Git pull completed successfully';
-                  
-                  // Broadcast to all clients about update
-                  io.emit('statusUpdate', {
-                    system: { status: 'maintenance', info: 'Code Updated', details: 'Latest changes pulled from repository' }
-                  });
-                } catch (error) {
-                  result.output = `Git pull failed: ${error.message}`;
-                  logger.error('Git pull error:', error);
-                }
-                break;
-
-              case 'npm-install':
-                try {
-                  const { exec } = await import('child_process');
-                  const { promisify } = await import('util');
-                  const execAsync = promisify(exec);
-                  
-                  const { stdout, stderr } = await execAsync('npm install');
-                  result.success = true;
-                  result.output = 'NPM install completed successfully';
-                  
-                  // Broadcast status update
-                  io.emit('statusUpdate', {
-                    system: { status: 'maintenance', info: 'Dependencies Updated', details: 'Package installation completed' }
-                  });
-                } catch (error) {
-                  result.output = `NPM install failed: ${error.message}`;
-                  logger.error('NPM install error:', error);
-                }
-                break;
-
-              case 'restart-server':
+            switch (command) {              case 'git-pull':
+              case 'npm-install': 
+              case 'git-status':
+                result = await executeAdminCommand(command, io);
+                break;              case 'restart-server':
                 try {
                   result.success = true;
                   result.output = 'Server restart initiated';
                   
-                  // Broadcast to all clients
-                  io.emit('statusUpdate', {
-                    system: { status: 'maintenance', info: 'Restarting', details: 'Server restart in progress' }
-                  });
+                  emitStatusUpdate(io, 'maintenance', 'Restarting', 'Server restart in progress');
                   
                   // Delay restart to allow response to be sent
                   setTimeout(() => {
@@ -1554,11 +1627,8 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
                   
                   result.success = true;
                   result.output = 'Full deployment completed, restarting server...';
-                  
-                  // Broadcast completion
-                  io.emit('statusUpdate', {
-                    system: { status: 'maintenance', info: 'Deployment Complete', details: 'Full deployment cycle finished' }
-                  });
+                        // Broadcast completion
+              emitStatusUpdate(io, 'maintenance', 'Deployment Complete', 'Full deployment cycle finished');
                   
                   io.emit('countdownUpdate', { remaining: 0, progress: 100 });
                   
@@ -1577,10 +1647,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
                   const { stdout, stderr } = await execAsync('nvm install node');
                   result.success = true;
                   result.output = `NVM install completed. Current: ${nodeVersion}, Latest installed via NVM`;
-                  
-                  io.emit('statusUpdate', {
-                    system: { status: 'maintenance', info: 'Node Updated', details: 'Latest Node.js version installed' }
-                  });
+                    emitStatusUpdate(io, 'maintenance', 'Node Updated', 'Latest Node.js version installed');
                 } catch (error) {
                   result.output = `NVM install failed: ${error.message}`;
                   logger.error('NVM install error:', error);
@@ -1595,10 +1662,7 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
                   
                   result.success = true;
                   result.output = `Branch: ${currentBranch}\nStatus: ${stdout || 'Working tree clean'}`;
-                  
-                  io.emit('statusUpdate', {
-                    system: { status: 'maintenance', info: 'Git Status Check', details: `Branch: ${currentBranch}` }
-                  });
+                    emitStatusUpdate(io, 'maintenance', 'Git Status Check', `Branch: ${currentBranch}`);
                 } catch (error) {
                   result.output = `Git status failed: ${error.message}`;
                   logger.error('Git status error:', error);
@@ -1620,10 +1684,7 @@ Node: ${process.version}
 Platform: ${process.platform}
 Disk Usage:
 ${diskUsage.stdout}`;
-                  
-                  io.emit('statusUpdate', {
-                    system: { status: 'maintenance', info: 'System Check Complete', details: `Memory: ${memoryMB}MB, Uptime: ${Math.floor(uptime / 3600)}h` }
-                  });
+                    emitStatusUpdate(io, 'maintenance', 'System Check Complete', `Memory: ${memoryMB}MB, Uptime: ${Math.floor(uptime / 3600)}h`);
                 } catch (error) {
                   result.output = `System check failed: ${error.message}`;
                   logger.error('System check error:', error);
@@ -1639,10 +1700,7 @@ ${diskUsage.stdout}`;
                   
                   result.success = true;
                   result.output = `Backup created: ../backups/${backupDir}`;
-                  
-                  io.emit('statusUpdate', {
-                    system: { status: 'maintenance', info: 'Backup Complete', details: `Backup stored: ${backupDir}` }
-                  });
+                    emitStatusUpdate(io, 'maintenance', 'Backup Complete', `Backup stored: ${backupDir}`);
                 } catch (error) {
                   result.output = `Backup failed: ${error.message}`;
                   logger.error('Backup error:', error);
@@ -1668,22 +1726,22 @@ ${diskUsage.stdout}`;
         socket.on('modeChange', (data) => {
           try {
             const { mode } = data;
-            logger.info(`Mode change requested: ${mode} from ${socket.id}`);
-
-            if (mode === 'maintenance') {
+            logger.info(`Mode change requested: ${mode} from ${socket.id}`);            if (mode === 'maintenance') {
               enableMaintenanceMode(300); // 5 minutes
               
-              io.emit('modeChanged', { mode: 'maintenance' });              io.emit('statusUpdate', {
+              io.emit('modeChanged', { mode: 'maintenance' });
+              emitStatusUpdate(io, 'maintenance', 'Maintenance Mode Active', 'Serving maintenance page');
+              socket.emit('statusUpdate', {
                 frontend: { status: 'maintenance', info: 'Maintenance Mode Active', details: 'Serving maintenance page' },
                 backend: { status: 'offline', info: 'Under Maintenance', details: 'Server updating...' },
                 database: { status: 'online', info: 'Online', details: 'Data preserved' },
-                system: { status: 'maintenance', info: 'Maintenance Mode', details: 'Manual maintenance activated' }
+                system: { status: 'maintenance', info: 'Manual maintenance activated', details: 'System maintenance in progress' }
               });
             } else if (mode === 'normal') {
               disableMaintenanceMode();
               
               io.emit('modeChanged', { mode: 'normal' });
-              io.emit('statusUpdate', {
+              socket.emit('statusUpdate', {
                 frontend: { status: 'online', info: 'Service Active', details: 'All systems operational' },
                 backend: { status: 'online', info: 'Running', details: 'Server operational' },
                 database: { status: 'online', info: 'Connected', details: 'Database available' },
@@ -1819,12 +1877,13 @@ async function startServer() {
     } else if (!(await isDatabaseConnectionHealthy())) {
       logger.warning('⚠️ Database connection reported success but connection is not ready.');
       logger.warning('⚠️ Server will start with LIMITED FUNCTIONALITY - database-dependent features disabled.');
-    }
-
-    // Ensure all models are properly registered
+    }    // Ensure all models are properly registered
     try {
       await ensureModelsRegistered();
       logger.debug('All database models registered successfully');
+      
+      // Preload commonly used models into cache for better performance
+      await modelCache.preloadModels();
     } catch (modelError) {
       logger.error(`Failed to register database models: ${modelError.message}`);
     }
@@ -1853,16 +1912,7 @@ async function startServer() {
       logger.success('Server startup completed successfully');
     });
 
-    if (process.env.NODE_ENV === 'production') {
-      startConnectionMonitoring(300000);
-    } else {
-      startConnectionMonitoring(60000);
-    }
-
-    // Start database health monitoring
-    startDbHealthMonitor();
-    startConnectionPoolMonitor();
-    logger.info('Database health and connection pool monitors started');
+    startUnifiedDatabaseMonitor();
 
     global.socketStore = socketStore;
     memoryMonitor.start();
