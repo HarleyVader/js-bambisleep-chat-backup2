@@ -228,19 +228,19 @@ socket.on('response', async (message) => {
     
     const sentences = messageText.split(/(?<=[:;,.!?]["']?)\s+/g);
     console.log('Split into sentences:', sentences);
-    
-    // Send response processing through control network
-    if (controlNodeId && window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
+      // Send response processing through control network
+    if (window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
+        const nodeId = window.bambiControlNetwork.clientNodeId || 'aigf-core';
         window.bambiControlNetwork.processControlSignal('AI_RESPONSE_RECEIVED', {
             content: messageText,
             sentenceCount: sentences.length,
             timestamp: Date.now(),
             source: 'AIGF_CORE'
-        }, controlNodeId);
+        }, nodeId);
         
         // Update node activity
         if (typeof window.bambiControlNetwork.updateNodeActivity === 'function') {
-            window.bambiControlNetwork.updateNodeActivity(controlNodeId);
+            window.bambiControlNetwork.updateNodeActivity(nodeId);
         }
     }
 

@@ -1084,12 +1084,12 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
           // Forward settings response to client
           if (msg.socketId) {
             io.to(msg.socketId).emit('worker:settings:response', msg.data);
-          }
-        } else if (msg.type === 'xp:update') {
+          }        } else if (msg.type === 'xp:update') {
           // Forward XP updates to client
           if (msg.socketId) {
             io.to(msg.socketId).emit('xp:update', msg.data);
-          }        } else if (msg.type === 'detected-triggers') {
+          }
+        } else if (msg.type === 'detected-triggers') {
           // Forward detected triggers to client
           if (msg.socketId && msg.triggers) {
             io.to(msg.socketId).emit('detected-triggers', msg.triggers);
