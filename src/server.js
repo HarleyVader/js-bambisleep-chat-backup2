@@ -32,6 +32,7 @@ import config from './config/config.js';
 
 // Import routes
 import indexRoute from './routes/index.js';
+import profileRoute from './routes/profile.js';
 import psychodelicTriggerManiaRouter from './routes/psychodelic-trigger-mania.js';
 import helpRoute from './routes/help.js';
 import chatRouter, { basePath as chatBasePath } from './routes/chat.js';
@@ -535,6 +536,7 @@ async function setupRoutes(app) {
   // Routes that don't strictly require database access
   const basicRoutes = [
     { path: '/', handler: indexRoute, dbRequired: false },
+    { path: '/profile', handler: profileRoute, dbRequired: true },
     { path: '/psychodelic-trigger-mania', handler: psychodelicTriggerManiaRouter, dbRequired: false },
     { path: '/help', handler: helpRoute, dbRequired: false },
     { path: '/health', handler: healthRoute, dbRequired: false },
@@ -1087,11 +1089,42 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
           // Forward XP updates to client
           if (msg.socketId) {
             io.to(msg.socketId).emit('xp:update', msg.data);
-          }
-        } else if (msg.type === 'detected-triggers') {
+          }        } else if (msg.type === 'detected-triggers') {
           // Forward detected triggers to client
           if (msg.socketId && msg.triggers) {
             io.to(msg.socketId).emit('detected-triggers', msg.triggers);
+          }
+        } else if (msg.type === 'connection_error') {
+          // Forward connection error to client
+          if (msg.socketId) {
+            io.to(msg.socketId).emit('connection_error', {
+              error: msg.error,
+              details: msg.details
+            });
+          }
+        } else if (msg.type === 'model_error') {
+          // Forward model error to client
+          if (msg.socketId) {
+            io.to(msg.socketId).emit('model_error', {
+              error: msg.error,
+              details: msg.details
+            });
+          }
+        } else if (msg.type === 'server_error') {
+          // Forward server error to client
+          if (msg.socketId) {
+            io.to(msg.socketId).emit('server_error', {
+              error: msg.error,
+              details: msg.details
+            });
+          }
+        } else if (msg.type === 'unknown_error') {
+          // Forward unknown error to client
+          if (msg.socketId) {
+            io.to(msg.socketId).emit('unknown_error', {
+              error: msg.error,
+              details: msg.details
+            });
           }
         }
       } catch (error) {

@@ -204,17 +204,125 @@ function handleClick() {
 }
 
 socket.on('response', async (message) => {
-    const messageText = message;
-    const sentences = messageText.split(/(?<=[:;,.!?]["']?)\s+/g);
-    for (let sentence of sentences) {
-        _textArray.push(sentence);
-        console.log('Text array:', _textArray);
-        if (state) {
-            handleAudioEnded();
+    console.log('Raw response received:', message);
+    
+    // Validate the message first
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+        console.warn('Received empty or invalid response:', message);
+        // Show user-friendly error message
+        const errorElement = document.createElement('p');
+        errorElement.className = 'system-error';
+        errorElement.textContent = 'AI response was empty. Please try your message again.';
+        if (response) {
+            if (response.firstChild) {
+                response.insertBefore(errorElement, response.firstChild);
+            } else {
+                response.appendChild(errorElement);
+            }
         }
-        sentence = '';
+        return;
     }
+    
+    const messageText = message.trim();
+    console.log('Processing message text:', messageText);
+    
+    const sentences = messageText.split(/(?<=[:;,.!?]["']?)\s+/g);
+    console.log('Split into sentences:', sentences);
+    
+    // Send response processing through control network
+    if (controlNodeId && window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
+        window.bambiControlNetwork.processControlSignal('AI_RESPONSE_RECEIVED', {
+            content: messageText,
+            sentenceCount: sentences.length,
+            timestamp: Date.now(),
+            source: 'AIGF_CORE'
+        }, controlNodeId);
+        
+        // Update node activity
+        if (typeof window.bambiControlNetwork.updateNodeActivity === 'function') {
+            window.bambiControlNetwork.updateNodeActivity(controlNodeId);
+        }
+    }
+
+    for (let sentence of sentences) {
+        sentence = sentence.trim();
+        if (sentence.length > 0) { // Only add non-empty sentences
+            _textArray.push(sentence);
+            console.log('Text array:', _textArray);
+            if (state) {
+                handleAudioEnded();
+            }
+        }    }
     applyUppercaseStyle();
+});
+
+// Handle specific error types from LMStudio worker
+socket.on('connection_error', (data) => {
+    console.error('LMStudio connection error:', data);
+    const errorElement = document.createElement('p');
+    errorElement.className = 'system-error connection-error';
+    errorElement.innerHTML = `
+        <strong>Connection Error:</strong> LMStudio AI service is not running.<br>
+        <small>Please start LMStudio on ${data.details?.host || 'localhost'}:${data.details?.port || '1234'} and try again.</small>
+    `;
+    if (response) {
+        if (response.firstChild) {
+            response.insertBefore(errorElement, response.firstChild);
+        } else {
+            response.appendChild(errorElement);
+        }
+    }
+});
+
+socket.on('model_error', (data) => {
+    console.error('LMStudio model error:', data);
+    const errorElement = document.createElement('p');
+    errorElement.className = 'system-error model-error';
+    errorElement.innerHTML = `
+        <strong>Model Error:</strong> No AI model is loaded in LMStudio.<br>
+        <small>Please load a model in LMStudio and try again.</small>
+    `;
+    if (response) {
+        if (response.firstChild) {
+            response.insertBefore(errorElement, response.firstChild);
+        } else {
+            response.appendChild(errorElement);
+        }
+    }
+});
+
+socket.on('server_error', (data) => {
+    console.error('LMStudio server error:', data);
+    const errorElement = document.createElement('p');
+    errorElement.className = 'system-error server-error';
+    errorElement.innerHTML = `
+        <strong>Server Error:</strong> LMStudio server encountered an error.<br>
+        <small>Status: ${data.details?.status || 'Unknown'} - ${data.details?.statusText || 'Server error'}</small>
+    `;
+    if (response) {
+        if (response.firstChild) {
+            response.insertBefore(errorElement, response.firstChild);
+        } else {
+            response.appendChild(errorElement);
+        }
+    }
+});
+
+socket.on('unknown_error', (data) => {
+    console.error('LMStudio unknown error:', data);
+    const errorElement = document.createElement('p');
+    errorElement.className = 'system-error unknown-error';
+    errorElement.innerHTML = `
+        <strong>Unknown Error:</strong> An unexpected error occurred with the AI service.<br>
+        <small>Error: ${data.details?.message || 'Unknown error'}</small>
+    `;
+    if (response) {
+        if (response.firstChild) {
+            response.insertBefore(errorElement, response.firstChild);
+        } else {
+            response.appendChild(errorElement);
+        }
+    }
 });
 
 socket.on('chat message', (messageData) => {

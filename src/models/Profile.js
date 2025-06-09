@@ -22,6 +22,39 @@ const ProfileSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  // Profile enhancement features
+  bio: {
+    type: String,
+    default: '',
+    maxlength: 2000
+  },
+  socialLinks: {
+    twitter: { type: String, default: '' },
+    instagram: { type: String, default: '' },
+    discord: { type: String, default: '' },
+    reddit: { type: String, default: '' },
+    custom: { type: String, default: '' }
+  },
+  likes: {
+    type: Number,
+    default: 0
+  },
+  loves: {
+    type: Number,
+    default: 0
+  },
+  profileStyle: {
+    type: String,
+    enum: ['minimal', 'standard', 'premium'],
+    default: 'standard'
+  },
+  usageStats: {
+    sessionsCount: { type: Number, default: 0 },
+    totalTimeSpent: { type: Number, default: 0 }, // in minutes
+    triggersActivated: { type: Number, default: 0 },
+    messagesPosted: { type: Number, default: 0 },
+    joinDate: { type: Date, default: Date.now }
   }
 });
 

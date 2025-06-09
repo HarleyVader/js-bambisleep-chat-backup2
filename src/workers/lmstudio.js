@@ -910,12 +910,71 @@ async function handleMessage(userPrompt, socketId, username) {
       // Something else went wrong
       logger.error(`Unexpected error: ${error.message}`);
     }
-    
-    // Check if it's a connection error specifically
+      // Check if it's a connection error specifically
     if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
-      handleResponse("Sorry, I can't connect to the AI service. Please make sure LMStudio is running and try again.", socketId, username, 0);
+      logger.error('⚠️ CRITICAL: LMStudio connection failed - is LMStudio running?');
+      logger.error(`API URL attempted: http://${process.env.LMS_HOST}:${process.env.LMS_PORT}/v1/chat/completions`);
+      
+      // Send a connection error response that the frontend can handle differently
+      parentPort.postMessage({
+        type: "connection_error",
+        error: `LMStudio connection failed: ${error.code}`,
+        socketId: socketId,
+        username: username,
+        details: {
+          host: process.env.LMS_HOST,
+          port: process.env.LMS_PORT,
+          errorCode: error.code
+        }
+      });
+      return; // Don't send regular response
+    } else if (error.response && error.response.status === 404) {
+      logger.error('⚠️ CRITICAL: LMStudio model not found or not loaded');
+      
+      parentPort.postMessage({
+        type: "model_error", 
+        error: "No model loaded in LMStudio",
+        socketId: socketId,
+        username: username,
+        details: {
+          status: error.response.status,
+          statusText: error.response.statusText
+        }
+      });
+      return; // Don't send regular response
+    } else if (error.response && error.response.status >= 500) {
+      logger.error('⚠️ CRITICAL: LMStudio server error');
+      
+      parentPort.postMessage({
+        type: "server_error",
+        error: "LMStudio server error", 
+        socketId: socketId,
+        username: username,
+        details: {
+          status: error.response.status,
+          statusText: error.response.statusText
+        }
+      });
+      return; // Don't send regular response
     } else {
-      handleResponse("I'm sorry, I encountered an error processing your request. Please try again.", socketId, username, 0);
+      logger.error('⚠️ UNKNOWN ERROR in LMStudio communication');
+      logger.error(`Full error details: ${JSON.stringify({
+        message: error.message,
+        code: error.code,
+        stack: error.stack?.split('\n')[0]
+      })}`);
+      
+      parentPort.postMessage({
+        type: "unknown_error",
+        error: "Unknown error in AI processing",
+        socketId: socketId, 
+        username: username,
+        details: {
+          message: error.message,
+          code: error.code
+        }
+      });
+      return; // Don't send regular response
     }
   }
 }
