@@ -93,7 +93,7 @@ function showSystemMessage(message) {
     const messageElement = document.createElement('p');
     messageElement.className = 'system-message';
     messageElement.textContent = message;
-    
+
     if (response && response.firstChild) {
         response.insertBefore(messageElement, response.firstChild);
     } else if (response) {
@@ -107,16 +107,16 @@ let isProcessing = false;
 if (submit) {
     submit.addEventListener('click', (event) => {
         event.preventDefault();
-        
+
         // Prevent multiple rapid clicks
         if (isProcessing) return;
-        
+
         isProcessing = true;
         clearTimeout(debounceTimeout);
-        
+
         debounceTimeout = setTimeout(() => {
             handleClick();
-            
+
             // Reset processing state after completion or timeout
             setTimeout(() => {
                 isProcessing = false;
@@ -136,7 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
-    
+
     let username = decodeURIComponent(cookies['bambiname'] || 'anonBambi').replace(/%20/g, ' ');
     window.username = username;
 });
@@ -150,22 +150,22 @@ function arrayPush(array, text) {
 function applyUppercaseStyle() {
     // Get all message paragraphs in the response
     const paragraphs = response ? response.querySelectorAll('p') : [];
-    
+
     // Apply uppercase to trigger words
     paragraphs.forEach(p => {
         if (!p) return;
-        
+
         // Get triggers from localStorage
         const triggers = JSON.parse(localStorage.getItem('bambiActiveTriggers') || '[]');
         if (!triggers || triggers.length === 0) return;
-        
+
         // Replace trigger words with uppercase versions
         let html = p.textContent;
         triggers.forEach(trigger => {
             const regex = new RegExp(`\\b${trigger}\\b`, 'gi');
             html = html.replace(regex, match => `<strong>${match.toUpperCase()}</strong>`);
         });
-        
+
         p.innerHTML = html;
     });
 }
@@ -173,7 +173,7 @@ function applyUppercaseStyle() {
 function flashTrigger(trigger, duration) {
     const container = document.getElementById("eye");
     if (!container) return;
-    
+
     container.innerHTML = "";
     const span = document.createElement("span");
     span.textContent = trigger;
@@ -193,7 +193,7 @@ function handleClick() {
         alert('Message cannot be empty');
         return;
     }
-    
+
     if (userPrompt) userPrompt.textContent = message;
     socket.emit('message', message);
 
@@ -205,7 +205,7 @@ function handleClick() {
 
 socket.on('response', async (message) => {
     console.log('Raw response received:', message);
-    
+
     // Validate the message first
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
         console.warn('Received empty or invalid response:', message);
@@ -222,13 +222,13 @@ socket.on('response', async (message) => {
         }
         return;
     }
-    
+
     const messageText = message.trim();
     console.log('Processing message text:', messageText);
-    
+
     const sentences = messageText.split(/(?<=[:;,.!?]["']?)\s+/g);
     console.log('Split into sentences:', sentences);
-      // Send response processing through control network
+    // Send response processing through control network
     if (window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
         const nodeId = window.bambiControlNetwork.clientNodeId || 'aigf-core';
         window.bambiControlNetwork.processControlSignal('AI_RESPONSE_RECEIVED', {
@@ -237,22 +237,23 @@ socket.on('response', async (message) => {
             timestamp: Date.now(),
             source: 'AIGF_CORE'
         }, nodeId);
-        
+
         // Update node activity
         if (typeof window.bambiControlNetwork.updateNodeActivity === 'function') {
             window.bambiControlNetwork.updateNodeActivity(nodeId);
         }
-    }
-
-    for (let sentence of sentences) {
+    } for (let sentence of sentences) {
         sentence = sentence.trim();
         if (sentence.length > 0) { // Only add non-empty sentences
-            _textArray.push(sentence);
-            console.log('Text array:', _textArray);
+            if (_textArray) {
+                _textArray.push(sentence);
+                console.log('Text array:', _textArray);
+            }
             if (state) {
                 handleAudioEnded();
             }
-        }    }
+        }
+    }
     applyUppercaseStyle();
 });
 
@@ -332,14 +333,14 @@ socket.on('chat message', (messageData) => {
 function displayChatMessage(messageData) {
     const chatResponse = document.getElementById('chat-response');
     if (!chatResponse) return;
-    
+
     const li = document.createElement('li');
     li.innerHTML = `
-        <span class="chat-time">${new Date(messageData.timestamp).toLocaleTimeString([], {hour12: false})}</span> -
+        <span class="chat-time">${new Date(messageData.timestamp).toLocaleTimeString([], { hour12: false })}</span> -
         <span class="chat-username"><a href="/profile/${messageData.username}" class="username-link">${messageData.username}</a>:</span>
         <span class="chat-message">${messageData.data}</span>
     `;
-    
+
     chatResponse.appendChild(li);
     chatResponse.scrollTop = chatResponse.scrollHeight;
 }

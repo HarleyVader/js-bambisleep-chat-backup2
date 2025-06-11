@@ -29,8 +29,7 @@
                         </span>
                     </div>
                 </div>
-                <div class="col-md-4 text-end">
-                    <div class="profile-reactions">
+                <div class="col-md-4 text-end">                    <div class="profile-reactions">
                         <button class="btn btn-outline-danger reaction-btn" data-type="love">
                             ❤️ <span class="love-count"><%= profile.loves || 0 %></span>
                         </button>
@@ -42,6 +41,8 @@
                     <div class="mt-2">
                         <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#editProfileModal">
                             Edit Profile
+                        </button>                        <button class="btn btn-warning" onclick="setTestLevel()">
+                            Test High Level
                         </button>
                     </div>
                     <% } %>
@@ -63,6 +64,12 @@
                             <p class="text-muted">No bio available yet.</p>
                         <% } %>
                     </div>
+                </div>
+
+                <!-- System Controls Section -->
+                <div class="profile-section">
+                    <h3>System Controls</h3>
+                    <%- include('partials/profile-system-controls', { profile: profile, xpRequirements: xpRequirements }) %>
                 </div>
 
                 <!-- Usage Statistics -->
@@ -220,6 +227,29 @@
 
     <script src="/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Test function to set high level account
+        async function setTestLevel() {
+            const username = '<%= profile.username %>';
+            try {
+                const response = await fetch(`/profile/${username}/debug/set-level`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ level: 8, xp: 500000 })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    alert(`Profile updated: ${result.message}`);
+                    location.reload();
+                } else {
+                    throw new Error('Failed to update profile');
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                alert('Error updating profile. Please try again.');
+            }
+        }
+
         // Reaction buttons
         document.querySelectorAll('.reaction-btn').forEach(btn => {
             btn.addEventListener('click', async () => {

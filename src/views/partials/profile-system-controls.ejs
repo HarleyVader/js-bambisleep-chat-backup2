@@ -3,20 +3,30 @@
 const userLevel = profile ? profile.level || 0 : 0;
 const userXp = profile ? profile.xp || 0 : 0;
 
-// Define XP requirements for each level
+// Define XP requirements for each level - must match backend
 const xpRequirements = [1000, 2500, 4500, 7000, 12000, 36000, 112000, 332000];
 
 // Calculate next level XP requirement
-const getNextLevelXP = (level) => {
-  if (level < xpRequirements.length) {
-    return xpRequirements[level];
-  } else {
-    return null;
+const getNextLevelXP = (level, currentXP) => {
+  if (level >= xpRequirements.length) return null;
+  
+  let totalXpForLevel = 0;
+  for (let i = 0; i <= level; i++) {
+    totalXpForLevel += xpRequirements[i] || 0;
   }
+  return totalXpForLevel;
 };
 
-const nextLevelXP = userLevel < xpRequirements.length ? getNextLevelXP(userLevel) : null;
+const nextLevelXP = getNextLevelXP(userLevel, userXp);
 const systemControls = profile && profile.systemControls ? profile.systemControls : {};
+
+// Debug logging
+console.log('Profile System Controls Debug:', {
+  userLevel,
+  userXp, 
+  nextLevelXP,
+  systemControls
+});
 %>
 
 <div class="system-controls">
@@ -205,9 +215,8 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
             <button id="save-spirals" class="save-btn">Save Spiral Settings</button>
           </div>
         </div>
-      <% } %>
-      
-      <% if (userLevel >= 5) { %>        <!-- Hypnosis panel -->
+      <% } %>        <% if (userLevel >= 5) { %>
+        <!-- Hypnosis panel -->
         <div id="hypnosis-panel" class="control-panel">
           <h3>Hypnosis Settings</h3>
           <div class="hypnosis-toggle">
@@ -282,8 +291,7 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
             
             <div id="frequency-description" class="frequency-description">
               Alpha waves (8-14Hz) promote relaxed focus and are ideal for gentle trance states.
-            </div>
-              <div id="custom-freq-container" class="brainwave-control-group" style="<%= (systemControls.brainwaveMode === 'custom') ? '' : 'display: none;' %>">
+            </div>              <div id="custom-freq-container" class="brainwave-control-group" style="<%= (systemControls.brainwaveMode === 'custom') ? '' : 'display: none;' %>">
               <label for="custom-frequency">Beat Frequency:</label>
               <div class="slider-container">
                 <input type="range" id="custom-frequency" min="1" max="30" value="<%= systemControls.customFrequency || 10 %>" step="0.5" class="brainwave-slider">
@@ -315,76 +323,75 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
           </div>
         </div>
       <% } %>
-      
         <% if (userLevel >= 8) { %>
-<!-- Advanced Binaural panel -->
-<div id="advanced-binaural-panel" class="control-panel">
-  <h3>Advanced Binaural Patterns</h3>
-  <div class="advanced-binaural-info">
-    <p>This advanced feature allows more complex brainwave entrainment patterns that change over time.</p>
-    <div class="science-reference">
-      <i class="fas fa-flask"></i> Based on recent neuroscience research on frequency-following response.
-      <a href="#" id="science-link" class="info-link">Learn more</a>
-    </div>
-  </div>
-  
-  <div class="binaural-toggle">
-    <input type="checkbox" id="advanced-binaural-enable" <%= systemControls.advancedBinauralEnabled ? 'checked' : '' %>>
-    <label for="advanced-binaural-enable">Enable Advanced Patterns</label>
-  </div>
-  
-  <div class="binaural-controls">
-    <div class="binaural-control-group">
-      <label for="pattern-select">Pattern Type:</label>
-      <select id="pattern-select" class="binaural-select">
-        <option value="descent" <%= (systemControls.binauralPattern === 'descent') ? 'selected' : '' %>>Descent (Alpha to Theta to Delta)</option>
-        <option value="ascent" <%= (systemControls.binauralPattern === 'ascent') ? 'selected' : '' %>>Ascent (Delta to Theta to Alpha)</option>
-        <option value="focus" <%= (systemControls.binauralPattern === 'focus') ? 'selected' : '' %>>Focus Cycle (Alpha-Beta-Alpha)</option>
-        <option value="trance" <%= (systemControls.binauralPattern === 'trance') ? 'selected' : '' %>>Deep Trance (Alpha-Theta Loop)</option>
-        <option value="custom" <%= (systemControls.binauralPattern === 'custom') ? 'selected' : '' %>>Custom Pattern</option>
-      </select>
-    </div>
-    
-    <div id="pattern-description" class="pattern-description">
-      Descent pattern gradually moves from alert Alpha waves down through Theta into deep Delta, creating a natural descent into trance.
-    </div>
-    
-    <div id="custom-pattern-container" class="binaural-control-group" style="<%= (systemControls.binauralPattern === 'custom') ? '' : 'display: none;' %>">
-      <label>Custom Pattern Sequence:</label>
-      <div class="pattern-segments">
-        <!-- Custom segments added by JS -->
-      </div>
-      <button id="add-segment" class="secondary-btn">Add Segment</button>
-    </div>
-    
-    <div class="binaural-control-group">
-      <label for="pattern-duration">Total Duration:</label>
-      <div class="slider-container">
-        <input type="range" id="pattern-duration" min="5" max="120" value="<%= systemControls.patternDuration || 20 %>" step="5" class="binaural-slider">
-        <span id="pattern-duration-value"><%= systemControls.patternDuration || 20 %> minutes</span>
-      </div>
-    </div>
-    
-    <div class="binaural-control-group">
-      <label for="transition-time">Transition Time:</label>
-      <div class="slider-container">
-        <input type="range" id="transition-time" min="10" max="120" value="<%= systemControls.transitionTime || 30 %>" step="10" class="binaural-slider">
-        <span id="transition-time-value"><%= systemControls.transitionTime || 30 %> seconds</span>
-      </div>
-    </div>
-    
-    <div class="binaural-visualization">
-      <canvas id="pattern-visualization" width="400" height="200"></canvas>
-    </div>
-  </div>
-  
-  <div class="binaural-actions">
-    <button id="play-advanced-binaural" class="secondary-btn">Play Pattern</button>
-    <button id="stop-advanced-binaural" class="secondary-btn" disabled>Stop</button>
-    <button id="save-advanced-binaural" class="save-btn">Save Settings</button>
-  </div>
-</div>
-<% } %>
+        <!-- Advanced Binaural panel -->
+        <div id="advanced-binaural-panel" class="control-panel">
+          <h3>Advanced Binaural Patterns</h3>
+          <div class="advanced-binaural-info">
+            <p>This advanced feature allows more complex brainwave entrainment patterns that change over time.</p>
+            <div class="science-reference">
+              <i class="fas fa-flask"></i> Based on recent neuroscience research on frequency-following response.
+              <a href="#" id="science-link" class="info-link">Learn more</a>
+            </div>
+          </div>
+          
+          <div class="binaural-toggle">
+            <input type="checkbox" id="advanced-binaural-enable" <%= systemControls.advancedBinauralEnabled ? 'checked' : '' %>>
+            <label for="advanced-binaural-enable">Enable Advanced Patterns</label>
+          </div>
+          
+          <div class="binaural-controls">
+            <div class="binaural-control-group">
+              <label for="pattern-select">Pattern Type:</label>
+              <select id="pattern-select" class="binaural-select">
+                <option value="descent" <%= (systemControls.binauralPattern === 'descent') ? 'selected' : '' %>>Descent (Alpha to Theta to Delta)</option>
+                <option value="ascent" <%= (systemControls.binauralPattern === 'ascent') ? 'selected' : '' %>>Ascent (Delta to Theta to Alpha)</option>
+                <option value="focus" <%= (systemControls.binauralPattern === 'focus') ? 'selected' : '' %>>Focus Cycle (Alpha-Beta-Alpha)</option>
+                <option value="trance" <%= (systemControls.binauralPattern === 'trance') ? 'selected' : '' %>>Deep Trance (Alpha-Theta Loop)</option>
+                <option value="custom" <%= (systemControls.binauralPattern === 'custom') ? 'selected' : '' %>>Custom Pattern</option>
+              </select>
+            </div>
+            
+            <div id="pattern-description" class="pattern-description">
+              Descent pattern gradually moves from alert Alpha waves down through Theta into deep Delta, creating a natural descent into trance.
+            </div>
+            
+            <div id="custom-pattern-container" class="binaural-control-group" style="<%= (systemControls.binauralPattern === 'custom') ? '' : 'display: none;' %>">
+              <label>Custom Pattern Sequence:</label>
+              <div class="pattern-segments">
+                <!-- Custom segments added by JS -->
+              </div>
+              <button id="add-segment" class="secondary-btn">Add Segment</button>
+            </div>
+            
+            <div class="binaural-control-group">
+              <label for="pattern-duration">Total Duration:</label>
+              <div class="slider-container">
+                <input type="range" id="pattern-duration" min="5" max="120" value="<%= systemControls.patternDuration || 20 %>" step="5" class="binaural-slider">
+                <span id="pattern-duration-value"><%= systemControls.patternDuration || 20 %> minutes</span>
+              </div>
+            </div>
+            
+            <div class="binaural-control-group">
+              <label for="transition-time">Transition Time:</label>
+              <div class="slider-container">
+                <input type="range" id="transition-time" min="10" max="120" value="<%= systemControls.transitionTime || 30 %>" step="10" class="binaural-slider">
+                <span id="transition-time-value"><%= systemControls.transitionTime || 30 %> seconds</span>
+              </div>
+            </div>
+            
+            <div class="binaural-visualization">
+              <canvas id="pattern-visualization" width="400" height="200"></canvas>
+            </div>
+          </div>
+          
+          <div class="binaural-actions">
+            <button id="play-advanced-binaural" class="secondary-btn">Play Pattern</button>
+            <button id="stop-advanced-binaural" class="secondary-btn" disabled>Stop</button>
+            <button id="save-advanced-binaural" class="save-btn">Save Settings</button>
+          </div>
+        </div>
+        <% } %>
 
     <% } else { %>
       <div class="locked-features-message">
@@ -393,18 +400,18 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
       </div>
     <% } %>
   </div>
-
-  <!-- </div>- XP progress bar -->
+  <!-- XP progress bar -->
   <% if (userXp !== undefined) { %>
-    <div class="xp-progress-container">      <div class="xp-progress-label" id="xp-progress-label">
-        <% if (userLevel < xpRequirements.length) { %>
+    <div class="xp-progress-container">
+      <div class="xp-progress-label" id="xp-progress-label">
+        <% if (userLevel < xpRequirements.length && nextLevelXP) { %>
           Level <%= userLevel %> • <%= userXp %> XP / <%= nextLevelXP %> XP
         <% } else { %>
           Level <%= userLevel %> • <%= userXp %> XP (MAX LEVEL)
         <% } %>
       </div>
       <div class="xp-progress-bar">
-        <% if (userLevel < xpRequirements.length) { %>
+        <% if (userLevel < xpRequirements.length && nextLevelXP) { %>
           <div class="xp-progress-fill" id="xp-progress-fill" style="width: <%= Math.min(100, (userXp / Math.max(1, nextLevelXP)) * 100) %>%;"></div>
         <% } else { %>
           <div class="xp-progress-fill" id="xp-progress-fill" style="width: 100%;"></div>

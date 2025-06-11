@@ -39,20 +39,59 @@ await fs.mkdir(join(__dirname, '..', 'uploads', 'profiles'), { recursive: true }
 
 export const basePath = '/profile';
 
+// XP requirements for each level
+const xpRequirements = [1000, 2500, 4500, 7000, 12000, 36000, 112000, 332000];
+
+// Calculate level from XP
+function calculateLevel(xp) {
+  if (!xp || xp < 0) return 0;
+  
+  let level = 0;
+  let totalXpRequired = 0;
+  
+  for (let i = 0; i < xpRequirements.length; i++) {
+    totalXpRequired += xpRequirements[i];
+    if (xp >= totalXpRequired) {
+      level = i + 1;
+    } else {
+      break;
+    }
+  }
+  
+  return level;
+}
+
+// Get XP progress for current level
+function getXpProgress(xp, level) {
+  if (level === 0) return { currentLevelXp: 0, nextLevelXp: xpRequirements[0], progress: 0 };
+  if (level >= xpRequirements.length) return { currentLevelXp: xp, nextLevelXp: null, progress: 100 };
+  
+  let totalXpForCurrentLevel = 0;
+  for (let i = 0; i < level; i++) {
+    totalXpForCurrentLevel += xpRequirements[i];
+  }
+  
+  const currentLevelXp = xp - totalXpForCurrentLevel;
+  const nextLevelXp = xpRequirements[level];
+  const progress = nextLevelXp ? (currentLevelXp / nextLevelXp) * 100 : 100;
+  
+  return { currentLevelXp, nextLevelXp, progress };
+}
+
 // Get profile page
-router.get('/:username', async (req, res) => {  try {
+router.get('/:username', async (req, res) => {
+  try {
     const { username } = req.params;
     const Profile = getModel('Profile');
-      let profile = await withDbConnection(async () => {
+    let profile = await withDbConnection(async () => {
       return await Profile.findOne({ username });
-    });
-
-    // Create a basic profile if none exists
+    });    // Create a basic profile if none exists
     if (!profile) {
       profile = await withDbConnection(async () => {
         return await Profile.create({
           username,
           xp: 0,
+          level: 0,
           bio: '',
           socialLinks: {},
           likes: 0,
@@ -64,15 +103,54 @@ router.get('/:username', async (req, res) => {  try {
             triggersActivated: 0,
             messagesPosted: 0,
             joinDate: new Date()
+          },
+          systemControls: {
+            collarEnabled: false,
+            collarText: '',
+            spiralsEnabled: false,
+            spiral1Width: 5.0,
+            spiral2Width: 3.0,
+            spiral1Speed: 20,
+            spiral2Speed: 15,
+            hypnosisEnabled: false,
+            useStreaming: false,
+            brainwaveEnabled: false,
+            brainwaveMode: 'alpha',
+            carrierFrequency: 200,
+            brainwaveVolume: 50,
+            customFrequency: 10,
+            advancedBinauralEnabled: false,
+            binauralPattern: 'descent',
+            patternDuration: 20,
+            transitionTime: 30
           }
         });
       });
     }
 
-    // Parse bio if it contains markdown
+    // Ensure level is calculated correctly from XP
+    profile.level = calculateLevel(profile.xp || 0);
+    
+    // Save updated level if it changed
+    if (profile.isModified && profile.isModified('level')) {
+      await withDbConnection(async () => {
+        return await profile.save();
+      });
+    }// Parse bio if it contains markdown
     let bioHtml = '';
     if (profile.bio) {
       bioHtml = marked(profile.bio);
+    }    // Calculate next level XP for progress bar
+    const xpProgress = getXpProgress(profile.xp || 0, profile.level);
+    let nextLevelXP = null;
+    let currentLevelBaseXP = 0;
+    
+    if (profile.level < xpRequirements.length) {
+      // Calculate total XP needed for current level
+      for (let i = 0; i < profile.level; i++) {
+        currentLevelBaseXP += xpRequirements[i];
+      }
+      nextLevelXP = currentLevelBaseXP + xpRequirements[profile.level];
     }
 
     res.render('profile', {
@@ -80,7 +158,11 @@ router.get('/:username', async (req, res) => {  try {
       profile,
       bioHtml,
       footer: footerConfig,
-      isOwner: req.cookies?.bambiname === encodeURIComponent(username)
+      isOwner: req.cookies?.bambiname === encodeURIComponent(username),
+      xpRequirements,
+      nextLevelXP,
+      currentLevelBaseXP,
+      xpProgress
     });
   } catch (error) {
     logger.error(`Error loading profile for ${req.params.username}:`, error);    res.status(500).render('error', {
@@ -269,7 +351,46 @@ router.post('/:username/stats', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     logger.error(`Error updating stats for ${req.params.username}:`, error);
-    res.status(500).json({ error: 'Error updating stats' });
+    res.status(500).json({ error: 'Error updating stats' });  }
+});
+
+// Test endpoint to set fake high level account (development only)
+router.post('/:username/debug/set-level', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { level, xp } = req.body;
+    
+    // Verify ownership
+    if (req.cookies?.bambiname !== encodeURIComponent(username)) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const Profile = getModel('Profile');
+    const profile = await withDbConnection(async () => {
+      return await Profile.findOne({ username });
+    });
+
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    // Set level and XP for testing
+    if (level !== undefined) profile.level = parseInt(level);
+    if (xp !== undefined) profile.xp = parseInt(xp);
+
+    await withDbConnection(async () => {
+      return await profile.save();
+    });
+
+    res.json({ 
+      success: true, 
+      message: `Profile updated to level ${profile.level} with ${profile.xp} XP`,
+      level: profile.level,
+      xp: profile.xp
+    });
+  } catch (error) {
+    logger.error(`Error setting debug level for ${req.params.username}:`, error);
+    res.status(500).json({ error: 'Error updating profile' });
   }
 });
 
