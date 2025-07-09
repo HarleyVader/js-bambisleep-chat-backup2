@@ -35,7 +35,8 @@
     "dev": "nodemon src/server.js",
     "debug": "node --inspect src/server.js",
     "test:control": "node test-socket-control.js",
-    "test:reboot": "node test-reboot.js"
+    "test:reboot": "node test-reboot.js",
+    "lint": "eslint **/**.js"
   },
   "dependencies": {
     "axios": "^1.8.4",
