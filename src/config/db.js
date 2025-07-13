@@ -501,6 +501,9 @@ export async function withDbConnection(callback, options = {}) {
   
   // If we get here, all retries failed
   if (lastError) throw lastError;
+  
+  // Fallback return null if no error but no result
+  return null;
 }
 
 /**

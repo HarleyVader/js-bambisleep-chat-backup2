@@ -6,7 +6,7 @@ const logger = new Logger('TriggerManiaRoutes');
 const router = express.Router();
 
 // Define the base path for this router
-export const basePath = '/triggers/mania';
+export const basePath = '/psychodelic-trigger-mania';
 
 // Define route handlers
 router.get('/', (req, res) => {

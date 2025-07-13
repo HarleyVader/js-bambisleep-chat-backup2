@@ -112,4 +112,16 @@ const Profile = mongoose.models.Profile || mongoose.model('Profile', ProfileSche
 // Add schema to the export for worker thread registration
 Profile.schema = ProfileSchema;
 
+// Export helper function for getting profile by username
+export async function getProfile(username) {
+  if (!username) return null;
+  try {
+    return await Profile.findOne({ username });
+  } catch (error) {
+    // Use console.error for now as logger isn't imported in models
+    console.error('Error fetching profile:', error);
+    return null;
+  }
+}
+
 export default Profile;
