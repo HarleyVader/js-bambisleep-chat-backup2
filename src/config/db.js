@@ -1,5 +1,9 @@
 import Logger from '../utils/logger.js';
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 // Initialize logger
 const logger = new Logger('Database');
@@ -81,8 +85,13 @@ export async function connectToProfilesDatabase() {
   }
 
   try {
-    // Create a separate connection for profiles
-    profilesConnection = mongoose.createConnection(process.env.MONGODB_PROFILES);
+    // Create a separate connection for profiles - use MONGODB_PROFILES or fallback to MONGODB_URI
+    const profilesUri = process.env.MONGODB_PROFILES || process.env.MONGODB_URI;
+    if (!profilesUri) {
+      throw new Error('MONGODB_PROFILES or MONGODB_URI environment variable not set');
+    }
+    
+    profilesConnection = mongoose.createConnection(profilesUri);
     
     logger.info('Connected to profiles database');
     
@@ -115,8 +124,13 @@ export async function connectToChatDatabase() {
   }
 
   try {
-    // Create a separate connection for chat data
-    chatConnection = mongoose.createConnection(process.env.MONGODB_CHAT);
+    // Create a separate connection for chat data - use MONGODB_CHAT or fallback to MONGODB_URI
+    const chatUri = process.env.MONGODB_CHAT || process.env.MONGODB_URI;
+    if (!chatUri) {
+      throw new Error('MONGODB_CHAT or MONGODB_URI environment variable not set');
+    }
+    
+    chatConnection = mongoose.createConnection(chatUri);
     
     logger.info('Connected to chat database');
     
@@ -149,8 +163,13 @@ export async function connectToAigfLogsDatabase() {
   }
 
   try {
-    // Create a separate connection for AIGF logs
-    aigfLogsConnection = mongoose.createConnection(process.env.MONGODB_AIGF_LOGS);
+    // Create a separate connection for AIGF logs - use MONGODB_AIGF_LOGS or fallback to MONGODB_URI
+    const aigfLogsUri = process.env.MONGODB_AIGF_LOGS || process.env.MONGODB_URI;
+    if (!aigfLogsUri) {
+      throw new Error('MONGODB_AIGF_LOGS or MONGODB_URI environment variable not set');
+    }
+    
+    aigfLogsConnection = mongoose.createConnection(aigfLogsUri);
     
     logger.info('Connected to AIGF logs database');
     
