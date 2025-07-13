@@ -23,7 +23,7 @@ const __dirname = path.dirname(__filename);
 const configSchemas = {
   SERVER_PORT: { type: 'number', default: 6969, min: 1, max: 65535 },
   NODE_ENV: { type: 'string', default: 'development', enum: ['development', 'production', 'test'] },
-  MONGODB_URI: { type: 'string', required: true },
+  MONGODB_URI: { type: 'string', default: 'mongodb://localhost:27017/bambisleep', required: false },
   KOKORO_HOST: { type: 'string', default: 'localhost' },
   KOKORO_PORT: { type: 'number', default: 8880, min: 1, max: 65535 },
   KOKORO_API_URL: { type: 'string', default: null },

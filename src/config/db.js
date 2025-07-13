@@ -14,39 +14,59 @@ let modelsRegistered = false;
 
 /**
  * Connect to the main MongoDB database
+ * @param {number} retries - Number of retry attempts
  * @returns {Promise<mongoose.Connection>} The database connection
  */
-export async function connectToDatabase() {
-  if (isConnected) {
+export async function connectToDatabase(retries = 3) {
+  if (isConnected && mongoose.connection.readyState === 1) {
     logger.info('Using existing database connection');
     return mongoose.connection;
   }
 
-  try {
-    const connectionOptions = {
-      // No need for useNewUrlParser and useUnifiedTopology in newer mongoose versions
-    };
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const connectionOptions = {
+        serverSelectionTimeoutMS: 5000,
+        maxPoolSize: 10,
+        minPoolSize: 2,
+        maxIdleTimeMS: 30000,
+        retryWrites: true,
+        retryReads: true
+      };
 
-    await mongoose.connect(process.env.MONGODB_URI, connectionOptions);
-    
-    isConnected = true;
-    logger.info('Connected to main database');
-    
-    // Set up connection event handlers
-    mongoose.connection.on('error', (err) => {
-      logger.error(`Database connection error: ${err.message}`);
-      isConnected = false;
-    });
-    
-    mongoose.connection.on('disconnected', () => {
-      logger.warning('Database disconnected');
-      isConnected = false;
-    });
-    
-    return mongoose.connection;
-  } catch (error) {
-    logger.error(`Failed to connect to database: ${error.message}`);
-    throw error;
+      await mongoose.connect(process.env.MONGODB_URI, connectionOptions);
+      
+      isConnected = true;
+      logger.success(`Connected to main database (attempt ${attempt}/${retries})`);
+      
+      // Set up connection event handlers
+      mongoose.connection.on('error', (err) => {
+        logger.error(`Database connection error: ${err.message}`);
+        isConnected = false;
+      });
+      
+      mongoose.connection.on('disconnected', () => {
+        logger.warning('Database disconnected');
+        isConnected = false;
+      });
+
+      mongoose.connection.on('reconnected', () => {
+        logger.info('Database reconnected');
+        isConnected = true;
+      });
+      
+      return mongoose.connection;
+    } catch (error) {
+      logger.error(`Failed to connect to database (attempt ${attempt}/${retries}): ${error.message}`);
+      
+      if (attempt === retries) {
+        logger.error('All database connection attempts failed');
+        throw error;
+      }
+      
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+    }
   }
 }
 

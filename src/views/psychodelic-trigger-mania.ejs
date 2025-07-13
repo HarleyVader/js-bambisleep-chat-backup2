@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('partials/head') %>
+    <title>Psychodelic Trigger Mania | BambiSleep.Chat</title>
+    <style>
+        body {
+            background: linear-gradient(45deg, #ff006e, #8338ec, #3a86ff);
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            min-height: 100vh;
+            color: white;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .trigger-mania-container {
+            text-align: center;
+            padding: 2rem;
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mania-title {
+            font-size: 3rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 2rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .trigger-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .trigger-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .trigger-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .warning-text {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid rgba(255, 0, 0, 0.5);
+            border-radius: 5px;
+            max-width: 600px;
+        }
+    </style>
+</head>
+
+<body>
+    <%- include('partials/nav', { path: '/psychodelic-trigger-mania' }) %>
+    
+    <div class="trigger-mania-container">
+        <h1 class="mania-title">Psychodelic Trigger Mania</h1>
+        
+        <div class="trigger-grid">
+            <button class="trigger-button" data-trigger="bambi-sleep">BAMBI SLEEP</button>
+            <button class="trigger-button" data-trigger="good-girl">GOOD GIRL</button>
+            <button class="trigger-button" data-trigger="blank-doll">BLANK DOLL</button>
+            <button class="trigger-button" data-trigger="giggle-time">GIGGLE TIME</button>
+            <button class="trigger-button" data-trigger="iq-drop">IQ DROP</button>
+            <button class="trigger-button" data-trigger="bimbo-time">BIMBO TIME</button>
+        </div>
+        
+        <div class="warning-text">
+            <strong>Warning:</strong> This page contains intense psychodelic triggers designed for experienced users only. 
+            Please ensure you are in a safe environment before proceeding.
+        </div>
+    </div>
+
+    <!-- Core scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.4.0/lib/p5.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/aigf-core.js"></script>
+    <script src="/js/text2speech.js"></script>
+    
+    <script>
+        // Initialize trigger buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            const triggerButtons = document.querySelectorAll('.trigger-button');
+            
+            triggerButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const trigger = this.dataset.trigger;
+                    console.log('Trigger activated:', trigger);
+                    
+                    // Add visual feedback
+                    this.style.background = 'rgba(255, 255, 255, 0.4)';
+                    setTimeout(() => {
+                        this.style.background = 'rgba(255, 255, 255, 0.1)';
+                    }, 200);
+                    
+                    // Emit trigger event if socket is available
+                    if (typeof socket !== 'undefined') {
+                        socket.emit('trigger_activated', {
+                            trigger: trigger,
+                            timestamp: Date.now()
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+
+    <%- include('partials/footer') %>
+</body>
+
+</html>

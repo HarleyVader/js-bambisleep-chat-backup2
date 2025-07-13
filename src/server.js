@@ -15,6 +15,7 @@ import cors from 'cors';
 import fileUpload from 'express-fileupload';
 import mongoose from 'mongoose';
 import { Worker } from 'worker_threads';
+import helmet from 'helmet';
 
 // Import custom utils
 import urlValidator from './utils/urlValidator.js';
@@ -33,7 +34,8 @@ import footerConfig from './config/footer.config.js';
 
 // Import routes
 import indexRoute from './routes/index.js';
-import psychodelicTriggerManiaRouter from './routes/psychodelic.js';
+import psychodelicRouter from './routes/psychodelic.js';
+import psychodelicTriggerManiaRouter from './routes/psychodelic-trigger-mania.js';
 import helpRoute from './routes/help.js';
 import chatRouter, { basePath as chatBasePath } from './routes/chat.js';
 import healthRoute from './routes/health.js';
@@ -732,6 +734,21 @@ async function initializeApp() {
  * @param {Express} app - Express application instance
  */
 function setupMiddleware(app) {
+  // Security middleware
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
+        fontSrc: ["'self'", "fonts.gstatic.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:"],
+        connectSrc: ["'self'", "ws:", "wss:"]
+      }
+    },
+    crossOriginEmbedderPolicy: false
+  }));
+  
   app.use(cors());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
@@ -814,8 +831,9 @@ async function setupRoutes(app) {  try {
     
     app.get('/health', (req, res) => {
       res.send('Health route works!');
-    });// Routes that don't strictly require database access
+    });    // Routes that don't strictly require database access
     const basicRoutes = [
+      { path: '/psychodelic', handler: psychodelicRouter, dbRequired: false },
       { path: '/psychodelic-trigger-mania', handler: psychodelicTriggerManiaRouter, dbRequired: false },
       { path: chatBasePath, handler: chatRouter, dbRequired: true }
     ];
@@ -827,10 +845,6 @@ async function setupRoutes(app) {  try {
     // Setup help router
     app.use('/help', dbFeatureCheck(false), helpRoute);
     logger.info('✅ Help routes registered at /help');
-    
-    // TEST: Register psychodelic route directly without middleware
-    app.use('/psychodelic-trigger-mania', psychodelicTriggerManiaRouter);
-    logger.info('✅ TEST: Psychodelic route registered directly at /psychodelic-trigger-mania');
     
     // Setup basic routes with appropriate database checks
     if (Array.isArray(basicRoutes)) {

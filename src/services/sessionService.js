@@ -16,7 +16,6 @@ import { withDbConnection, connectToChatDatabase } from '../config/db.js';
 import Logger from '../utils/logger.js';
 import footerConfig from '../config/footer.config.js';
 import config from '../config/config.js';
-import Profile from '../models/Profile.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -367,9 +366,12 @@ export async function validateMentions(mentions) {
       const usernames = [...new Set(mentions.map(mention => mention.username))];
       
       // Find which users exist
-      const existingUsers = await Profile.find({ 
-        username: { $in: usernames } 
-      }).select('username').lean();
+      const existingUsers = await withDbConnection(async () => {
+        const Profile = mongoose.models.Profile || (await import('../models/Profile.js')).default;
+        return await Profile.find({ 
+          username: { $in: usernames } 
+        }).select('username').lean();
+      }, { requireConnection: false });
       
       const existingUsernames = existingUsers.map(user => user.username);
       
@@ -506,7 +508,10 @@ export function createChatRouter() {
       let profile = null;
       if (username && username !== 'anonBambi') {
         try {
-          profile = await Profile.findByUsername(username);
+          profile = await withDbConnection(async () => {
+            const Profile = mongoose.models.Profile || (await import('../models/Profile.js')).default;
+            return await Profile.findByUsername(username);
+          }, { requireConnection: false });
         } catch (error) {
           logger.error(`Error fetching profile for ${username}:`, error);
         }

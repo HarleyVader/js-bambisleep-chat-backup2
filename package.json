@@ -34,8 +34,12 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "debug": "node --inspect src/server.js",
-    "test:control": "node test-socket-control.js",
-    "test:reboot": "node test-reboot.js"
+    "test": "node --test",
+    "test:db": "node scripts/test-db.js",
+    "test:health": "node scripts/test-health.js",
+    "lint": "eslint src/ --fix",
+    "production": "NODE_ENV=production node src/server.js",
+    "setup": "node scripts/setup.js"
   },
   "dependencies": {
     "axios": "^1.8.4",
