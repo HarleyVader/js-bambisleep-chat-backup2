@@ -3,10 +3,10 @@
  * Initial setup script for BambiSleep.Chat
  */
 
+import Logger from '../src/utils/logger.js';
+import { fileURLToPath } from 'url';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import Logger from '../src/utils/logger.js';
 
 const logger = new Logger('Setup');
 const __filename = fileURLToPath(import.meta.url);

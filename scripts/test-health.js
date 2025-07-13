@@ -3,8 +3,8 @@
  * Health endpoint test script
  */
 
-import axios from 'axios';
 import Logger from '../src/utils/logger.js';
+import axios from 'axios';
 
 const logger = new Logger('Health-Test');
 

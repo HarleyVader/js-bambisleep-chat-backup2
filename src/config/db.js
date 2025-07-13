@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
 import Logger from '../utils/logger.js';
+import mongoose from 'mongoose';
 
 // Initialize logger
 const logger = new Logger('Database');

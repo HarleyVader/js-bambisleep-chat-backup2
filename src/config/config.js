@@ -1,8 +1,9 @@
 // src/utils/config.js
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
+
 import Logger from '../utils/logger.js';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
 // Initialize logger
 const logger = new Logger('Config');

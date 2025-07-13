@@ -1,5 +1,5 @@
-import express from 'express';
 import Logger from '../utils/logger.js';
+import express from 'express';
 import footerConfig from '../config/footer.config.js';
 
 const logger = new Logger('PsychodelicRoutes');

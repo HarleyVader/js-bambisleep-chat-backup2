@@ -1,51 +1,76 @@
-import { promises as fsPromises } from 'fs';
+import chatRouter, { basePath as chatBasePath } from './routes/chat.js';
+
+import Logger from './utils/logger.js';
+import { Server as SocketIOServer } from 'socket.io';
+import { Worker } from 'worker_threads';
+import aigfLogger from './utils/aigfLogger.js';
+import audioTriggers from './utils/audioTriggers.js';
+import axios from 'axios';
+import bambiControlNetwork from './services/bambiControlNetwork.js';
+import bnncsRoutes from './routes/bnncs.js';
+import config from './config/config.js';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import dotenv from 'dotenv';
+import errorHandler from './utils/errorHandler.js';
 import express from 'express';
+import { fileURLToPath } from 'url';
+import fileUpload from 'express-fileupload';
+import footerConfig from './config/footer.config.js';
+import { promises as fsPromises } from 'fs';
+import healthRoute from './routes/health.js';
+import helmet from 'helmet';
+import helpRoute from './routes/help.js';
 import http from 'http';
+import indexRoute from './routes/index.js';
+import mongoose from 'mongoose';
 import os from 'os';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import cookieParser from 'cookie-parser';
-import axios from 'axios';
+import psychodelicRouter from './routes/psychodelic.js';
+import psychodelicTriggerManiaRouter from './routes/psychodelic-trigger-mania.js';
+import sessionService from './services/sessionService.js';
 import { spawn } from 'child_process';
+import spiralsWorker from './workers/spirals.js';
+import urlValidator from './utils/urlValidator.js';
+import userMentions from './utils/userMentions.js';
 
 // Import modules
-import { Server as SocketIOServer } from 'socket.io';
-import cors from 'cors';
-import fileUpload from 'express-fileupload';
-import mongoose from 'mongoose';
-import { Worker } from 'worker_threads';
-import helmet from 'helmet';
+
+
+
+
+
+
 
 // Import custom utils
-import urlValidator from './utils/urlValidator.js';
-import audioTriggers from './utils/audioTriggers.js';
-import userMentions from './utils/userMentions.js';
-import aigfLogger from './utils/aigfLogger.js';
-import sessionService from './services/sessionService.js';
+
+
+
+
+
 
 // Import workers
-import spiralsWorker from './workers/spirals.js';
+
 
 // Import configuration
-import config from './config/config.js';
-import footerConfig from './config/footer.config.js';
+
+
 // Database module is imported dynamically to prevent circular dependencies
 
 // Import routes
-import indexRoute from './routes/index.js';
-import psychodelicRouter from './routes/psychodelic.js';
-import psychodelicTriggerManiaRouter from './routes/psychodelic-trigger-mania.js';
-import helpRoute from './routes/help.js';
-import chatRouter, { basePath as chatBasePath } from './routes/chat.js';
-import healthRoute from './routes/health.js';
-import bnncsRoutes from './routes/bnncs.js';
 
-import Logger from './utils/logger.js';
-import errorHandler from './utils/errorHandler.js';
+
+
+
+
+
+
+
+
+
 
 // Import Bambi Control Network
-import bambiControlNetwork from './services/bambiControlNetwork.js';
+
 
 // Fix the registerModels function to properly export the models
 async function registerModels() {

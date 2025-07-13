@@ -10,15 +10,16 @@
  * It provides a centralized service for all chat operations.
  */
 
-import express from 'express';
-import mongoose from 'mongoose';
-import { withDbConnection, connectToChatDatabase } from '../config/db.js';
+import { connectToChatDatabase, withDbConnection } from '../config/db.js';
+
 import Logger from '../utils/logger.js';
-import footerConfig from '../config/footer.config.js';
 import config from '../config/config.js';
-import fs from 'fs/promises';
-import path from 'path';
+import express from 'express';
 import { fileURLToPath } from 'url';
+import footerConfig from '../config/footer.config.js';
+import fs from 'fs/promises';
+import mongoose from 'mongoose';
+import path from 'path';
 
 // Initialize logger
 const logger = new Logger('SessionService');
