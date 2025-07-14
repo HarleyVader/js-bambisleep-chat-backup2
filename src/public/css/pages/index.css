@@ -1,4 +1,13 @@
 /* Index Page Specific Styles */
+#chat-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+    min-height: calc(100vh - 120px);
+}
+
 #user-input {
     background: rgba(var(--primary-color-rgb), 0.9);
     border: var(--border-width) solid var(--border-color);
@@ -137,6 +146,10 @@
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
+    #chat-container {
+        padding: var(--spacing-md);
+    }
+    
     #llm-form {
         flex-direction: column;
     }
