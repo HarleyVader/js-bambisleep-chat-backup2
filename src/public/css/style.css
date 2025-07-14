@@ -1196,13 +1196,6 @@ a:hover {
     animation: fadeOut 0.3s forwards;
 }
 
-#chat-container {
-    display: flex;
-    height: calc(99.4vh - 3vh);
-    border: ridge 3px var(--button-color);
-    border-radius: 8px;
-}
-
 #user-input {
     display: flex;
     flex-direction: column;
@@ -1243,21 +1236,6 @@ a:hover {
         sans-serif;
     text-shadow: var(--secondary-color) 2px 2px 2px;
     height: 2vw;
-}
-
-#response-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: calc(99.4vh - 3vh);
-    background-color: var(--transparent-alt);
-}
-
-#response-chat-wrapper {
-    display: flex;
-    flex-direction: row;
-    height: calc(99.4vh - 56%);
-    width: 100%;
 }
 
 #response,
@@ -1688,13 +1666,6 @@ a:hover {
         font-size: 14px;
     }
 
-    #chat-container {
-        flex-direction: column;
-        height: auto;
-        margin: 0;
-        padding: 0.5em;
-    }
-
     #user-input {
         width: 100%;
         padding: 0.35em;
@@ -1740,20 +1711,9 @@ a:hover {
         font-size: 16px;
     }
 
-    #chat-container {
-        flex-direction: column;
-        height: auto;
-        margin: 0;
-        padding: 1em;
-    }
-
     #user-input {
         width: 100%;
         padding: 0.7em;
-    }
-
-    #response-container {
-        width: 100%;
     }
 
     #response {
