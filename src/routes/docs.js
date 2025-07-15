@@ -372,7 +372,7 @@ router.get('/', async (req, res) => {
       if (b === 'General') return 1;
       return a.localeCompare(b);
     });
-      res.render('docs/docs-index', {
+      res.render('help', {
       title: 'Documentation',
       description: 'Browse all documentation files',
       files: markdownFiles,
@@ -381,11 +381,13 @@ router.get('/', async (req, res) => {
       footer: footerConfig
     });
   } catch (error) {
-    console.error('Error listing documentation:', error.message);    res.status(500).render('error', {
+    console.error('Error listing documentation:', error.message);
+    res.status(500).render('error', {
       title: 'Error',
       error: 'Could not load documentation list',
       message: error.message,
-      footer: footerConfig
+      footer: footerConfig,
+      req: req
     });
   }
 });
@@ -427,7 +429,7 @@ router.get('/:name', async (req, res) => {
     const currentIndex = allSortedFiles.findIndex(file => file.name === doc.fileName);
     const prevDoc = currentIndex > 0 ? allSortedFiles[currentIndex - 1] : null;
     const nextDoc = currentIndex < allSortedFiles.length - 1 ? allSortedFiles[currentIndex + 1] : null;
-      res.render('docs/docs-view', {
+      res.render('help', {
       title: doc.title,
       description: doc.description,
       content: doc.content,
@@ -449,18 +451,22 @@ router.get('/:name', async (req, res) => {
   } catch (error) {
     console.error('Error reading documentation:', error.message);
     
-    if (error.code === 'ENOENT') {      return res.status(404).render('error', {
+    if (error.code === 'ENOENT') {
+      return res.status(404).render('error', {
         title: 'Documentation Not Found',
         error: `The document "${req.params.name}" was not found`,
         message: 'Please check the URL or return to the documentation index',
-        footer: footerConfig
+        footer: footerConfig,
+        req: req
       });
     }
-      res.status(500).render('error', {
+    
+    res.status(500).render('error', {
       title: 'Error',
       error: 'Could not load documentation',
       message: error.message,
-      footer: footerConfig
+      footer: footerConfig,
+      req: req
     });
   }
 });
@@ -622,13 +628,14 @@ router.get('/search/html', async (req, res) => {
   try {
     const query = req.query.q;
     if (!query || query.trim().length < 2) {
-      return res.render('docs/docs-search', {
+      return res.render('help', {
         title: 'Documentation Search',
         description: 'Search documentation',
         query: '',
         results: [],
         groupedResults: {},
-        totalResults: 0
+        totalResults: 0,
+        footer: footerConfig
       });
     }
     
@@ -637,20 +644,23 @@ router.get('/search/html', async (req, res) => {
     const response = await fetch(`http://localhost:${process.env.PORT || 3000}${searchUrl}`);
     const searchData = await response.json();
     
-    res.render('docs/docs-search', {
+    res.render('help', {
       title: `Search Results for "${query}"`,
       description: `Documentation search results for "${query}"`,
       query,
       results: searchData.results,
       groupedResults: searchData.groupedResults,
-      totalResults: searchData.totalResults
+      totalResults: searchData.totalResults,
+      footer: footerConfig
     });
   } catch (error) {
     console.error('Error rendering search results:', error.message);
     res.status(500).render('error', {
       title: 'Search Error',
       error: 'Error searching documentation',
-      message: error.message
+      message: error.message,
+      footer: footerConfig,
+      req: req
     });
   }
 });
