@@ -2,10 +2,10 @@ import { dirname, join } from 'path';
 
 import express from 'express';
 import { fileURLToPath } from 'url';
+import footerConfig from '../config/footer.config.js';
 import { promises as fs } from 'fs';
 import hljs from 'highlight.js';
 import { marked } from 'marked';
-import footerConfig from '../config/footer.config.js';
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);

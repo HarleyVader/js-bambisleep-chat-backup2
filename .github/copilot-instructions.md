@@ -50,7 +50,11 @@
 **CRITICAL: When task is complete, STOP. Don't add features, don't improve, don't optimize.**
 
 ### GITHUB PUSH TO REPOSITORY
-- Push code to the repository immediately after confirming it works
+- do git status
+- do git diff
+- do git add .
+- do git commit -m "feat: [brief description of the feature]"
+- do git push
 
 
 **IMPORTANT: DO NOT FORGET TO THINK BEFORE DOING THIS**
