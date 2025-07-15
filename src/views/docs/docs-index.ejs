@@ -1,63 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= title %> - BambiSleepChat Documentation</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/docs.css">
-  <meta name="description" content="<%= description %>">
+    <%- include('../partials/head') %>
+    <title><%= title %> - Documentation</title>
+    <link rel="stylesheet" href="/css/pages/docs.css">
 </head>
-<body class="docs-page">
-  <header class="header">
-    <div class="container">
-      <h1>BambiSleepChat Documentation</h1>
-      <p class="subtitle">GitHub Organizations API Server</p>
-    </div>
-  </header>
-  
-  <nav class="nav">
-    <div class="container">
-      <ul class="nav-list">
-        <li><a href="/" class="nav-link">Dashboard</a></li>
-        <li><a href="/api/status" class="nav-link">API Status</a></li>
-        <li><a href="/docs" class="nav-link active">Documentation</a></li>
-      </ul>
-    </div>
-  </nav>
-  
-  <main class="main-content">
+<body>
+    <%- include('../partials/nav', { path: '/docs' }) %>
+    
     <div class="container docs-container">
-      <aside class="docs-sidebar">
-        <h3>Documentation Files</h3>
-        <ul class="docs-list">
-          <% files.forEach(function(file) { %>
-            <li><a href="<%= file.path %>" class="doc-link"><%= file.title %></a></li>
-          <% }); %>
-        </ul>
-      </aside>
-      
-      <section class="docs-content">
-        <h2>Documentation</h2>
-        <p>Select a document from the list to view its contents.</p>
+        <aside class="docs-sidebar">
+            <h3>Documentation Files</h3>
+            <ul class="docs-list">
+                <% if (typeof files !== 'undefined' && files.length > 0) { %>
+                    <% files.forEach(function(file) { %>
+                        <li>
+                            <a href="<%= file.path %>" class="doc-link">
+                                <%= file.title %>
+                            </a>
+                        </li>
+                    <% }); %>
+                <% } %>
+            </ul>
+        </aside>
         
-        <div class="docs-cards">
-          <% files.forEach(function(file) { %>
-            <div class="doc-card">
-              <h3><a href="<%= file.path %>"><%= file.title %></a></h3>
-              <p class="doc-path"><%= file.name %></p>
-              <a href="<%= file.path %>" class="doc-button">View Document</a>
+        <section class="docs-content">
+            <div class="help-header">
+                <h1>🧠 Documentation & Help Center</h1>
+                <p>Your guide to BambiSleep.Chat features and technical documentation</p>
             </div>
-          <% }); %>
-        </div>
-      </section>
+            
+            <div class="help-categories">
+                <div class="help-category">
+                    <h3>📋 Quick Start</h3>
+                    <p class="help-category-desc">Get started with BambiSleep.Chat basics</p>
+                    <ul class="help-topics">
+                        <li class="help-topic"><a href="/docs/USER-GUIDE">User Guide</a></li>
+                        <li class="help-topic"><a href="/docs/INSTALLATION">Installation</a></li>
+                    </ul>
+                </div>
+                
+                <div class="help-category">
+                    <h3>🛠️ Technical Documentation</h3>
+                    <p class="help-category-desc">Developer and technical resources</p>
+                    <ul class="help-topics">
+                        <li class="help-topic"><a href="/docs/API">API Documentation</a></li>
+                        <li class="help-topic"><a href="/docs/MONGODB-SETUP">Database Setup</a></li>
+                        <li class="help-topic"><a href="/docs/PROFILE-SYSTEM">Profile System</a></li>
+                    </ul>
+                </div>
+                
+                <div class="help-category">
+                    <h3>🐛 Troubleshooting</h3>
+                    <p class="help-category-desc">Debugging and problem resolution</p>
+                    <ul class="help-topics">
+                        <li class="help-topic"><a href="/docs/DEBUG">Debug Guide</a></li>
+                        <li class="help-topic"><a href="/docs/TROUBLESHOOTING">Troubleshooting</a></li>
+                    </ul>
+                </div>
+                
+                <div class="help-category">
+                    <h3>🎯 Features</h3>
+                    <p class="help-category-desc">Platform features and capabilities</p>
+                    <ul class="help-topics">
+                        <li class="help-topic"><a href="/docs/TERMINAL-INTERFACE">Terminal Interface</a></li>
+                        <li class="help-topic"><a href="/docs/CHAT-CONSOLIDATION">Chat System</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="docs-cards">
+                <% files.forEach(function(file) { %>
+                    <div class="doc-card">
+                        <h3><a href="<%= file.path %>"><%= file.title %></a></h3>
+                        <p class="doc-path"><%= file.name %></p>
+                        <a href="<%= file.path %>" class="doc-button">View Document</a>
+                    </div>
+                <% }); %>
+            </div>
+            
+            <div class="help-container">
+                <div class="feedback-form">
+                    <iframe width="640px" height="480px" 
+                            src="https://forms.office.com/r/9PvY2ZFJc0?embed=true" 
+                            frameborder="0" marginwidth="0" marginheight="0" 
+                            style="border: none; max-width:100%; max-height:100vh" 
+                            allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        </section>
     </div>
-  </main>
-  
-  <footer class="footer">
-    <div class="container">
-      <p>&copy; <%= new Date().getFullYear() %> BambiSleepChat - GitHub Organizations API Server</p>
-    </div>
-  </footer>
+    
+    <%- include('../partials/footer') %>
 </body>
 </html>
