@@ -79,7 +79,8 @@ router.get('/', async (req, res) => {
       message: 'Internal Server Error',
       error: { status: 500 },
       title: 'Error - Internal Server Error',
-      footer: footerConfig
+      footer: footerConfig,
+      req: req
     });
   }
 });
@@ -96,7 +97,8 @@ router.get('/:fileName', async (req, res) => {
         message: 'Documentation not found',
         error: { status: 404 },
         title: 'Error - Documentation Not Found',
-        footer: footerConfig
+        footer: footerConfig,
+        req: req
       });
     }
     
@@ -115,7 +117,8 @@ router.get('/:fileName', async (req, res) => {
       message: 'Internal Server Error',
       error: { status: 500 },
       title: 'Error - Internal Server Error',
-      footer: footerConfig
+      footer: footerConfig,
+      req: req
     });
   }
 });
