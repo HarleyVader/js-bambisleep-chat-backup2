@@ -49,6 +49,10 @@
 
 **CRITICAL: When task is complete, STOP. Don't add features, don't improve, don't optimize.**
 
+### GITHUB PUSH TO REPOSITORY
+- Push code to the repository immediately after confirming it works
+
+
 **IMPORTANT: DO NOT FORGET TO THINK BEFORE DOING THIS**
 
 

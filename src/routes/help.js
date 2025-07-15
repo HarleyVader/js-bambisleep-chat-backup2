@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url';
 import { promises as fs } from 'fs';
 import hljs from 'highlight.js';
 import { marked } from 'marked';
+import footerConfig from '../config/footer.config.js';
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -69,7 +70,8 @@ router.get('/', async (req, res) => {
     const files = await getMarkdownFiles();
     res.render('help', { 
       title: 'Help Center',
-      files: files
+      files: files,
+      footer: footerConfig
     });
   } catch (error) {
     console.error('Error rendering help page:', error);
@@ -96,7 +98,8 @@ router.get('/:fileName', async (req, res) => {
       title: title,
       content: content,
       files: files,
-      fileName: fileName
+      fileName: fileName,
+      footer: footerConfig
     });
   } catch (error) {
     console.error('Error rendering help document:', error);
