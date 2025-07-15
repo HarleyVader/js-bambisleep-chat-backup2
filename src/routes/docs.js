@@ -1,11 +1,12 @@
+import { dirname, join } from 'path';
+
 import express from 'express';
-import { promises as fs } from 'fs';
-import { join, dirname } from 'path';
-import { marked } from 'marked';
-import hljs from 'highlight.js';
-import { fileURLToPath } from 'url';
 import fetch from 'node-fetch';
+import { fileURLToPath } from 'url';
 import footerConfig from '../config/footer.config.js';
+import { promises as fs } from 'fs';
+import hljs from 'highlight.js';
+import { marked } from 'marked';
 
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);

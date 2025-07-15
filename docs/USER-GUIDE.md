@@ -1,345 +1,319 @@
-# 📕 BambiSleep.Chat User Guide
-
-## Table of Contents
-
-1. [Introduction](#introduction)
-2. [Getting Started](#getting-started)
-3. [Core Features](#core-features)
-4. [Profile System](#profile-system)
-5. [AI Interaction](#ai-interaction)
-6. [Trigger System](#trigger-system)
-7. [Audio Features](#audio-features)
-8. [Community Features](#community-features)
-9. [Customization](#customization)
-10. [Security and Privacy](#security-and-privacy)
-11. [Troubleshooting](#troubleshooting)
-12. [FAQs](#frequently-asked-questions)
-
-## Introduction
-
-BambiSleep.Chat is an AI-powered interactive platform designed to provide a hypnotic AIGF (AI Girlfriend) experience tailored to the BambiSleep community. This guide will help you navigate and make the most of all features available on the platform.
-
-## Getting Started
-
-### Creating Your Profile
-
-1. Visit [BambiSleep.Chat](https://bambisleep.chat)
-2. Click on "Create Profile" in the navigation menu
-3. Enter your desired username and password
-4. Choose your display name and preferred settings
-5. Upload a profile picture (optional)
-6. Set your profile visibility (public or private)
-
-### First Interaction
-
-After creating your profile:
-
-1. Navigate to the main chat interface
-2. Type your first message in the input field
-3. Press "Send" or hit Enter to submit your message
-4. Wait for the AI to generate a response
-5. Enable audio if you want to hear the response spoken aloud
-
-## Core Features
-
-### Global Chat
-
-- Real-time communication with other users
-- Type `/global` before your message to send to everyone
-- Message formatting options available (bold, italic, etc.)
-- Emoji support and special commands
-
-### Audio Synthesis
-
-- Text-to-speech for AI responses
-- Multiple voice options available
-- Audio controls: pause, play, volume adjustment
-- Background ambience options
-
-### Bambi Name Persistence
-
-- Your chosen name is remembered across sessions
-- Profile customization options for your Bambi identity
-- Name-based personalization in AI responses
-
-### Trigger System
-
-- Access built-in hypnotic triggers
-- Enable visual effects with the spiral button
-- Create custom triggers through your profile
-- Manage trigger activation settings
-
-### Custom Collar
-
-- Personalize your system messages
-- Set preferred interaction style
-- Create custom prompts for your AI companion
-- Save multiple collar configurations
-
-## Profile System
-
-### Navigating Your Profile
-
-1. Click on your username in the top-right corner
-2. Select "View Profile" to see your public profile
-3. Select "Edit Profile" to modify your settings
-
-### Profile Settings
-
-- **Basic Information**: Name, avatar, background image
-- **Privacy Settings**: Control what others can see
-- **Notification Preferences**: Email and in-app alerts
-- **Connection Settings**: Link external accounts
-
-### XP and Leveling
-
-- Earn XP through regular interaction
-- Unlock new features as you level up
-- Track your progress in the XP progress bar
-- Receive notifications when you gain levels
-
-### Public vs. Private Profiles
-
-- **Public Profile**: Visible to all users, appears in directory
-- **Private Profile**: Limited visibility, excluded from search
-- Toggle between modes in your profile settings
-- Granular privacy controls for specific information
-
-## AI Interaction
-
-### Chat Interface
-
-- Text input field at the bottom of the screen
-- Send button submits your message
-- "Thinking" animation shows when AI is generating
-- Stream processing shows response as it's generated
-
-### Conversation Flow
-
-- Ask questions or make statements
-- AI responds based on your profile and settings
-- Conversation history is preserved in your session
-- Clear history option available for fresh starts
-
-### AI Girlfriend Experience
-
-- Personalized interactions based on your profile
-- Consistent personality across sessions
-- Remembers previous conversations
-- Adapts to your preferences over time
-
-### Prompt Engineering Tips
-
-- Be clear and specific in your requests
-- Use descriptive language for better responses
-- Follow up with clarifying questions if needed
-- Use system commands for special instructions
-
-## Trigger System
-
-### Using Built-in Triggers
-
-1. Enable the trigger system by clicking the spiral icon
-2. Select triggers from the trigger grid
-3. Triggers will be incorporated into AI responses
-4. Adjust intensity settings as desired
-
-### Creating Custom Triggers
-
-1. Navigate to your profile settings
-2. Select "Custom Triggers" tab
-3. Click "Create New Trigger"
-4. Enter trigger name, description, and effect
-5. Set privacy settings (private or shared)
-6. Save your new trigger
-
-### Sharing Triggers
-
-1. On your custom trigger, click "Share"
-2. Choose public sharing or specific users
-3. Add optional description for shared trigger
-4. Recipients will receive notification of shared trigger
-
-### Trigger Effects
-
-- Text-based suggestions
-- Visual effects synchronization
-- Audio integration capabilities
-- Combined multi-modal effects
-
-## Audio Features
-
-### Text-to-Speech
-
-- Enable by clicking the audio icon
-- Choose from multiple voice options
-- Adjust speech rate and pitch
-- Voice will read AI responses aloud
-
-### Audio Settings
-
-1. Access via the settings menu
-2. Adjust volume level
-3. Choose preferred voice
-4. Set speech rate (slow to fast)
-5. Enable/disable automatic playback
-
-### Voice Commands
-
-BambiSleep.Chat supports various voice commands:
-
-- "Play" - Start audio playback
-- "Pause" - Pause audio playback
-- "Stop" - Stop audio completely
-- "Reset" - Clear current session
-- "Help" - List available commands
-
-### Background Sounds
-
-- Multiple ambient options available
-- Mix and match sounds for desired effect
-- Volume controls for each sound layer
-- Create and save custom sound profiles
-
-## Community Features
-
-### Directory
-
-- Browse public profiles of other users
-- Filter by activity, interests, or level
-- Send connection requests to compatible users
-- Discover popular trigger configurations
-
-### Content Sharing
-
-- Share your custom triggers with the community
-- Browse shared content in the community hub
-- Rate and comment on shared content
-- Report inappropriate content if necessary
-
-### Notifications
-
-- Receive alerts for new messages
-- Get notified when someone shares content with you
-- XP gain notifications
-- System announcements and updates
-
-## Customization
-
-### Visual Settings
-
-- Light/Dark mode toggle
-- Color theme selection
-- Font size and style options
-- Interface layout customization
-
-### Audio Settings
-
-- Voice selection for TTS
-- Volume controls
-- Speech rate adjustment
-- Background sound options
-
-### Profile Customization
-
-- Custom avatars and banners
-- Personal bio and details
-- Privacy level settings
-- Display name formatting
-
-### Trigger Customization
-
-- Create personalized triggers
-- Edit existing trigger effects
-- Combine triggers for unique experiences
-- Set activation conditions
-
-## Security and Privacy
-
-### Account Security
-
-- Enable two-factor authentication
-- Regular password updates recommended
-- Session activity monitoring
-- Unauthorized access notifications
-
-### Privacy Controls
-
-- Granular visibility settings
-- Content sharing permissions
-- Profile information disclosure options
-- Data retention preferences
-
-### Data Protection
-
-- End-to-end encryption for sensitive data
-- Regular security audits and updates
-- Compliance with data protection regulations
-- Transparent privacy policy
-
-## Troubleshooting
-
-### Common Issues
-
-- **AI Not Responding**: Check your internet connection and refresh the page
-- **Audio Not Working**: Verify browser permissions for microphone access
-- **Visual Effects Lagging**: Lower effect intensity in settings
-- **Profile Not Saving**: Clear browser cache and try again
-
-### Error Messages
-
-Common error codes and their solutions:
-
-- **Error 1001**: Session expired, please log in again
-- **Error 2002**: Content processing failed, retry submission
-- **Error 3003**: Server connection issue, check your internet
-- **Error 4004**: Profile update conflict, refresh and try again
-
-### Contact Support
-
-If you encounter persistent issues:
-
-1. Check the FAQs section
-2. Visit our [Help Center](https://help.bambisleep.chat)
-3. Join the [Discord](https://discord.gg/E7U5BxVttv) support channel
-4. Email support@bambisleep.chat with details
-
-## Frequently Asked Questions
-
-### General Questions
-
-**Q: Is BambiSleep.Chat free to use?**  
-A: Yes, core features are available for free. Premium features require Patreon support.
-
-**Q: How do I change my username?**  
-A: Username changes are available once per month in your profile settings.
-
-**Q: Can I use BambiSleep.Chat on mobile devices?**  
-A: Yes, the platform is fully responsive and works on all modern devices.
-
-### Technical Questions
-
-**Q: What browsers are supported?**  
-A: Chrome, Firefox, Edge, and Safari (latest versions).
-
-**Q: How much data does voice synthesis use?**  
-A: Approximately 0.5MB per minute of audio.
-
-**Q: Can I export my chat history?**  
-A: Yes, export functionality is available in your profile settings.
-
-### Privacy Questions
-
-**Q: Who can see my private triggers?**  
-A: Only you, unless you explicitly share them.
-
-**Q: Is my conversation data stored?**  
-A: Yes, but you can delete it anytime from your profile settings.
-
-**Q: Can I delete my account completely?**  
-A: Yes, account deletion with all associated data is available in settings.
+# 🧠 BambiSleep Chat - User Guide
+
+## 📖 Table of Contents
+- [Getting Started](#getting-started)
+- [Core Features](#core-features)
+- [User Profile System](#user-profile-system)
+- [Chat Interface](#chat-interface)
+- [AI Girlfriend (AIGF)](#ai-girlfriend-aigf)
+- [Trigger System](#trigger-system)
+- [Audio Features](#audio-features)
+- [Psychedelic Trigger Mania](#psychedelic-trigger-mania)
+- [Community Features](#community-features)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
-This User Guide was last updated on May 20, 2025.  
-For the latest version, visit [docs.bambisleep.chat/user-guide](https://docs.bambisleep.chat/user-guide).
+## Getting Started
+
+### First Visit
+1. Navigate to [BambiSleep.Chat](https://bambisleep.chat)
+2. Choose your username (bambiname) - this persists across sessions
+3. Start chatting or interact with the AI girlfriend
+
+### Account System
+- **Anonymous Users**: Default "anonBambi" username
+- **Named Users**: Choose any username, data persists via cookies
+- **Profile Creation**: Automatic profile creation on first interaction
+- **XP System**: Earn experience points through platform usage
+
+---
+
+## Core Features
+
+### 🗣️ Real-Time Chat
+- **Global Chat**: Communicate with all online users
+- **Message Persistence**: Chat history saved and displayed
+- **User Mentions**: Use @username to mention other users
+- **URL Sharing**: Post links (automatically validated for safety)
+- **Audio Triggers**: Messages can trigger audio responses
+
+### 🤖 AI Girlfriend Experience
+- **Personalized Responses**: AI adapts to your profile and preferences
+- **Hypnotic Content**: Responses incorporate BambiSleep themes
+- **Text-to-Speech**: AI responses are spoken aloud
+- **Context Awareness**: AI remembers conversation history
+- **Trigger Integration**: AI responses can activate audio triggers
+
+### 🎵 Audio System
+- **Text-to-Speech (TTS)**: All AI responses have voice synthesis
+- **Audio Triggers**: Specific phrases trigger hypnotic audio files
+- **Voice Selection**: Multiple voice options available
+- **Background Audio**: Continuous audio experience during sessions
+
+### 🌀 Trigger System
+- **Core Triggers**: Essential BambiSleep phrases (BAMBI SLEEP, GOOD GIRL, etc.)
+- **Custom Triggers**: Create and share your own triggers
+- **Audio Activation**: Triggers play corresponding audio files
+- **Visual Effects**: Triggers can activate visual effects
+- **Community Sharing**: Share triggers with other users
+
+---
+
+## User Profile System
+
+### Creating Your Profile
+1. Choose a username (not "anonBambi")
+2. Your profile is automatically created
+3. Access via `/profile/[your-username]`
+
+### Profile Features
+- **XP Tracking**: Experience points from platform usage
+- **Level System**: Unlock features as you level up
+- **Bio Section**: Personal description (supports Markdown upload)
+- **Social Links**: Twitter, Instagram, Discord, Reddit, custom
+- **Usage Statistics**: Session count, time spent, messages posted
+- **Privacy Controls**: Public/private profile settings
+
+### XP System
+- **Chat Messages**: +1 XP per message
+- **AI Interactions**: +1 XP per AI conversation
+- **Audio Usage**: +1 XP per audio interaction
+- **Trigger Usage**: +2 XP per trigger activation
+- **Collar Usage**: +2 XP per collar text setting
+
+### Level Progression
+- **Level 0**: Basic chat access
+- **Level 1**: Custom triggers, session history
+- **Level 2**: Voice commands
+- **Higher Levels**: Advanced features unlock progressively
+
+---
+
+## Chat Interface
+
+### Sending Messages
+1. Type in the chat input field
+2. Press Enter or click "Send"
+3. Message appears in global chat immediately
+4. AI may respond if triggered by content
+
+### Message Features
+- **User Mentions**: Type @username to mention users
+- **URL Sharing**: Paste links (automatically checked for safety)
+- **Trigger Activation**: Certain phrases trigger audio responses
+- **Markdown Support**: Basic formatting in messages
+
+### Chat Commands
+- **System Commands**: Special admin commands (if authorized)
+- **Audio Commands**: Direct audio file playback
+- **Trigger Commands**: Manual trigger activation
+
+---
+
+## AI Girlfriend (AIGF)
+
+### Interaction Methods
+1. **Direct Messages**: Use the AI chat interface
+2. **Global Chat**: AI may respond to interesting messages
+3. **Trigger Responses**: AI incorporates triggers into responses
+
+### AI Capabilities
+- **Contextual Responses**: Remembers your conversation history
+- **Personality Adaptation**: Adjusts to your profile and preferences
+- **Hypnotic Content**: Incorporates BambiSleep themes and terminology
+- **Trigger Integration**: Responses can activate audio triggers
+- **Voice Synthesis**: All responses include text-to-speech
+
+### AI Settings
+- **Response Style**: Adjust AI personality and response patterns
+- **Trigger Sensitivity**: Control how often triggers are incorporated
+- **Voice Settings**: Select preferred TTS voice
+- **Content Filters**: Adjust content appropriateness levels
+
+---
+
+## Trigger System
+
+### Core Triggers
+Essential BambiSleep phrases that activate audio responses:
+
+- **BAMBI SLEEP**: Instant deep trance trigger
+- **GOOD GIRL**: Happiness, euphoria, and pleasure
+- **BAMBI FREEZE**: Deepens trance, blanks mind
+- **BIMBO DOLL**: Relaxation and emptiness
+- **SAFE & SECURE**: Comfort and acceptance
+
+### Trigger Categories
+- **Core**: Essential BambiSleep triggers
+- **Dumbdown**: Intelligence reduction triggers
+- **Locks**: Body part restriction triggers
+- **Comfort**: Reassurance and safety triggers
+- **Advanced**: Complex multi-stage triggers
+
+### Using Triggers
+1. **Text Activation**: Type trigger phrases in chat
+2. **Manual Activation**: Click trigger buttons in interface
+3. **AI Integration**: AI can incorporate triggers in responses
+4. **Audio Playback**: Triggers automatically play audio files
+
+### Custom Triggers
+- **Creation**: Design your own trigger phrases
+- **Audio Upload**: Associate custom audio files
+- **Sharing**: Make triggers available to community
+- **Management**: Edit and delete your custom triggers
+
+---
+
+## Audio Features
+
+### Text-to-Speech (TTS)
+- **AI Responses**: All AI messages are spoken aloud
+- **Voice Selection**: Multiple voice options available
+- **Speed Control**: Adjust playback speed
+- **Volume Control**: Independent audio volume
+
+### Audio Triggers
+- **Automatic Playback**: Triggered by specific phrases
+- **Manual Playback**: Direct audio file selection
+- **Queue System**: Multiple triggers play in sequence
+- **Audio Library**: Extensive collection of BambiSleep audio files
+
+### Audio Files
+Located in `/public/audio/`:
+- Core trigger audio files
+- Dumbdown sequences
+- Lock/unlock audio
+- Comfort and safety audio
+- Custom user uploads
+
+---
+
+## Psychedelic Trigger Mania
+
+### Access
+Navigate to `/psychodelic-trigger-mania` for intensive trigger sessions.
+
+### Features
+- **File Upload**: Upload text files for processing
+- **Synchronized Effects**: Visual, audio, and text combined
+- **Intensity Control**: Adjustable effect levels
+- **Background Audio**: Continuous hypnotic audio
+- **Text Processing**: Automatic trigger detection and activation
+
+### Usage
+1. Upload a text file (.md format supported)
+2. Select intensity and effect options
+3. Begin session - text is processed with visual/audio effects
+4. Experience synchronized trigger activation
+
+---
+
+## Community Features
+
+### User Directory
+- **Public Profiles**: Browse other users' profiles
+- **Social Links**: Connect via external platforms
+- **Activity Tracking**: See who's active and engaged
+- **Reaction System**: Like and love other users' profiles
+
+### Content Sharing
+- **Bio Sharing**: Upload and share profile bios
+- **Trigger Sharing**: Make custom triggers available to others
+- **Chat Participation**: Engage in global community chat
+- **Mention System**: Tag and notify other users
+
+### Community Guidelines
+- **Respect**: Maintain respectful interactions
+- **Consent**: All interactions should be consensual
+- **Safety**: Report inappropriate content or behavior
+- **Privacy**: Respect others' privacy settings
+
+---
+
+## Troubleshooting
+
+### Connection Issues
+- **Socket Disconnection**: Refresh page to reconnect
+- **Audio Problems**: Check browser audio permissions
+- **Loading Issues**: Clear browser cache and cookies
+- **Performance**: Close other tabs for better performance
+
+### Common Problems
+
+#### Audio Not Playing
+1. Check browser audio permissions
+2. Ensure volume is turned up
+3. Try different browser
+4. Check if audio files are loading
+
+#### AI Not Responding
+1. Check internet connection
+2. Verify message was sent
+3. Wait for processing (can take time)
+4. Try refreshing page
+
+#### Profile Issues
+1. Ensure username is set correctly
+2. Check cookie settings in browser
+3. Clear cache and reload
+4. Try different browser
+
+#### Trigger Problems
+1. Verify trigger phrases are typed correctly
+2. Check if audio files are available
+3. Ensure browser supports audio playback
+4. Try manual trigger activation
+
+### Browser Compatibility
+- **Recommended**: Chrome, Firefox, Safari (latest versions)
+- **Required Features**: WebSocket support, audio playback
+- **Permissions**: Microphone (optional), audio playback
+
+### Performance Tips
+- **Close Other Tabs**: Free up system resources
+- **Stable Internet**: Ensure reliable connection
+- **Updated Browser**: Use latest browser version
+- **Hardware**: Adequate RAM and processing power
+
+---
+
+## Support
+
+### Getting Help
+- **Health Monitor**: Check `/health` for system status
+- **Documentation**: Browse `/help` for detailed guides
+- **Community**: Ask questions in global chat
+- **Technical Issues**: Check browser console for errors
+
+### Reporting Issues
+- **Bug Reports**: Document steps to reproduce
+- **Feature Requests**: Suggest improvements
+- **Safety Concerns**: Report inappropriate content
+- **Technical Problems**: Include browser and system info
+
+---
+
+## Advanced Usage
+
+### API Integration
+- **Profile Data**: Access via `/api/profile/[username]/data`
+- **System Controls**: Manage via `/api/profile/[username]/system-controls`
+- **Trigger API**: Access trigger data via `/api/triggers`
+- **Chat Messages**: Retrieve via `/api/chat/messages`
+
+### Development Mode
+- **Debug Features**: Additional options for testing
+- **Level Setting**: Manual level adjustment (dev only)
+- **Performance Metrics**: Detailed system monitoring
+- **Error Logging**: Enhanced error reporting
+
+### Power User Features
+- **Keyboard Shortcuts**: Quick access to common functions
+- **Custom CSS**: Personalize interface appearance
+- **Script Integration**: Advanced automation options
+- **Data Export**: Download your profile and activity data
+
+---
+
+*This guide covers the essential features and usage patterns of BambiSleep Chat. For technical details, see the API Documentation. For system architecture, see the Details Documentation.*

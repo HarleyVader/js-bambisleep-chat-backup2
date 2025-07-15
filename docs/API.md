@@ -1,129 +1,190 @@
-# 📘 BambiSleep.Chat API Documentation
+# 🔌 BambiSleep Chat - API Documentation
+
+## 📖 Table of Contents
+
+- [Overview](#overview)
+- [Authentication](#authentication)
+- [RESTful API Endpoints](#restful-api-endpoints)
+- [Socket.IO Events](#socketio-events)
+- [Data Models](#data-models)
+- [Error Handling](#error-handling)
+- [Rate Limiting](#rate-limiting)
+- [Examples](#examples)
+
+---
 
 ## Overview
 
-This document provides comprehensive information about the BambiSleep.Chat API endpoints, request/response formats, and authentication methods. The API enables developers to integrate with the platform and access its features programmatically.
+BambiSleep Chat provides both RESTful API endpoints and real-time Socket.IO communication for comprehensive interaction with the platform.
 
-## Base URL
+### Base URL
+```
+https://bambisleep.chat
+```
 
-```
-https://api.bambisleep.chat/v1
-```
+### API Version
+Current Version: **MK-XII**
+
+### Content Types
+- **Request**: `application/json`
+- **Response**: `application/json`
+- **Audio**: `audio/mpeg`
+
+---
 
 ## Authentication
 
-### Session-based Authentication
+### Session-Based Authentication
+The platform uses cookie-based sessions for user identification:
 
-All API requests require a valid session cookie obtained through the authentication endpoints.
-
+```javascript
+// Cookies used for authentication
+bambiname=username        // User's chosen name
+bambiid=session_id       // Session identifier (optional)
 ```
-POST /auth/login
-```
 
-**Request Body:**
-```json
-{
-  "username": "your_username",
-  "password": "your_password"
-}
+### Anonymous Access
+Users can access most features without explicit authentication using the default `anonBambi` username.
+
+---
+
+## RESTful API Endpoints
+
+### Profile Endpoints
+
+#### Get Profile Data
+```http
+GET /api/profile/{username}/data
 ```
 
 **Response:**
 ```json
 {
   "success": true,
-  "message": "Authentication successful",
-  "user": {
-    "id": "user_id",
-    "username": "your_username"
+  "profile": {
+    "username": "string",
+    "xp": 0,
+    "level": 0,
+    "bio": "string",
+    "socialLinks": {
+      "twitter": "string",
+      "instagram": "string",
+      "discord": "string",
+      "reddit": "string",
+      "custom": "string"
+    },
+    "likes": 0,
+    "loves": 0,
+    "usageStats": {
+      "sessionsCount": 0,
+      "totalTimeSpent": 0,
+      "triggersActivated": 0,
+      "messagesPosted": 0,
+      "joinDate": "2025-01-01T00:00:00.000Z"
+    }
   }
 }
 ```
 
-### API Key Authentication
-
-For server-to-server communication, use API key authentication:
-
-```
-GET /resource
-Authorization: Bearer YOUR_API_KEY
-```
-
-## API Endpoints
-
-### Profile Management
-
-#### Get Profile
-
-```
-GET /profile/{username}
+#### Get System Controls
+```http
+GET /api/profile/{username}/system-controls
 ```
 
 **Response:**
 ```json
 {
-  "id": "profile_id",
-  "username": "username",
-  "displayName": "Display Name",
-  "avatarUrl": "https://bambisleep.chat/avatars/image.png",
-  "isPublic": true,
-  "xp": 1250,
-  "level": 5,
-  "createdAt": "2025-01-01T00:00:00Z",
-  "triggers": ["trigger1", "trigger2"]
+  "activeTriggers": [
+    {
+      "name": "BAMBI SLEEP",
+      "category": "core",
+      "enabled": true
+    }
+  ],
+  "systemSettings": {
+    "autoTriggers": true,
+    "audioEnabled": true,
+    "ttsVoice": "af_bella"
+  }
+}
+```
+
+#### Update System Controls
+```http
+POST /api/profile/{username}/system-controls
+```
+
+**Request Body:**
+```json
+{
+  "section": "triggers",
+  "settings": {
+    "autoTriggers": true,
+    "triggerSensitivity": "high"
+  }
 }
 ```
 
 #### Update Profile
-
-```
-PUT /profile/{username}
-```
-
-**Request Body:**
-```json
-{
-  "displayName": "New Display Name",
-  "avatarUrl": "https://bambisleep.chat/avatars/new-image.png",
-  "isPublic": true
-}
-```
-
-### AI Interaction
-
-#### Generate AI Response
-
-```
-POST /ai/generate
+```http
+POST /profile/{username}/update
 ```
 
 **Request Body:**
 ```json
 {
-  "prompt": "Hello Bambi",
-  "settings": {
-    "model": "MODEL_1",
-    "includeAudio": true,
-    "includeTriggers": true
-  }
+  "bio": "string",
+  "socialLinks": {
+    "twitter": "username",
+    "discord": "username#1234"
+  },
+  "profileStyle": "premium"
 }
+```
+
+#### React to Profile
+```http
+POST /profile/{username}/reaction
+```
+
+**Request Body:**
+```json
+{
+  "type": "like" // or "love"
+}
+```
+
+### Chat Endpoints
+
+#### Get Recent Messages
+```http
+GET /api/chat/messages?limit=50
 ```
 
 **Response:**
 ```json
 {
-  "response": "AI generated response text",
-  "audioUrl": "https://bambisleep.chat/audio/response-123.mp3",
-  "triggers": ["trigger1", "trigger2"]
+  "messages": [
+    {
+      "_id": "message_id",
+      "username": "string",
+      "data": "string",
+      "timestamp": "2025-01-01T00:00:00.000Z",
+      "messageType": "text",
+      "urls": [],
+      "mentions": [],
+      "audioTriggered": null,
+      "isAigfResponse": false
+    }
+  ]
 }
 ```
 
-### Trigger Management
+### Trigger Endpoints
 
-#### List Triggers
-
-```
-GET /triggers
+#### Get Available Triggers
+```http
+GET /api/triggers
 ```
 
 **Response:**
@@ -131,38 +192,89 @@ GET /triggers
 {
   "triggers": [
     {
-      "id": "trigger_id",
-      "name": "Trigger Name",
-      "description": "Trigger Description",
-      "isPublic": true,
-      "creator": "username"
+      "name": "BAMBI SLEEP",
+      "audioFile": "Bambi Sleep",
+      "description": "Instant deep trance trigger",
+      "details": "Trained in: Bimbo Slavedoll Conditioning 01",
+      "filename": "Bambi-Sleep.mp3",
+      "category": "core"
     }
   ]
 }
 ```
 
-#### Create Custom Trigger
+### Audio/TTS Endpoints
 
-```
-POST /triggers
+#### Get Available Voices
+```http
+GET /api/tts/voices
 ```
 
-**Request Body:**
+**Response:**
 ```json
 {
-  "name": "Custom Trigger",
-  "description": "Custom Trigger Description",
-  "isPublic": false,
-  "content": "Trigger activation text"
+  "voices": [
+    {
+      "id": "af_bella",
+      "name": "Bella",
+      "language": "en-US",
+      "gender": "female"
+    }
+  ]
 }
 ```
 
-### Session Management
-
-#### List Session Histories
-
+#### Generate Speech
+```http
+GET /api/tts?text={text}&voice={voice_id}
 ```
-GET /sessions
+
+**Parameters:**
+- `text` (required): Text to convert to speech
+- `voice` (optional): Voice ID (default: af_bella)
+
+**Response:** Binary audio data (audio/mpeg)
+
+### Health Endpoints
+
+#### System Health Check
+```http
+GET /health/api
+```
+
+**Response:**
+```json
+{
+  "system": {
+    "uptime": "string",
+    "memory": {
+      "total": 16384,
+      "free": 8192,
+      "used": 8192,
+      "percentage": 50
+    },
+    "cpu": {
+      "percentage": 25
+    }
+  },
+  "database": {
+    "status": "connected",
+    "responseTime": 10
+  },
+  "workers": {
+    "lmstudio": {
+      "status": "healthy",
+      "sessions": 5
+    }
+  }
+}
+```
+
+### Session Endpoints
+
+#### Get User Sessions
+```http
+GET /api/sessions/{username}
 ```
 
 **Response:**
@@ -170,132 +282,416 @@ GET /sessions
 {
   "sessions": [
     {
-      "id": "session_id",
-      "createdAt": "2025-01-01T00:00:00Z",
-      "messageCount": 10
+      "sessionId": "string",
+      "startTime": "2025-01-01T00:00:00.000Z",
+      "endTime": "2025-01-01T01:00:00.000Z",
+      "messageCount": 50,
+      "triggerCount": 5
     }
   ]
 }
 ```
 
-#### Get Session Details
+---
 
-```
-GET /sessions/{sessionId}
+## Socket.IO Events
+
+### Connection Events
+
+#### Join Events
+```javascript
+// Join main chat
+socket.emit('join-chat', { username: 'username' });
+
+// Join profile room
+socket.emit('join-profile', 'username');
+
+// Join psychedelic trigger mania
+socket.emit('join-psychodelic-trigger-mania', { username: 'username' });
 ```
 
-**Response:**
-```json
+### Chat Events
+
+#### Send Message
+```javascript
+socket.emit('chat message', {
+  data: 'message content'
+});
+```
+
+#### Receive Message
+```javascript
+socket.on('chat message', (messageData) => {
+  // messageData contains username, data, timestamp
+});
+```
+
+### AI Interaction Events
+
+#### Send AI Message
+```javascript
+socket.emit('message', 'prompt for AI');
+```
+
+#### Receive AI Response
+```javascript
+socket.on('response', (response) => {
+  // AI response text
+});
+```
+
+#### AI Error
+```javascript
+socket.on('error', (error) => {
+  // Error message from AI
+});
+```
+
+### Trigger Events
+
+#### Activate Triggers
+```javascript
+socket.emit('triggers', {
+  triggerNames: ['BAMBI SLEEP', 'GOOD GIRL']
+});
+```
+
+#### Receive Trigger Activation
+```javascript
+socket.on('audio triggers', (data) => {
+  // data.username, data.triggers
+});
+```
+
+#### Detected Triggers
+```javascript
+socket.on('detected-triggers', (data) => {
+  // Automatically detected triggers in messages
+});
+```
+
+### Audio Events
+
+#### Play Audio
+```javascript
+socket.emit('play audio', {
+  audioFile: 'Good-Girl.mp3',
+  targetUsername: 'optional_target' // or null for broadcast
+});
+```
+
+#### Receive Audio Play
+```javascript
+socket.on('play audio', (data) => {
+  // data.audioFile, data.sourceUsername
+});
+```
+
+### Profile Events
+
+#### Get Profile Data
+```javascript
+socket.emit('get profile data', { username: 'username' }, (response) => {
+  // response.success, response.profile or response.error
+});
+```
+
+#### Profile Update
+```javascript
+socket.on('profile-update', (data) => {
+  // data.xp, data.level
+});
+```
+
+#### XP Update
+```javascript
+socket.on('xp:update', (data) => {
+  // data.xp, data.level, data.xpEarned, data.reason
+});
+```
+
+### System Events
+
+#### Status Updates
+```javascript
+socket.on('statusUpdate', (status) => {
+  // System status information
+});
+```
+
+#### Mode Changes
+```javascript
+socket.emit('modeChange', { mode: 'maintenance' });
+socket.on('modeChanged', (data) => {
+  // data.mode
+});
+```
+
+#### Settings Updates
+```javascript
+socket.emit('worker:settings:update', {
+  section: 'audio',
+  username: 'username',
+  settings: { volume: 0.8 }
+});
+
+socket.on('worker:settings:response', (response) => {
+  // response.success, response.message or response.error
+});
+```
+
+### User Interaction Events
+
+#### User Mentions
+```javascript
+socket.on('mention', (data) => {
+  // data.from, data.message, data.timestamp
+});
+```
+
+#### URL Safety
+```javascript
+socket.on('unsafe url', (data) => {
+  // data.messageId, data.url, data.reason
+});
+```
+
+---
+
+## Data Models
+
+### Profile Model
+```javascript
 {
-  "id": "session_id",
-  "createdAt": "2025-01-01T00:00:00Z",
-  "messages": [
-    {
-      "role": "user",
-      "content": "User message",
-      "timestamp": "2025-01-01T00:00:00Z"
-    },
-    {
-      "role": "assistant",
-      "content": "Assistant response",
-      "timestamp": "2025-01-01T00:00:01Z"
-    }
-  ]
+  username: String,           // Unique username
+  xp: Number,                // Experience points
+  preferences: Object,        // User preferences
+  lastActive: Date,          // Last activity timestamp
+  createdAt: Date,           // Account creation date
+  bio: String,               // Profile biography
+  socialLinks: {             // Social media links
+    twitter: String,
+    instagram: String,
+    discord: String,
+    reddit: String,
+    custom: String
+  },
+  likes: Number,             // Profile likes count
+  loves: Number,             // Profile loves count
+  profileStyle: String,      // 'minimal', 'standard', 'premium'
+  usageStats: {              // Usage statistics
+    sessionsCount: Number,
+    totalTimeSpent: Number,
+    triggersActivated: Number,
+    messagesPosted: Number,
+    joinDate: Date
+  }
 }
 ```
 
-## Websocket API
-
-### Real-time Chat
-
-Connect to the WebSocket endpoint for real-time messaging:
-
-```
-wss://api.bambisleep.chat/ws/chat
-```
-
-**Connection Authentication:**
-```json
+### Chat Message Model
+```javascript
 {
-  "type": "auth",
-  "token": "YOUR_SESSION_TOKEN"
+  username: String,          // Message author
+  data: String,             // Message content
+  timestamp: Date,          // Message timestamp
+  messageType: String,      // 'text', 'audio', 'trigger', 'command', 'url', 'system'
+  urls: [{                  // Detected URLs
+    url: String,
+    isClean: Boolean,
+    checkedAt: Date
+  }],
+  mentions: [{              // User mentions
+    username: String,
+    index: Number
+  }],
+  audioTriggered: String,   // Triggered audio file
+  isAigfResponse: Boolean,  // AI response flag
+  replyTo: ObjectId         // Reply reference
 }
 ```
 
-**Send Message:**
-```json
+### Trigger Model
+```javascript
 {
-  "type": "message",
-  "content": "Hello everyone!"
+  name: String,             // Trigger phrase
+  audioFile: String,        // Associated audio file
+  description: String,      // Trigger description
+  details: String,          // Training details
+  filename: String,         // Audio filename
+  category: String          // Trigger category
 }
 ```
 
-**Receive Message:**
-```json
+### Audio Interaction Model
+```javascript
 {
-  "type": "message",
-  "username": "other_user",
-  "content": "Hi there!",
-  "timestamp": "2025-01-01T00:00:00Z"
+  sourceUsername: String,   // User who triggered audio
+  targetUsername: String,   // Target user (optional)
+  audioFile: String,        // Audio file name
+  triggerType: String,      // 'direct', 'chat', 'trigger'
+  messageId: ObjectId,      // Associated message
+  timestamp: Date           // Interaction timestamp
 }
 ```
+
+### AIGF Interaction Model
+```javascript
+{
+  username: String,         // User who interacted
+  interactionType: String,  // Type of interaction
+  inputData: String,        // User input
+  outputData: String,       // AI response
+  duration: Number,         // Response time
+  socketId: String,         // Socket identifier
+  timestamp: Date           // Interaction timestamp
+}
+```
+
+---
 
 ## Error Handling
 
-All API endpoints return standard HTTP status codes:
-
-- `200 OK`: Request succeeded
-- `400 Bad Request`: Invalid parameters
-- `401 Unauthorized`: Authentication failed
-- `403 Forbidden`: Insufficient permissions
-- `404 Not Found`: Resource not found
-- `500 Internal Server Error`: Server error
-
-Error responses follow this format:
-
+### Standard Error Response
 ```json
 {
-  "error": true,
+  "error": "Error message",
   "code": "ERROR_CODE",
-  "message": "Human-readable error message",
-  "details": {} // Optional additional details
+  "details": "Additional details (development mode only)"
 }
 ```
+
+### Common Error Codes
+- `INVALID_INPUT`: Malformed request data
+- `NOT_FOUND`: Resource not found
+- `UNAUTHORIZED`: Authentication required
+- `RATE_LIMITED`: Too many requests
+- `SERVER_ERROR`: Internal server error
+- `SERVICE_UNAVAILABLE`: Service temporarily unavailable
+
+### HTTP Status Codes
+- `200`: Success
+- `400`: Bad Request
+- `401`: Unauthorized
+- `404`: Not Found
+- `429`: Too Many Requests
+- `500`: Internal Server Error
+- `503`: Service Unavailable
+
+---
 
 ## Rate Limiting
 
-API requests are limited to:
-- 60 requests per minute for authenticated users
-- 10 requests per minute for unauthenticated requests
+### API Limits
+- **Chat Messages**: 60 per minute per user
+- **AI Interactions**: 10 per minute per user
+- **Profile Updates**: 5 per minute per user
+- **Audio Requests**: 30 per minute per user
 
-When rate limited, you'll receive a `429 Too Many Requests` response with a `Retry-After` header indicating the number of seconds to wait.
+### WebSocket Limits
+- **Connection**: 1 per user
+- **Message Rate**: 1 per second average
+- **Trigger Rate**: 5 per minute per user
 
-## Webhook Integration
+---
 
-Configure webhooks to receive real-time notifications:
+## Examples
 
+### JavaScript Client Example
+```javascript
+// Initialize connection
+const socket = io('https://bambisleep.chat');
+
+// Join chat
+socket.emit('join-chat', { username: 'myUsername' });
+
+// Send message
+socket.emit('chat message', { data: 'Hello everyone!' });
+
+// Listen for responses
+socket.on('chat message', (message) => {
+  console.log(`${message.username}: ${message.data}`);
+});
+
+// Interact with AI
+socket.emit('message', 'Tell me about BambiSleep');
+socket.on('response', (response) => {
+  console.log('AI Response:', response);
+});
+
+// Activate triggers
+socket.emit('triggers', { triggerNames: ['BAMBI SLEEP'] });
 ```
-POST /webhooks
+
+### Profile Management Example
+```javascript
+// Get profile data
+fetch('/api/profile/myUsername/data')
+  .then(response => response.json())
+  .then(data => console.log(data.profile));
+
+// Update profile
+fetch('/profile/myUsername/update', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    bio: 'Updated bio text',
+    socialLinks: { twitter: 'myhandle' }
+  })
+});
 ```
 
-**Request Body:**
-```json
-{
-  "url": "https://your-server.com/webhook",
-  "events": ["message.new", "profile.update", "trigger.shared"],
-  "secret": "your_webhook_secret"
-}
+### Audio/TTS Example
+```javascript
+// Get available voices
+fetch('/api/tts/voices')
+  .then(response => response.json())
+  .then(voices => console.log(voices));
+
+// Generate speech
+const audioUrl = '/api/tts?text=Hello%20world&voice=af_bella';
+const audio = new Audio(audioUrl);
+audio.play();
 ```
 
-## SDK Libraries
+---
 
-Official client libraries:
-- [JavaScript](https://github.com/bambisleep/js-sdk)
-- [Python](https://github.com/bambisleep/python-sdk)
-- [PHP](https://github.com/bambisleep/php-sdk)
+## Development Notes
 
-## Support
+### Local Development
+```bash
+# Start development server
+npm run dev
 
-For API support, contact:
-- Email: api@bambisleep.chat
-- Discord: [#api-support](https://discord.gg/E7U5BxVttv)
+# Enable garbage collection
+npm run dev:gc
+
+# Debug mode
+npm run debug
+```
+
+### Environment Variables
+```bash
+SERVER_PORT=6969
+MONGODB_URI=mongodb://localhost:27017/bambisleep
+KOKORO_HOST=localhost
+KOKORO_PORT=8880
+LMS_HOST=localhost
+LMS_PORT=7777
+```
+
+### Testing API Endpoints
+```bash
+# Health check
+curl https://bambisleep.chat/health/api
+
+# Get triggers
+curl https://bambisleep.chat/api/triggers
+
+# Get profile data
+curl https://bambisleep.chat/api/profile/username/data
+```
+
+---
+
+*This API documentation covers all available endpoints and real-time events. For usage examples, see the User Guide. For system architecture, see the Details Documentation.*
