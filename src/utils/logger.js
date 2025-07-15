@@ -99,81 +99,11 @@ class Logger {
   getModulePrefix() {
     return this.moduleName ? `[${this.moduleName}]` : '';
   }
-
   /**
-   * Format usernames in various contexts - improved to handle more cases
+   * Simplified message formatting
    */
   formatMessage(message) {
-    if (typeof message !== 'string') {
-      return message;
-    }
-
-    // Format numbers (integers, decimals, etc.)
-    message = message.replace(/\b\d+(\.\d+)?\b/g, (match) => {
-      return this.specialColors.number(match);
-    });
-
-    // Format socket IDs (typical format: alphanumeric strings)
-    message = message.replace(/\b(socket\.id|socketId|socket id|socket:|socket=)([a-zA-Z0-9_-]+)\b/gi, (match, prefix, id) => {
-      return `${prefix}${this.specialColors.socket(id)}`;
-    });
-    
-    // Highlight standalone socket IDs that match typical socket.io format - both shorter and longer IDs
-    message = message.replace(/\b([a-zA-Z0-9_-]{10,30})\b/g, (match) => {
-      // Only match if it looks like a Socket.io ID (includes common characters)
-      if (match.includes('-') || match.includes('_') || /[a-zA-Z][0-9]/.test(match)) {
-        return this.specialColors.socket(match);
-      }
-      return match;
-    });
-
-    // Format URLs and links
-    message = message.replace(/(https?:\/\/[^\s]+)/g, (match) => {
-      return this.specialColors.url(match);
-    });
-    
-    // Format port numbers and host:port combinations
-    message = message.replace(/(\w+:\/\/[\w.-]+):(\d+)/g, (match, host, port) => {
-      return `${host}:${this.specialColors.number(port)}`;
-    });
-    
-    // Format hostname:port combinations (like localhost:3000)
-    message = message.replace(/(\b\w+):(\d+)\b/g, (match, host, port) => {
-      return `${host}:${this.specialColors.number(port)}`;
-    });
-    
-    // Format bambi names - handle more diverse name formats including special characters
-    message = message.replace(/\b(bambi\s*name:|bambiName:|bambi:)\s*([^\s,.:;]+(?:[\s-][^\s,.:;]+)*)\b/gi, (match, prefix, name) => {
-      return `${prefix} ${this.specialColors.bambi(name)}`;
-    });
-    
-    // Format usernames in various contexts - more comprehensive patterns
-    message = message.replace(/\b(user|username|name|from|client|for)[:=]\s*([^\s,.:;]+(?:[\s-][^\s,.:;]+)*)\b/gi, (match, prefix, name) => {
-      if (name === 'unregistered' || name === 'unknown') return `${prefix}: ${name}`;
-      return `${prefix}: ${this.specialColors.bambi(name)}`;
-    });
-    
-    // Format usernames in parentheses - more comprehensive
-    message = message.replace(/\(([^\(\)]+)\)/g, (match, content) => {
-      // Don't apply to obvious non-username content
-      if (content === 'unregistered' || 
-          content === 'unknown' || 
-          content.includes('total') || 
-          content.includes('remaining') ||
-          /^\d+$/.test(content)) {
-        return match;
-      }
-      
-      // Apply coloring to what appears to be a username
-      return `(${this.specialColors.bambi(content)})`;
-    });
-    
-    // Format worker references - more comprehensive
-    message = message.replace(/\b(worker[s]?:|worker\s*id:|workers:)\s*([a-zA-Z0-9_\-,\s]+)\b/gi, (match, prefix, name) => {
-      return `${prefix} ${this.specialColors.worker(name)}`;
-    });
-
-    return message;
+    return typeof message === 'string' ? message : String(message);
   }
 
   /**

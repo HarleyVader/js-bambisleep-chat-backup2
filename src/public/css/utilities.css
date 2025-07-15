@@ -1,14 +1,29 @@
-/* Utilities
- * Common utility classes for spacing, sizing, display, etc.
+/* Utilities - Simplified
+ * BambiSleep-specific utilities only. Bootstrap provides the rest.
  */
 
-/* Display utilities */
-.d-none { display: none !important; }
-.d-inline { display: inline !important; }
-.d-inline-block { display: inline-block !important; }
-.d-block { display: block !important; }
-.d-flex { display: flex !important; }
-.d-grid { display: grid !important; }
+/* Custom BambiSleep utilities */
+.neon-glow {
+    text-shadow: 0 0 5px var(--nav-alt), 0 0 10px var(--nav-alt);
+}
+
+.glass-effect {
+    background-color: rgba(var(--primary-color-rgb), 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: var(--border-width) solid rgba(var(--text-color), 0.1);
+}
+
+.gradient-text {
+    background: linear-gradient(90deg, var(--tertiary-color) 0%, var(--nav-alt) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Essential utilities for BambiSleep theming */
+.text-tertiary { color: var(--tertiary-color) !important; }
+.border-tertiary { border-color: var(--tertiary-color) !important; }
 
 /* Flex utilities */
 .flex-row { flex-direction: row !important; }

@@ -1,97 +1,108 @@
-import { promises as fsPromises } from 'fs';
-import fs from 'fs';
-import dotenv from 'dotenv';
-import express from 'express';
-import http from 'http';
-import os from 'os';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import cookieParser from 'cookie-parser';
-import axios from 'axios';
+// Core dependencies
 
-// Import modules
-import { Server as SocketIOServer } from 'socket.io';
-import cors from 'cors';
-import fileUpload from 'express-fileupload';
-import mongoose from 'mongoose';
-import { Worker } from 'worker_threads';
-
-// Import custom utils
-import urlValidator from './utils/urlValidator.js';
-import audioTriggers from './utils/audioTriggers.js';
-import userMentions from './utils/userMentions.js';
-import aigfLogger from './utils/aigfLogger.js';
-import sessionService from './services/sessionService.js';
-
-// Import workers
-import spiralsWorker from './workers/spirals.js';
-
-// Import configuration
-import config from './config/config.js';
-// Database module is imported dynamically to prevent circular dependencies
-
-// Import routes
-import indexRoute from './routes/index.js';
-import profileRoute from './routes/profile.js';
-import psychodelicTriggerManiaRouter from './routes/psychodelic-trigger-mania.js';
-import helpRoute from './routes/help.js';
 import chatRouter, { basePath as chatBasePath } from './routes/chat.js';
-import healthRoute from './routes/health.js';
 
 import Logger from './utils/logger.js';
+import { Server as SocketIOServer } from 'socket.io';
+import { Worker } from 'worker_threads';
+import aigfLogger from './utils/aigfLogger.js';
+import audioTriggers from './utils/audioTriggers.js';
+import axios from 'axios';
+import config from './config/config.js';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import dotenv from 'dotenv';
 import errorHandler from './utils/errorHandler.js';
+import express from 'express';
+import { fileURLToPath } from 'url';
+import fileUpload from 'express-fileupload';
+import fs from 'fs';
+import { promises as fsPromises } from 'fs';
+import healthRoute from './routes/health.js';
+import helpRoute from './routes/help.js';
+import http from 'http';
+import indexRoute from './routes/index.js';
+import mongoose from 'mongoose';
+import os from 'os';
+import path from 'path';
+import profileRoute from './routes/profile.js';
+import psychodelicTriggerManiaRouter from './routes/psychodelic-trigger-mania.js';
+import sessionService from './services/sessionService.js';
+import spiralsWorker from './workers/spirals.js';
+import urlCacheHandler from './utils/urlCacheHandler.js';
+import urlValidator from './utils/urlValidator.js';
+import userMentions from './utils/userMentions.js';
 
-// Fix the registerModels function to properly export the models
+// Middleware
+
+
+
+
+// Routes
+
+
+
+
+
+
+
+// Utils and services
+
+
+
+
+
+
+
+
+
+
+// Initialize environment and logger
+dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const logger = new Logger('Server');
+
+// Model registration helper
 async function registerModels() {
   try {
-    // Import Profile model - fix schema extraction
-    const ProfileModule = await import('./models/Profile.js');
-    if (!mongoose.models.Profile) {
-      // ProfileModule.default already has the model created in the file
-      // Just ensure it's registered in mongoose models
-      mongoose.models.Profile = ProfileModule.default;
-      logger.info('Profile model registered');
+    // Import and register models
+    const models = [
+      { name: 'Profile', path: './models/Profile.js' },
+      { name: 'SessionHistory', path: './models/SessionHistory.js' },
+      { name: 'AudioInteraction', path: './models/AudioInteraction.js' },
+      { name: 'UserInteraction', path: './models/UserInteraction.js' },
+      { name: 'AigfInteraction', path: './models/AigfInteraction.js' }
+    ];
+
+    for (const { name, path } of models) {
+      if (!mongoose.models[name]) {
+        const module = await import(path);
+        mongoose.models[name] = module.default;
+        logger.info(`${name} model registered`);
+      }
     }
 
-    // Import SessionHistory model - same fix
-    const SessionHistoryModule = await import('./models/SessionHistory.js');
-    if (!mongoose.models.SessionHistory) {
-      // SessionHistoryModule.default already has the model created in the file
-      mongoose.models.SessionHistory = SessionHistoryModule.default;
-      logger.info('SessionHistory model registered');
-    }    // Initialize session service chat model
+    // Initialize session service
     await sessionService.initSessionService();
-    logger.info('SessionService chat model registered');
-    
-    const AudioInteractionModule = await import('./models/AudioInteraction.js');
-    if (!mongoose.models.AudioInteraction) {
-      mongoose.models.AudioInteraction = AudioInteractionModule.default;
-      logger.info('AudioInteraction model registered');
-    }
-    
-    const UserInteractionModule = await import('./models/UserInteraction.js');
-    if (!mongoose.models.UserInteraction) {
-      mongoose.models.UserInteraction = UserInteractionModule.default;
-      logger.info('UserInteraction model registered');
-    }
-    
-    const AigfInteractionModule = await import('./models/AigfInteraction.js');
-    if (!mongoose.models.AigfInteraction) {
-      mongoose.models.AigfInteraction = AigfInteractionModule.default;
-      logger.info('AigfInteraction model registered');
-    }
-      // Models have been registered
     logger.success('All models registered successfully');
   } catch (error) {
     logger.error(`Model registration error: ${error.message}`);
   }
 }
 
-// Initialize these at the top of the file
+// Simplified memory monitoring
 const memoryMonitor = {
+  interval: null,
+  
   start(interval = 60000) {
-    this.interval = setInterval(() => this.checkMemory(), interval);
-    logger.info(`Memory monitor started with interval ${interval}ms`);
+    this.interval = setInterval(() => {
+      const used = process.memoryUsage();
+      if (used.heapUsed > used.heapTotal * 0.85) {
+        logger.warning('High memory usage detected');
+        global.gc && global.gc();
+      }
+    }, interval);
   },
 
   stop() {
@@ -101,32 +112,12 @@ const memoryMonitor = {
     }
   },
 
-  checkMemory() {
-    const used = process.memoryUsage();
-    logger.debug(`Memory usage: RSS ${Math.round(used.rss / 1024 / 1024)}MB, Heap ${Math.round(used.heapUsed / 1024 / 1024)}/${Math.round(used.heapTotal / 1024 / 1024)}MB`);
-
-    // Force garbage collection if memory pressure is high
-    if (used.heapUsed > used.heapTotal * 0.85) {
-      logger.warning('Memory pressure detected, suggesting garbage collection');
-      global.gc && global.gc();
-    }
-  },
-
   getClientScript() {
-    return `
-      // Memory monitoring client script
-      console.log('Memory monitoring active');
-      setInterval(() => {
-        const memory = performance.memory;
-        if (memory) {
-          console.log('Memory: ' + Math.round(memory.usedJSHeapSize / 1024 / 1024) + 'MB / ' + 
-                       Math.round(memory.jsHeapSizeLimit / 1024 / 1024) + 'MB');
-        }
-      }, 60000);
-    `;
+    return 'console.log("Memory monitoring enabled");';
   }
 };
 
+// Scheduled tasks management
 const scheduledTasks = {
   tasks: [],
   initialize() {
@@ -152,7 +143,6 @@ const scheduledTasks = {
   },
 
   stop() {
-    // Adding alias for stopAll to handle shutdown correctly
     this.stopAll();
   }
 };
@@ -327,15 +317,6 @@ function disableMaintenanceMode() {
 // Expose these functions globally
 global.enableMaintenanceMode = enableMaintenanceMode;
 global.disableMaintenanceMode = disableMaintenanceMode;
-
-// Initialize environment and paths
-dotenv.config();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Initialize logger
-const logger = new Logger('Server');
-logger.info('Starting BambiSleep.chat server...');
 
 // Git pull detection and auto-restart functionality
 function setupGitPullDetection() {
@@ -1026,197 +1007,159 @@ const modelCache = {
 function setupSocketHandlers(io, socketStore, filteredWords) {
   try {
     // Initialize the LMStudio worker thread
-    const lmstudio = new Worker(path.join(__dirname, 'workers/lmstudio.js'));    // Restart the worker automatically to maintain AI service availability
-    lmstudio.on('exit', (code) => {
-      logger.error(`Worker thread exited with code ${code}`);
+    const lmstudio = new Worker(path.join(__dirname, 'workers/lmstudio.js'));
 
-      // Notify all connected clients
-      if (io) {
-        io.emit('system', {
-          message: 'AI service restarting, please wait...'
-        });
-      }
+    // Set up worker handlers
+    setupWorkerHandlers(lmstudio, io);
 
-      // Start a new worker after a short delay
-      setTimeout(() => {
-        setupSocketHandlers(io, socketStore, filteredWords);
-      }, 1000);
-    });    // Set up worker message handlers
-    lmstudio.on("message", async (msg) => {
-      try {
-        if (msg.type === "log") {
-          logger.info(msg.data, msg.socketId);
-        } else if (msg.type === 'response') {
-          // Convert object responses to strings
-          const responseData = typeof msg.data === 'object' ? JSON.stringify(msg.data) : msg.data;
+    // Set up XP system
+    const xpSystem = createXPSystem();
 
-          // Send response to client
-          io.to(msg.socketId).emit("response", responseData);
-            // Log AIGF interaction with duration from message or calculate default
-          const duration = msg.duration || 0;
-          await logAigfInteraction(
-            msg.socketId,
-            msg.username,
-            'chat',
-            msg.prompt || 'Unknown input',
-            responseData,
-            duration
-          );
-        } else if (msg.type === 'error') {
-          // Provide user-friendly error messages while logging technical details
-          logger.error(`Worker error for ${msg.socketId}: ${msg.error}`);
-          
-          // Send friendly error message to client
-          const errorMessage = process.env.NODE_ENV === 'production' 
-            ? "Sorry, I couldn't process your request. Please try again."
-            : `Error: ${msg.error}`;
-            
-          io.to(msg.socketId).emit("error", { message: errorMessage });
-            // Log AIGF error
-          await logAigfError(
-            msg.socketId,
-            msg.username,
-            'chat',
-            msg.prompt || 'Unknown input',
-            new Error(msg.error)
-          );
-        } else if (msg.type === 'worker:settings:response') {
-          // Forward settings response to client
-          if (msg.socketId) {
-            io.to(msg.socketId).emit('worker:settings:response', msg.data);
-          }        } else if (msg.type === 'xp:update') {
-          // Forward XP updates to client
-          if (msg.socketId) {
-            io.to(msg.socketId).emit('xp:update', msg.data);
-          }
-        } else if (msg.type === 'detected-triggers') {
-          // Forward detected triggers to client
-          if (msg.socketId && msg.triggers) {
-            io.to(msg.socketId).emit('detected-triggers', msg.triggers);
-          }
-        } else if (msg.type === 'connection_error') {
-          // Forward connection error to client
-          if (msg.socketId) {
-            io.to(msg.socketId).emit('connection_error', {
-              error: msg.error,
-              details: msg.details
-            });
-          }
-        } else if (msg.type === 'model_error') {
-          // Forward model error to client
-          if (msg.socketId) {
-            io.to(msg.socketId).emit('model_error', {
-              error: msg.error,
-              details: msg.details
-            });
-          }
-        } else if (msg.type === 'server_error') {
-          // Forward server error to client
-          if (msg.socketId) {
-            io.to(msg.socketId).emit('server_error', {
-              error: msg.error,
-              details: msg.details
-            });
-          }
-        } else if (msg.type === 'unknown_error') {
-          // Forward unknown error to client
-          if (msg.socketId) {
-            io.to(msg.socketId).emit('unknown_error', {
-              error: msg.error,
-              details: msg.details
-            });
-          }
-        }
-      } catch (error) {
-        logger.error('Error in lmstudio message handler:', error);
-      }
-    });    // Log worker information for debugging and monitoring purposes
-    lmstudio.on('info', (info) => {
-      logger.info('Worker info:', info);
-    });    // Recover from worker errors to maintain service availability
-    lmstudio.on('error', (err) => {
-      logger.error('Worker error:', err);
-      
-      // Notify all clients about system issues
-      if (io) {
-        io.emit('system', {
-          message: 'AI service encountered an error, trying to recover...',
-          type: 'error'
-        });
-      }
-      
-      // Attempt to restart worker if it's a critical error
-      if (err.fatal) {
-        logger.error('Fatal worker error, attempting restart');
-        
-        // Start a new worker after a short delay
-        setTimeout(() => {
-          setupSocketHandlers(io, socketStore, filteredWords);
-        }, 5000);
-      }
-    });
+    // Set up socket connection handlers
+    setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWords);
 
-    // Simple filter function to avoid bad words
-    function filter(content) {
-      if (!content || !filteredWords || !filteredWords.length) return content;
+  } catch (error) {
+    logger.error('Error setting up socket handlers:', error);
+  }
+}
 
-      if (typeof content !== 'string') {
-        content = String(content);
-      }
-
-      return content
-        .split(' ')
-        .map(word => filteredWords.includes(word.toLowerCase()) ? '[filtered]' : word)
-        .join(' ')
-        .trim();
+/**
+ * Set up worker message handlers
+ */
+function setupWorkerHandlers(lmstudio, io) {
+  // Restart the worker automatically to maintain AI service availability
+  lmstudio.on('exit', (code) => {
+    logger.error(`Worker thread exited with code ${code}`);
+    if (io) {
+      io.emit('system', { message: 'AI service restarting, please wait...' });
     }
+    setTimeout(() => {
+      setupSocketHandlers(io, socketStore, filteredWords);
+    }, 1000);
+  });
 
-    // XP system functions
-    const xpSystem = {
-      requirements: [1000, 2500, 4500, 7000, 12000, 36000, 112000, 332000],
+  // Set up worker message handlers
+  lmstudio.on("message", async (msg) => {
+    try {
+      const handlers = {
+        'log': () => logger.info(msg.data, msg.socketId),
+        'response': () => handleWorkerResponse(msg, io),
+        'error': () => handleWorkerError(msg, io),
+        'worker:settings:response': () => io.to(msg.socketId)?.emit('worker:settings:response', msg.data),
+        'xp:update': () => io.to(msg.socketId)?.emit('xp:update', msg.data),
+        'detected-triggers': () => io.to(msg.socketId)?.emit('detected-triggers', msg.triggers),
+        'connection_error': () => io.to(msg.socketId)?.emit('connection_error', { error: msg.error, details: msg.details }),
+        'model_error': () => io.to(msg.socketId)?.emit('model_error', { error: msg.error, details: msg.details }),
+        'server_error': () => io.to(msg.socketId)?.emit('server_error', { error: msg.error, details: msg.details }),
+        'unknown_error': () => io.to(msg.socketId)?.emit('unknown_error', { error: msg.error, details: msg.details })
+      };
 
-      // Calculate level based on XP
-      calculateLevel(xp) {
-        let level = 0;
-        while (level < this.requirements.length && xp >= this.requirements[level]) {
-          level++;
-        }
-        return level;
-      },
+      const handler = handlers[msg.type];
+      if (handler) await handler();
+    } catch (error) {
+      logger.error('Error in lmstudio message handler:', error);
+    }
+  });
 
-      // Award XP to a user
-      awardXP(socket, amount, reason = 'interaction') {
-        if (!socket.bambiData) return;
+  lmstudio.on('info', (info) => logger.info('Worker info:', info));
+  lmstudio.on('error', (err) => handleWorkerError(err, io));
+}
 
-        const oldXP = socket.bambiData.xp || 0;
-        const oldLevel = this.calculateLevel(oldXP);
+/**
+ * Handle worker response messages
+ */
+async function handleWorkerResponse(msg, io) {
+  const responseData = typeof msg.data === 'object' ? JSON.stringify(msg.data) : msg.data;
+  io.to(msg.socketId).emit("response", responseData);
+  
+  const duration = msg.duration || 0;
+  await logAigfInteraction(
+    msg.socketId,
+    msg.username,
+    'chat',
+    msg.prompt || 'Unknown input',
+    responseData,
+    duration
+  );
+}
 
-        // Add XP
-        socket.bambiData.xp = oldXP + amount;
-        const newLevel = this.calculateLevel(socket.bambiData.xp);
+/**
+ * Handle worker error messages
+ */
+async function handleWorkerError(msg, io) {
+  logger.error(`Worker error for ${msg.socketId}: ${msg.error}`);
+  
+  const errorMessage = process.env.NODE_ENV === 'production' 
+    ? "Sorry, I couldn't process your request. Please try again."
+    : `Error: ${msg.error}`;
+    
+  io.to(msg.socketId).emit("error", { message: errorMessage });
+  
+  await logAigfError(
+    msg.socketId,
+    msg.username,
+    'chat',
+    msg.prompt || 'Unknown input',
+    new Error(msg.error)
+  );
+}
 
-        // Notify client of XP gain
-        socket.emit('xp:update', {
-          xp: socket.bambiData.xp,
-          level: newLevel,
-          xpEarned: amount,
-          reason: reason
-        });
+/**
+ * Create XP system with all functions
+ */
+function createXPSystem() {
+  const requirements = [1000, 2500, 4500, 7000, 12000, 36000, 112000, 332000];
+  
+  return {
+    requirements,
+    calculateLevel: (xp) => {
+      let level = 0;
+      while (level < requirements.length && xp >= requirements[level]) level++;
+      return level;
+    },
+    awardXP: function(socket, amount, reason = 'interaction') {
+      if (!socket.bambiData) return;
 
-        // Check for level up
-        if (newLevel > oldLevel) {
-          socket.emit('level-up', { level: newLevel });
-          logger.info(`User ${socket.bambiUsername} leveled up to ${newLevel}`);
-        }
+      const oldXP = socket.bambiData.xp || 0;
+      const oldLevel = this.calculateLevel(oldXP);
+      socket.bambiData.xp = oldXP + amount;
+      const newLevel = this.calculateLevel(socket.bambiData.xp);
 
-        // Save to database if available
-        if (socket.bambiUsername && socket.bambiUsername !== 'anonBambi') {
-          updateProfileXP(socket.bambiUsername, socket.bambiData.xp);
-        }
+      socket.emit('xp:update', {
+        xp: socket.bambiData.xp,
+        level: newLevel,
+        xpEarned: amount,
+        reason: reason
+      });
+
+      if (newLevel > oldLevel) {
+        socket.emit('level-up', { level: newLevel });
+        logger.info(`User ${socket.bambiUsername} leveled up to ${newLevel}`);
       }
-    };
 
-    io.on('connection', (socket) => {
+      if (socket.bambiUsername && socket.bambiUsername !== 'anonBambi') {
+        updateProfileXP(socket.bambiUsername, socket.bambiData.xp);
+      }
+    }
+  };
+}
+
+/**
+ * Set up connection handlers
+ */
+function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWords) {
+  // Simple filter function to avoid bad words
+  function filter(content) {
+    if (!content || !filteredWords || !filteredWords.length) return content;
+    if (typeof content !== 'string') content = String(content);
+    return content
+      .split(' ')
+      .map(word => filteredWords.includes(word.toLowerCase()) ? '[filtered]' : word)
+      .join(' ')
+      .trim();
+  }
+
+  io.on('connection', (socket) => {
       try {
         // Connection setup code...
         const cookies = socket.handshake.headers.cookie || '';
@@ -1843,10 +1786,7 @@ ${diskUsage.stdout}`;
         logger.error('Error handling socket connection:', error);
       }
     });
-  } catch (error) {
-    logger.error('Error in setupSocketHandlers:', error);
   }
-}
 
 /**
  * Set up error handlers for the application

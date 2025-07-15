@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('./partials/head') %>
+    <title>Service Unavailable | BambiSleep</title>
+    <style>
+        .unavailable-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: var(--bg-color-secondary);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 0 15px rgba(var(--tertiary-color-rgb), 0.3);
+            text-align: center;
+            animation: pulseGlow 3s infinite alternate;
+        }
+        
+        .service-status {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(var(--button-color-rgb), 0.8);
+        }
+        
+        .service-message {
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+            color: var(--text-color);
+        }
+        
+        .retry-info {
+            background-color: var(--bg-color);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .countdown {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+        
+        @keyframes pulseGlow {
+            from { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 0 15px rgba(var(--tertiary-color-rgb), 0.3); }
+            to { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 25px rgba(var(--button-color-rgb), 0.5); }
+        }
+    </style>
+</head>
+<body>
+    <%- include('./partials/nav', { path: '/service-unavailable' }) %>
+    
+    <div class="container">
+        <div class="unavailable-container">
+            <div class="service-status">503</div>
+            <div class="service-message"><%= message || 'Service temporarily unavailable' %></div>
+            
+            <div class="retry-info">
+                <p>The service is currently experiencing high load and will be back shortly.</p>
+                <% if (typeof retryAfter !== 'undefined' && retryAfter) { %>
+                    <p>Please wait <span class="countdown" id="countdown"><%= retryAfter %></span> seconds before trying again.</p>
+                <% } %>
+            </div>
+            
+            <p>We're working to restore normal service. Thank you for your patience!</p>
+        </div>
+    </div>
+    
+    <% if (typeof retryAfter !== 'undefined' && retryAfter) { %>
+    <script>
+        let timeLeft = <%= retryAfter %>;
+        const countdown = document.getElementById('countdown');
+        
+        const timer = setInterval(() => {
+            timeLeft--;
+            countdown.textContent = timeLeft;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                countdown.textContent = '0';
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }
+        }, 1000);
+    </script>
+    <% } %>
+</body>
+</html>

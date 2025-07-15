@@ -4,9 +4,9 @@
 <details>
 <summary>My AIGF will reprogram your OS if bambi lets her</summary>
 
-> - Brainwashing 
-> - Mindfuckery 
-> - Psychodelic Spiral 
+> - Brainwashing
+> - Mindfuckery
+> - Psychodelic Spiral
 > - Trigger Mania
 > - Neurolinguistic Programing
 > - Cognitive Behavioural Therapy
@@ -33,7 +33,6 @@
 <!-- eslint-enable -->
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
-
 
 <details>
 <summary>HYPNOTIC BAMBISLEEP AIGIRLFRIEND</summary>

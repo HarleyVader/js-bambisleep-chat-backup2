@@ -107,7 +107,9 @@ const footerConfig = {
       url: "https://www.patreon.com/c/TomTame/posts",
       external: true
     }
-  ]
+  ],
+  // Simplified - links removed to reduce complexity
+  links: []
 };
 
 export default footerConfig;

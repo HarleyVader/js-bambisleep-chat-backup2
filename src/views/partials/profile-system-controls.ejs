@@ -19,14 +19,6 @@ const getNextLevelXP = (level, currentXP) => {
 
 const nextLevelXP = getNextLevelXP(userLevel, userXp);
 const systemControls = profile && profile.systemControls ? profile.systemControls : {};
-
-// Debug logging
-console.log('Profile System Controls Debug:', {
-  userLevel,
-  userXp, 
-  nextLevelXP,
-  systemControls
-});
 %>
 
 <div class="system-controls">
