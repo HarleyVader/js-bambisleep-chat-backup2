@@ -75,7 +75,12 @@ router.get('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Error rendering help page:', error);
-    res.status(500).render('error', { error: { status: 500, message: 'Internal Server Error' } });
+    res.status(500).render('error', { 
+      message: 'Internal Server Error',
+      error: { status: 500 },
+      title: 'Error - Internal Server Error',
+      footer: footerConfig
+    });
   }
 });
 
@@ -88,7 +93,10 @@ router.get('/:fileName', async (req, res) => {
     
     if (!content) {
       return res.status(404).render('error', { 
-        error: { status: 404, message: 'Documentation not found' } 
+        message: 'Documentation not found',
+        error: { status: 404 },
+        title: 'Error - Documentation Not Found',
+        footer: footerConfig
       });
     }
     
@@ -103,7 +111,12 @@ router.get('/:fileName', async (req, res) => {
     });
   } catch (error) {
     console.error('Error rendering help document:', error);
-    res.status(500).render('error', { error: { status: 500, message: 'Internal Server Error' } });
+    res.status(500).render('error', { 
+      message: 'Internal Server Error',
+      error: { status: 500 },
+      title: 'Error - Internal Server Error',
+      footer: footerConfig
+    });
   }
 });
 

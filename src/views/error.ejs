@@ -112,7 +112,7 @@
     </style>
 </head>
 <body>
-    <%- include('./partials/nav', { path: req?.originalUrl || '/error' }) %>
+    <%- include('./partials/nav', { path: (typeof req !== 'undefined' ? req.originalUrl : null) || '/error' }) %>
     
     <div class="container">
         <div class="error-container">
