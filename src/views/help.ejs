@@ -1,39 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <%- include('partials/hea                    </div>
-                    
-                    <div class="content-section">
-                        <h2>🎯 How to Use AIGF</h2>
-                        <div class="feature-guide">
-                            <h3>Getting Started</h3>
-                            <ol>
-                                <li><strong>Enter Your Bambi Name:</strong> When first visiting, you'll be prompted to enter your "bambi name" - this creates your unique identity</li>
-                                <li><strong>Access the Chat:</strong> The main interface features a prominent textarea with "Prompt my AIGF" placeholder</li>
-                                <li><strong>Send Messages:</strong> Type your message and click "Send" or press Enter to interact with the AI</li>
-                            </ol>
-                            
-                            <h3>Interactive Features</h3>
-                            <ul>
-                                <li><strong>Audio Responses:</strong> The system automatically plays relevant audio files based on your conversation</li>
-                                <li><strong>Profile Integration:</strong> Your responses are saved and influence future interactions</li>
-                                <li><strong>Real-time Updates:</strong> Instant messaging with socket-based communication</li>
-                                <li><strong>Visual Feedback:</strong> Eye cursor and other visual elements respond to your interactions</li>
-                            </ul>
-                            
-                            <h3>Advanced Controls</h3>
-                            <p>The profile system controls allow you to:</p>
-                            <ul>
-                                <li>Manage trigger settings</li>
-                                <li>View your progression level</li>
-                                <li>Customize your experience</li>
-                                <li>Access advanced features as you level up</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="content-section">
-                        <h2>📋 Documentation</h2>%>
+    <%- include('partials/head') %>
     <title><%= title || 'Help Center' %> - BambiSleep.Chat</title>
     <link rel="stylesheet" href="/css/pages/docs.css">
     <% if (typeof fileName !== 'undefined') { %>
@@ -105,7 +73,7 @@
                     </div>
                     
                     <div class="content-section">
-                        <h2>� Documentation</h2>
+                        <h2>📋 Documentation</h2>
                         <div class="docs-cards">
                             <div class="doc-card">
                                 <h3><a href="/help/USER-GUIDE">📖 User Guide</a></h3>
