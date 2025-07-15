@@ -29,7 +29,6 @@ import profileRoute from './routes/profile.js';
 import psychodelicTriggerManiaRouter from './routes/psychodelic-trigger-mania.js';
 import sessionService from './services/sessionService.js';
 import spiralsWorker from './workers/spirals.js';
-import urlCacheHandler from './utils/urlCacheHandler.js';
 import urlValidator from './utils/urlValidator.js';
 import userMentions from './utils/userMentions.js';
 
@@ -1888,17 +1887,13 @@ async function startServer() {
 
     global.socketStore = socketStore;
     
-    if (process.env.MEMORY_MONITOR_ENABLED === 'true') {
-      const monitorInterval = process.env.MEMORY_MONITOR_INTERVAL
-        ? parseInt(process.env.MEMORY_MONITOR_INTERVAL)
-        : (process.env.NODE_ENV === 'production' ? 60000 : 30000);
+    const monitorInterval = process.env.MEMORY_MONITOR_INTERVAL
+      ? parseInt(process.env.MEMORY_MONITOR_INTERVAL)
+      : (process.env.NODE_ENV === 'production' ? 60000 : 30000);
 
-      memoryMonitor.start(monitorInterval);
-      logger.info(`Enhanced memory monitoring started (interval: ${monitorInterval}ms) to prevent overnight OOM kills`);
-    } else {
-      memoryMonitor.start(process.env.NODE_ENV === 'production' ? 60000 : 30000);
-      logger.info('Standard memory monitoring started to prevent overnight OOM kills');
-    }
+    memoryMonitor.start(monitorInterval);
+    logger.info(`Memory monitoring started (interval: ${monitorInterval}ms)`);
+    
 
     process.on('SIGTERM', () => shutdown('SIGTERM'));
     process.on('SIGINT', () => shutdown('SIGINT'));

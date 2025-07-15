@@ -24,34 +24,6 @@ const patterns = {
   }
 };
 
-// Terminal interface integration
-let terminalInterface = null;
-
-/**
- * Enable terminal interface mode
- */
-export function enableTerminalInterface() {
-  try {
-    // Dynamic import to avoid dependency if not used
-    import('./terminalInterface.js').then(({ default: TerminalInterface }) => {
-      terminalInterface = new TerminalInterface();
-      terminalInterface.init();
-    });
-  } catch (error) {
-    console.error('Failed to initialize terminal interface:', error.message);
-  }
-}
-
-/**
- * Disable terminal interface mode
- */
-export function disableTerminalInterface() {
-  if (terminalInterface) {
-    terminalInterface.destroy();
-    terminalInterface = null;
-  }
-}
-
 /**
  * Unified logging utility for bambisleep-chat with enhanced visual formatting
  * Uses contrasting colors for message text vs prefix and highlights important elements

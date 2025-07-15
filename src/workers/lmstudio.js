@@ -317,16 +317,16 @@ function handleResponse(response, socketId, username, wordCount) {
 }
 
 // Function to count words in a text
-function countWords(text) {
-  if (!text || typeof text !== 'string') return 0;
-  return text.trim().split(/\s+/).length;
-}
-
 // Fix updateUserXP function to properly access Profile model
 async function updateUserXP(username, wordCount, currentSocketId) {
   if (!username || username === 'anonBambi' || wordCount <= 0) {
     return;
   }
+  
+  // Count words inline if needed
+  const actualWordCount = typeof wordCount === 'string' 
+    ? wordCount.trim().split(/\s+/).length 
+    : wordCount;
   try {
     const xpToAdd = Math.ceil(wordCount / 10);
 
@@ -887,7 +887,7 @@ async function handleMessage(userPrompt, socketId, username) {
     }
 
     // Update XP and send response
-    const wordCount = countWords(finalContent);
+    const wordCount = finalContent ? finalContent.trim().split(/\s+/).length : 0;
     updateUserXP(username, wordCount, socketId).catch(err => {
       logger.error(`XP update failed: ${err.message}`);
     });
