@@ -19,6 +19,7 @@ import fileUpload from 'express-fileupload';
 import fs from 'fs';
 import { promises as fsPromises } from 'fs';
 import healthRoute from './routes/health.js';
+import helpRoute from './routes/help.js';
 import http from 'http';
 import indexRoute from './routes/index.js';
 import mongoose from 'mongoose';
@@ -518,15 +519,10 @@ async function setupRoutes(app) {
     { path: '/', handler: indexRoute, dbRequired: false },
     { path: '/profile', handler: profileRoute, dbRequired: true },
     { path: '/psychodelic-trigger-mania', handler: psychodelicTriggerManiaRouter, dbRequired: false },
+    { path: '/help', handler: helpRoute, dbRequired: false },
     { path: '/health', handler: healthRoute, dbRequired: false },
     { path: chatBasePath, handler: chatRouter, dbRequired: true }
   ];
-  
-  // Redirect help to docs
-  app.get('/help*', (req, res) => {
-    const helpPath = req.path.replace('/help', '');
-    res.redirect(301, `/docs${helpPath}`);
-  });
   
   // Import and setup docs router
   const docsRouter = await import('./routes/docs.js');

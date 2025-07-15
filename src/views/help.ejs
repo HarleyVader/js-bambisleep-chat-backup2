@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/head') %>
+    <title><%= title || 'Help Center' %> - BambiSleep.Chat</title>
+    <link rel="stylesheet" href="/css/pages/docs.css">
+    <% if (typeof fileName !== 'undefined') { %>
+        <link rel="stylesheet" href="/css/highlight.css">
+    <% } %>
+</head>
+<body>
+    <%- include('partials/nav', { path: '/help' }) %>
+    
+    <div class="container docs-container">
+        <aside class="docs-sidebar">
+            <% if (typeof fileName !== 'undefined') { %>
+                <div class="docs-sidebar-header">
+                    <a href="/help" class="back-link">← Help Center</a>
+                </div>
+            <% } %>
+            <h3>Help & Documentation</h3>
+            <ul class="docs-list">
+                <% if (typeof files !== 'undefined' && files.length > 0) { %>
+                    <% files.forEach(function(file) { %>
+                        <li>
+                            <a href="/help/<%= file.name.replace('.md', '') %>" class="doc-link <%= (typeof fileName !== 'undefined' && file.name === fileName+'.md') ? 'active' : '' %>">
+                                <%= file.title %>
+                            </a>
+                        </li>
+                    <% }); %>
+                <% } %>
+            </ul>
+        </aside>
+        
+        <section class="docs-content">
+            <% if (typeof fileName !== 'undefined' && typeof content !== 'undefined') { %>
+                <!-- Technical Documentation View -->
+                <div class="docs-header">
+                    <h2><%= title %></h2>
+                    <div class="docs-actions">
+                        <a href="/docs/<%= fileName %>.md" class="action-button" title="View Original File" target="_blank">
+                            <span class="icon">📄</span> View Original
+                        </a>
+                        <a href="/docs/<%= fileName %>/raw" class="action-button" title="View Raw Markdown" target="_blank">
+                            <span class="icon">📝</span> Raw
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="markdown-body">
+                    <%- content %>
+                </div>
+            <% } else { %>
+                <!-- General Help Center View -->
+                <div class="help-header">
+                    <h1>🧠 BambiSleep.Chat Help Center</h1>
+                    <p>Your complete guide to BambiSleep.Chat features, AI interaction, and technical documentation</p>
+                </div>
+                
+                <!-- Quick Start Section -->
+                <div class="help-container">
+                    <div class="content-section">
+                        <h2 id="quick-start">🚀 Quick Start Guide</h2>
+                        <p>Welcome to BambiSleep.Chat - your AI girlfriend experience with hypnotic themes!</p>
+                        
+                        <h3>Getting Started</h3>
+                        <ol>
+                            <li><strong>Chat Interface:</strong> Navigate to the main chat to start talking with BambiSleep AI</li>
+                            <li><strong>Create Profile:</strong> Set up your profile to track progress and unlock features</li>
+                            <li><strong>Use Triggers:</strong> Activate audio triggers for immersive experiences</li>
+                            <li><strong>Level Up:</strong> Gain XP by chatting and using features to unlock more content</li>
+                        </ol>
+                        
+                        <h3>Core Features</h3>
+                        <ul>
+                            <li><strong>AI Chat:</strong> Interactive conversations with BambiSleep AI</li>
+                            <li><strong>Audio Triggers:</strong> Voice-activated hypnotic experiences</li>
+                            <li><strong>Profile System:</strong> Track your progress and unlock new features</li>
+                            <li><strong>Trigger Mania:</strong> Upload text files for intensive trigger sessions</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h2 id="usage">💡 How to Use</h2>
+                        
+                        <h3>Basic Chat</h3>
+                        <p>Simply type your message in the chat interface and press Send. BambiSleep will respond with both text and speech.</p>
+                        
+                        <h3>Triggers</h3>
+                        <p>Triggers are special phrases that activate audio responses. They unlock as you level up your profile. Click trigger buttons or type trigger phrases in chat.</p>
+                        
+                        <h3>Profile Levels</h3>
+                        <ul>
+                            <li><strong>Level 1:</strong> Basic triggers and chat features</li>
+                            <li><strong>Level 2:</strong> Collar features and advanced triggers</li>
+                            <li><strong>Level 3:</strong> Session history and premium features</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="content-section">
+                        <h2 id="technical">🛠️ Technical Documentation</h2>
+                        <p>For developers and advanced users, explore our comprehensive technical documentation:</p>
+                    </div>
+                </div>
+                
+                <!-- Technical Documentation Categories -->
+                <div class="help-categories">
+                    <div class="help-category">
+                        <h3>📋 Setup & Installation</h3>
+                        <p class="help-category-desc">Get the platform running locally</p>
+                        <ul class="help-topics">
+                            <li class="help-topic"><a href="/help/INSTALLATION">Installation Guide</a></li>
+                            <li class="help-topic"><a href="/help/MONGODB-SETUP">Database Setup</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-category">
+                        <h3>🔧 Development</h3>
+                        <p class="help-category-desc">Developer resources and APIs</p>
+                        <ul class="help-topics">
+                            <li class="help-topic"><a href="/help/API">API Documentation</a></li>
+                            <li class="help-topic"><a href="/help/CSS-ARCHITECTURE">CSS Architecture</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-category">
+                        <h3>🐛 Troubleshooting</h3>
+                        <p class="help-category-desc">Debug issues and problems</p>
+                        <ul class="help-topics">
+                            <li class="help-topic"><a href="/help/DEBUG">Debug Guide</a></li>
+                            <li class="help-topic"><a href="/help/TROUBLESHOOTING">Troubleshooting</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-category">
+                        <h3>🎯 Features</h3>
+                        <p class="help-category-desc">Platform capabilities</p>
+                        <ul class="help-topics">
+                            <li class="help-topic"><a href="/help/PROFILE-SYSTEM">Profile System</a></li>
+                            <li class="help-topic"><a href="/help/TERMINAL-INTERFACE">Terminal Interface</a></li>
+                            <li class="help-topic"><a href="/help/CHAT-CONSOLIDATION">Chat System</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- All Documentation Files -->
+                <div class="content-section">
+                    <h2>📚 All Documentation</h2>
+                    <div class="docs-cards">
+                        <% if (typeof files !== 'undefined' && files.length > 0) { %>
+                            <% files.forEach(function(file) { %>
+                                <div class="doc-card">
+                                    <h3><a href="/help/<%= file.name.replace('.md', '') %>"><%= file.title %></a></h3>
+                                    <p class="doc-path"><%= file.name %></p>
+                                    <a href="/help/<%= file.name.replace('.md', '') %>" class="doc-button">View Document</a>
+                                </div>
+                            <% }); %>
+                        <% } %>
+                    </div>
+                </div>
+                
+                <!-- Support Section -->
+                <div class="help-container">
+                    <div class="content-section">
+                        <h2 id="support">🆘 Support & Community</h2>
+                        <p>Need help or want to connect with the community?</p>
+                        <ul>
+                            <li>Submit feedback using the form below</li>
+                            <li>Visit our <a href="https://www.patreon.com/c/bambisleepchat/membership" target="_blank">Patreon</a> for support</li>
+                            <li>Check the troubleshooting docs for common issues</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="feedback-form">
+                        <h3>📝 Feedback Form</h3>
+                        <iframe width="640px" height="480px" 
+                                src="https://forms.office.com/r/9PvY2ZFJc0?embed=true" 
+                                frameborder="0" marginwidth="0" marginheight="0" 
+                                style="border: none; max-width:100%; max-height:100vh" 
+                                allowfullscreen webkitallowfullscreen mozallowfullscreen msallowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+            <% } %>
+        </section>
+    </div>
+    
+    <%- include('partials/footer') %>
+</body>
+</html>
