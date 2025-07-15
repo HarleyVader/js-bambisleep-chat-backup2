@@ -1,53 +1,74 @@
-# 🧠 BambiSleep Chat - User Guide
+# 🧠 BambiSleep.Chat - User Guide
 
-## 📖 Table of Contents
-- [Getting Started](#getting-started)
-- [Core Features](#core-features)
-- [User Profile System](#user-profile-system)
-- [Chat Interface](#chat-interface)
-- [AI Girlfriend (AIGF)](#ai-girlfriend-aigf)
-- [Trigger System](#trigger-system)
-- [Audio Features](#audio-features)
-- [Psychedelic Trigger Mania](#psychedelic-trigger-mania)
-- [Community Features](#community-features)
-- [Troubleshooting](#troubleshooting)
-
----
+Welcome to BambiSleep.Chat - your AI girlfriend experience with hypnotic themes!
 
 ## Getting Started
 
-### First Visit
-1. Navigate to [BambiSleep.Chat](https://bambisleep.chat)
-2. Choose your username (bambiname) - this persists across sessions
-3. Start chatting or interact with the AI girlfriend
+### 1. First Visit
+- Navigate to the main chat interface
+- Your profile is automatically created
+- Start chatting to gain XP and unlock features
 
-### Account System
-- **Anonymous Users**: Default "anonBambi" username
-- **Named Users**: Choose any username, data persists via cookies
-- **Profile Creation**: Automatic profile creation on first interaction
-- **XP System**: Earn experience points through platform usage
+### 2. Profile System
+- **Level 1**: Basic triggers and chat features
+- **Level 2**: Collar features and advanced triggers  
+- **Level 3**: Session history and premium features
+- **Level 4+**: Advanced control systems
 
----
+### 3. Chat Features
+- Type messages to chat with BambiSleep AI
+- AI responds with both text and audio
+- Triggers activate automatically based on keywords
+- Audio plays when triggers are detected
 
 ## Core Features
 
-### 🗣️ Real-Time Chat
-- **Global Chat**: Communicate with all online users
-- **Message Persistence**: Chat history saved and displayed
-- **User Mentions**: Use @username to mention other users
-- **URL Sharing**: Post links (automatically validated for safety)
-- **Audio Triggers**: Messages can trigger audio responses
+### Audio Triggers
+Special phrases that activate audio responses:
+- **BAMBI SLEEP**: Deep trance activation
+- **GOOD GIRL**: Reinforcement and submission
+- **Trigger buttons**: Click to activate specific triggers
+- **Auto-detection**: Triggers activate from chat text
 
-### 🤖 AI Girlfriend Experience
-- **Personalized Responses**: AI adapts to your profile and preferences
-- **Hypnotic Content**: Responses incorporate BambiSleep themes
-- **Text-to-Speech**: AI responses are spoken aloud
-- **Context Awareness**: AI remembers conversation history
-- **Trigger Integration**: AI responses can activate audio triggers
+### Profile Management
+- **XP System**: Gain experience by chatting
+- **Level Progression**: Unlock new features
+- **Customization**: Upload bio, set display name
+- **Stats Tracking**: Monitor usage and progress
 
-### 🎵 Audio System
-- **Text-to-Speech (TTS)**: All AI responses have voice synthesis
-- **Audio Triggers**: Specific phrases trigger hypnotic audio files
+### Control Systems
+Advanced users can access:
+- **Collar System**: Visual collar with custom text
+- **Spiral Effects**: Hypnotic visual spirals
+- **Brainwave Audio**: Binaural beats and frequencies
+- **Streaming Response**: Real-time text streaming
+
+## Usage Tips
+
+### Chat Effectively
+- Be conversational and engaging
+- Use trigger phrases naturally
+- Respond to AI prompts
+- Build rapport over time
+
+### Level Up Faster
+- Chat regularly and frequently
+- Use trigger features
+- Complete profile setup
+- Engage with all system features
+
+### Troubleshooting
+- Refresh page if audio doesn't play
+- Check browser audio permissions
+- Ensure JavaScript is enabled
+- Clear cache for persistent issues
+
+## Safety & Privacy
+
+- No personal data is stored permanently
+- Chat logs are temporary
+- Profile data is local to your session
+- Audio files are hosted securely
 - **Voice Selection**: Multiple voice options available
 - **Background Audio**: Continuous audio experience during sessions
 

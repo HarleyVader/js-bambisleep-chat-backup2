@@ -1,52 +1,111 @@
-# 🔌 BambiSleep Chat - API Documentation
+# 🔌 BambiSleep.Chat - API Documentation
 
-## 📖 Table of Contents
+Simple API reference for BambiSleep.Chat platform.
 
-- [Overview](#overview)
-- [Authentication](#authentication)
-- [RESTful API Endpoints](#restful-api-endpoints)
-- [Socket.IO Events](#socketio-events)
-- [Data Models](#data-models)
-- [Error Handling](#error-handling)
-- [Rate Limiting](#rate-limiting)
-- [Examples](#examples)
-
----
-
-## Overview
-
-BambiSleep Chat provides both RESTful API endpoints and real-time Socket.IO communication for comprehensive interaction with the platform.
-
-### Base URL
+## Base URL
 ```
 https://bambisleep.chat
 ```
 
-### API Version
-Current Version: **MK-XII**
-
-### Content Types
-- **Request**: `application/json`
-- **Response**: `application/json`
-- **Audio**: `audio/mpeg`
-
----
-
 ## Authentication
+Uses cookie-based authentication:
+- `bambiid`: Session identifier
+- `bambiname`: Username (URL-encoded)
 
-### Session-Based Authentication
-The platform uses cookie-based sessions for user identification:
+## Core API Endpoints
 
-```javascript
-// Cookies used for authentication
-bambiname=username        // User's chosen name
-bambiid=session_id       // Session identifier (optional)
+### Profile Data
+```
+GET /api/profile/:username/data
+```
+Get user profile information.
+
+**Response:**
+```json
+{
+  "username": "bambidoll",
+  "displayName": "Bambi Doll", 
+  "level": 5,
+  "xp": 1250,
+  "activeTriggers": ["BAMBI SLEEP", "GOOD GIRL"]
+}
 ```
 
-### Anonymous Access
-Users can access most features without explicit authentication using the default `anonBambi` username.
+### System Controls
+```
+GET /api/profile/:username/system-controls
+POST /api/profile/:username/system-controls
+```
+Get/update user's system control settings.
 
----
+**Response:**
+```json
+{
+  "activeTriggers": ["BAMBI SLEEP"],
+  "systemControls": {
+    "collarEnabled": true,
+    "collarText": "Good Girl",
+    "spiralsEnabled": false
+  }
+}
+```
+
+### Triggers
+```
+GET /api/triggers
+```
+Get available audio triggers.
+
+**Response:**
+```json
+{
+  "triggers": [
+    {
+      "name": "BAMBI SLEEP",
+      "description": "Deep trance activation",
+      "category": "core"
+    }
+  ]
+}
+```
+
+## Data Models
+
+### Profile Model
+```javascript
+{
+  username: String,
+  displayName: String,
+  level: Number,
+  xp: Number,
+  activeTriggers: Array,
+  systemControls: Object
+}
+```
+
+### Trigger Model  
+```javascript
+{
+  name: String,
+  description: String,
+  category: String,
+  audioFile: String
+}
+```
+
+## Error Responses
+
+All endpoints return standard HTTP status codes:
+- `200`: Success
+- `400`: Bad request
+- `403`: Unauthorized
+- `404`: Not found
+- `500`: Server error
+
+## Rate Limiting
+
+API endpoints are rate-limited to prevent abuse.
+Standard limits apply per IP address.
 
 ## RESTful API Endpoints
 

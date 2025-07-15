@@ -1,53 +1,135 @@
-# 🏗️ BambiSleep Chat - Technical Details
+# 🏗️ BambiSleep.Chat - Technical Details
 
-## 📖 Table of Contents
-
-- [Architecture Overview](#architecture-overview)
-- [Technology Stack](#technology-stack)
-- [System Components](#system-components)
-- [Database Design](#database-design)
-- [Real-Time Communication](#real-time-communication)
-- [AI Integration](#ai-integration)
-- [Audio System](#audio-system)
-- [Security & Privacy](#security--privacy)
-- [Performance & Scalability](#performance--scalability)
-- [Deployment](#deployment)
-- [Development Workflow](#development-workflow)
-- [Monitoring & Logging](#monitoring--logging)
-
----
+Technical overview of the BambiSleep.Chat platform architecture and implementation.
 
 ## Architecture Overview
 
-BambiSleep Chat is a Node.js-based real-time web application that combines traditional web technologies with AI integration and multimedia features to create an immersive hypnotic chat experience.
+BambiSleep.Chat is a Node.js web application with real-time features:
 
-### High-Level Architecture
+- **Frontend**: EJS templates, Socket.IO client, Web Audio API
+- **Backend**: Express.js server, Socket.IO, Worker threads
+- **Database**: MongoDB for user profiles and chat history
+- **AI Integration**: LMStudio for chat responses
+- **Audio**: Text-to-speech and trigger audio files
 
+## Technology Stack
+
+### Core Technologies
+- **Node.js**: Server runtime
+- **Express.js**: Web framework
+- **Socket.IO**: Real-time communication
+- **MongoDB**: Database storage
+- **EJS**: Template engine
+
+### Frontend Features
+- **Enhanced Chat**: Real-time messaging interface
+- **Audio System**: Trigger sounds and TTS
+- **Profile System**: User progression and controls
+- **Spiral Effects**: Visual hypnotic elements
+- **Collar System**: User control interface
+
+## System Components
+
+### Main Server (`src/server.js`)
+- Express application setup
+- Socket.IO server initialization  
+- Route registration
+- Database connection management
+
+### Routes (`src/routes/`)
+- **index.js**: Homepage and API endpoints
+- **chat.js**: Chat interface
+- **profile.js**: User profile management
+- **help.js**: Documentation system
+
+### Models (`src/models/`)
+- **Profile.js**: User profile data
+- **UserInteraction.js**: Chat interactions
+- **AudioInteraction.js**: Audio trigger logs
+- **SessionHistory.js**: User session tracking
+
+### Utilities (`src/utils/`)
+- **logger.js**: Centralized logging
+- **audioTriggers.js**: Trigger detection
+- **errorHandler.js**: Error processing
+- **gracefulShutdown.js**: Clean shutdown
+
+## Database Design
+
+### Profile Collection
+```javascript
+{
+  username: String,
+  level: Number,
+  xp: Number,
+  activeTriggers: Array,
+  systemControls: Object,
+  usageStats: Object
+}
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Web Client    │    │   Node.js API   │    │    Database     │
-│   (Browser)     │◄──►│     Server      │◄──►│   (MongoDB)     │
-│                 │    │                 │    │                 │
-│ - Socket.IO     │    │ - Express.js    │    │ - Chat Messages │
-│ - EJS Templates │    │ - Socket.IO     │    │ - User Profiles │
-│ - Audio API     │    │ - Worker Threads│    │ - Interactions  │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                                │
-                       ┌─────────────────┐
-                       │  External APIs  │
-                       │                 │
-                       │ - LMStudio AI   │
-                       │ - Kokoro TTS    │
-                       │ - RunPod (opt)  │
-                       └─────────────────┘
+
+### Interaction Collections
+- User interactions with timestamps
+- Audio trigger activations
+- Session history tracking
+- Performance metrics
+
+## Real-Time Features
+
+### Socket.IO Events
+- **bambi:message**: Chat messages
+- **bambi:trigger**: Audio trigger activation
+- **bambi:audio**: Audio playback commands
+- **bambi:status**: System status updates
+
+### Worker Threads
+- **lmstudio.js**: AI response generation
+- **spirals.js**: Visual effect processing
+
+## Security & Privacy
+
+### Authentication
+- Cookie-based sessions
+- Username verification
+- Profile ownership checks
+
+### Data Protection
+- Input validation and sanitization
+- XSS protection
+- Rate limiting on API endpoints
+- Secure audio file serving
+
+## Development Setup
+
+### Prerequisites
+- Node.js 18+
+- MongoDB
+- LMStudio (for AI features)
+
+### Installation
+```bash
+npm install
+npm start
 ```
 
-### Design Principles
+### Environment Variables
+- `PORT`: Server port (default: 3000)
+- `MONGODB_URI`: Database connection string
+- `NODE_ENV`: Environment mode
 
-- **Real-Time First**: Socket.IO for instant communication
-- **Microservice Ready**: Modular component design
-- **Performance Optimized**: Worker threads for CPU-intensive tasks
-- **User Experience**: Seamless multimedia integration
+## Performance Considerations
+
+### Optimization Strategies
+- Connection pooling for database
+- Worker threads for CPU-intensive tasks
+- Efficient Socket.IO event handling
+- Compressed static asset serving
+
+### Monitoring
+- Health check endpoint (`/health`)
+- Performance metrics collection
+- Error logging and tracking
+- Resource usage monitoring
 - **Extensibility**: Plugin-based trigger system
 
 ---
