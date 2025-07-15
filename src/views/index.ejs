@@ -2,6 +2,7 @@
 <html lang="en">
 <%- include('../views/partials/head.ejs') %>
   <title>BambiSleep.Chat AIGF</title>
+
   <body data-username="<%= locals.username || '' %>">
     <%- include('../views/partials/nav.ejs', { path: '/' }) %>
       <div id="chat-container">
@@ -32,18 +33,14 @@
             <%- include('../views/partials/profile-system-controls.ejs', { profile: profile }) %>
           </div>
         </div>
-          <div id="eyeCursorContainer">
-            <div id="eyeCursor">
-              <div id="eyeCursorText"></div>
-              <div id="eyeCursorText2"></div>
-              <div id="eye" aria-label="Eye Cursor"></div>
-              <div id="eyeCursorText3"></div>
-              <div id="eyeCursorText4"></div>
-            </div>
+        <div id="eyeCursorContainer">
+          <div id="eyeCursor">
+            <div id="eyeCursorText"></div>
+            <div id="eyeCursorText2"></div>
+            <div id="eye" aria-label="Eye Cursor"></div>
+            <div id="eyeCursorText3"></div>
+            <div id="eyeCursorText4"></div>
           </div>
-        </div>
-        <div id="collar-container" style="display: none;">
-          <div id="textarea-collar-response"></div>
         </div>
       </div>
       <%- include('../views/partials/footer.ejs') %>
@@ -53,8 +50,9 @@
           // Initialize socket at the global level
           window.socket = window.socket || io();
 
-          // Log socket connection
-          window.socket.on('connect', function() {
+          // Handle socket connection with error handling
+          window.socket.on('connect', function () {
+            console.log("Socket connected successfully");
             // Socket connection established
             // Load triggers after connection
             if (typeof initProfileAndTriggers === 'function') {
@@ -62,8 +60,14 @@
             }
           });
 
+          // Handle socket connection errors
+          window.socket.on('connect_error', function (error) {
+            console.error("Socket connection error:", error);
+          });
+
           // Handle reconnection
-          window.socket.on('reconnect', function() {
+          window.socket.on('reconnect', function () {
+            console.log("Socket reconnected");
             // Socket reconnected
             // Re-initialize as needed
             if (typeof initProfileAndTriggers === 'function') {
@@ -72,7 +76,8 @@
           });
 
           // Handle disconnect
-          window.socket.on('disconnect', function() {
+          window.socket.on('disconnect', function () {
+            console.log("Socket disconnected");
             // Socket disconnected
           });
         </script>
@@ -91,7 +96,7 @@
               // Get username from cookie
               const cookieUsername = getCookie('bambiname');
               username = cookieUsername || '';
-              
+
               if (!username) {
                 modal.style.display = 'block';
               } else {
@@ -106,38 +111,42 @@
                 loadProfileTriggers(window.username);
               }
             };
-            
+
             // Add event listener for username submit button
-            document.getElementById('username-submit').addEventListener('click', () => {
-              const modal = document.getElementById('username-modal');
-              const usernameInput = document.getElementById('username-input');
-              const username = usernameInput.value.trim();
-              
-              if (username) {
-                // Set username in cookie (30 day expiration)
-                const expiryDate = new Date();
-                expiryDate.setDate(expiryDate.getDate() + 30);
-                document.cookie = `bambiname=${username}; expires=${expiryDate.toUTCString()}; path=/`;
-                
-                // Update global username
-                window.username = username;
-                
-                // Update data attribute
-                document.body.setAttribute('data-username', username);
-                
-                // Hide modal
-                modal.style.display = 'none';
-                
-                // Load profile triggers if socket is connected
-                if (window.socket && window.socket.connected) {
-                  loadProfileTriggers(username);
+            const usernameSubmitBtn = document.getElementById('username-submit');
+            const usernameInput = document.getElementById('username-input');
+            
+            if (usernameSubmitBtn && usernameInput) {
+              usernameSubmitBtn.addEventListener('click', () => {
+                const modal = document.getElementById('username-modal');
+                const username = usernameInput.value.trim();
+
+                if (username) {
+                  // Set username in cookie (30 day expiration)
+                  const expiryDate = new Date();
+                  expiryDate.setDate(expiryDate.getDate() + 30);
+                  document.cookie = `bambiname=${username}; expires=${expiryDate.toUTCString()}; path=/`;
+
+                  // Update global username
+                  window.username = username;
+
+                  // Update data attribute
+                  document.body.setAttribute('data-username', username);
+
+                  // Hide modal
+                  if (modal) modal.style.display = 'none';
+
+                  // Load profile triggers if socket is connected
+                  if (window.socket && window.socket.connected) {
+                    loadProfileTriggers(username);
+                  }
+
+                  // Refresh page to update UI elements that depend on username
+                  // Alternatively, you can update UI elements directly without refresh
+                  // location.reload();
                 }
-                
-                // Refresh page to update UI elements that depend on username
-                // Alternatively, you can update UI elements directly without refresh
-                // location.reload();
-              }
-            });
+              });
+            }
 
             // Helper function to get cookie by name
             function getCookie(name) {
@@ -163,18 +172,18 @@
                 console.log("Socket not connected, can't load profile triggers");
                 return;
               }
-              
+
               // Request active triggers from server for this profile
               window.socket.emit('get-profile-triggers', { username });
-              
+
               // Listen for trigger data from server
-              window.socket.on('profile-triggers', function(data) {
+              window.socket.on('profile-triggers', function (data) {
                 if (data && data.triggerNames && Array.isArray(data.triggerNames)) {
                   console.log("Received profile triggers:", data.triggerNames);
-                  
+
                   // Use localStorage to apply these triggers
                   localStorage.setItem('bambiActiveTriggers', JSON.stringify(data.triggerNames));
-                  
+
                   // If trigger.js is loaded and has this function, update the UI
                   if (window.bambiAudio && typeof window.bambiAudio.refreshTriggers === 'function') {
                     window.bambiAudio.refreshTriggers();
@@ -185,26 +194,30 @@
               });
             }
 
-            document.getElementById("chat-form").addEventListener("submit", (event) => {
-              event.preventDefault();
-              const messageInput = document.getElementById("textarea-chat");
-              const message = messageInput.value.trim();
+            // Fix: Use correct form and textarea IDs that actually exist in the DOM
+            const chatForm = document.getElementById("llm-form");
+            if (chatForm) {
+              chatForm.addEventListener("submit", (event) => {
+                event.preventDefault();
+                const messageInput = document.getElementById("textarea");
+                const message = messageInput.value.trim();
 
-              if (message && window.username) {
-                if (window.socket && window.socket.connected) {
-                  window.socket.emit("chat message", {
-                    data: message,
-                    username: window.username
-                  });
+                if (message && window.username) {
+                  if (window.socket && window.socket.connected) {
+                    window.socket.emit("chat message", {
+                      data: message,
+                      username: window.username
+                    });
 
-                  messageInput.value = "";
-                  messageInput.style.height = 'inherit';
-                } else {
-                  console.error("Socket not connected, can't send message");
+                    messageInput.value = "";
+                    messageInput.style.height = 'inherit';
+                  } else {
+                    console.error("Socket not connected, can't send message");
+                  }
                 }
-              }
-            });
-            
+              });
+            }
+
             // Make functions available globally
             window.initProfileAndTriggers = initProfileAndTriggers;
             window.loadProfileTriggers = loadProfileTriggers;
@@ -214,18 +227,18 @@
           document.addEventListener("DOMContentLoaded", () => {
             // Create a simple settings object if needed
             window.bambiSystemSettings = window.bambiSystemSettings || {};
-              // Handle settings updates in a safer way
+            // Handle settings updates in a safer way
             const updateSettings = (settings) => {
               // Use provided settings or default to empty object
               const settingsToSend = settings || {};
-            
-            // Simple helper for safe JSON parsing
-            window.safeJsonParse = (str) => {
-              try { return JSON.parse(str); } 
-              catch(e) { return null; }
+
+              // Simple helper for safe JSON parsing
+              window.safeJsonParse = (str) => {
+                try { return JSON.parse(str); }
+                catch (e) { return null; }
+              };
             };
-            };
-            
+
           });
         </script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
