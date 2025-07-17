@@ -415,7 +415,8 @@ button i,
     border-radius: 8px;
     margin-top: 15px;
     position: relative;
-    overflow: hidden;
+    overflow-y: auto;
+    max-height: 500px;
     box-shadow: inset 0 0 10px rgba(var(--tertiary-color-rgb), 0.2);
     display: none;
 }
@@ -936,7 +937,8 @@ a:hover {
     border-radius: 8px;
     margin-top: 15px;
     position: relative;
-    overflow: hidden;
+    overflow-y: auto;
+    max-height: 500px;
     box-shadow: inset 0 0 10px rgba(var(--tertiary-color-rgb), 0.2);
 }
 
