@@ -190,12 +190,15 @@
     // Auto-scroll to bottom and maintain 50 messages max
     function autoScrollToBottom() {
       const chatResponse = document.getElementById('chat-response');
+      const chatMessages = document.querySelector('.chat-messages');
+      
       // Remove oldest messages if we have more than 50
       while (chatResponse.children.length > 50) {
         chatResponse.removeChild(chatResponse.firstChild);
       }
+      
       // Always scroll to bottom
-      chatResponse.scrollTop = chatResponse.scrollHeight;
+      chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
     // Show countdown in chat
@@ -287,12 +290,31 @@
   }
   
   .chat-messages {
-    height: 400px;
-    overflow: hidden;
+    height: 450px;
+    overflow-y: auto;
     background: rgba(var(--nav-color-rgb), 0.3);
     border-radius: var(--border-radius);
     padding: 10px;
     margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+  }
+  
+  .chat-messages::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .chat-messages::-webkit-scrollbar-track {
+    background: var(--nav-color);
+    border-radius: var(--border-radius);
+  }
+  
+  .chat-messages::-webkit-scrollbar-thumb {
+    background: var(--tertiary-color);
+    border-radius: var(--border-radius);
+  }
+  
+  .chat-messages::-webkit-scrollbar-thumb:hover {
+    background: var(--nav-alt);
   }
   
   .chat-container {
@@ -336,35 +358,35 @@
   }
   
   .font-controls button {
-    background: var(--button-color);
-    border: 1px solid var(--button-alt);
-    color: var(--button-alt);
-    padding: 8px 12px;
-    border-radius: 50%;
+    /* Use main button styles from style.css */
+    color: var(--secondary-color);
+    background-color: var(--button-color);
+    text-shadow: var(--tertiary-color) 0.3vw 0.3vw 0.3vw;
+    border: var(--secondary-color) outset 0.3vw;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    border-radius: 0.6vw;
     cursor: pointer;
-    font-size: 12px;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-sizing: border-box;
     font-family: "Audiowide", cursive;
-    transition: all 0.3s ease;
-    text-shadow: none;
   }
   
   .font-controls button:hover {
-    background: var(--tertiary-color);
-    color: var(--nav-alt);
-    box-shadow: 0 0 8px var(--tertiary-color);
-    transform: scale(1.1);
+    color: var(--button-color);
+    background-color: var(--secondary-color);
+    text-shadow: var(--nav-color) 0.3vw 0.3vw 0.3vw;
+    border: var(--button-color) outset 0.3vw;
+    box-shadow: 0 0 15px var(--button-color), 0 0 25px rgba(var(--button-color-rgb), 0.5);
   }
   
   .font-controls button:active {
-    background: var(--nav-alt);
-    color: var(--button-alt);
-    box-shadow: 0 0 15px var(--nav-alt);
-    transform: scale(0.95);
+    background-color: var(--tertiary-alt);
+    color: var(--nav-alt);
+    border-color: var(--primary-alt);
+    transform: translateY(0);
   }
   
   #font-size-display {
@@ -420,7 +442,8 @@
   .input-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    flex-wrap: nowrap;
   }
   
   .input-group input {
@@ -441,67 +464,69 @@
   }
   
   .emoji-btn {
-    background: var(--nav-color);
-    border: 1px solid var(--border-color);
-    font-size: 18px;
+    /* Use main button styles from style.css */
+    color: var(--secondary-color);
+    background-color: var(--button-color);
+    text-shadow: var(--tertiary-color) 0.3vw 0.3vw 0.3vw;
+    border: var(--secondary-color) outset 0.3vw;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border-radius: 0.6vw;
     cursor: pointer;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    color: var(--nav-alt);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-sizing: border-box;
     flex-shrink: 0;
   }
   
   .emoji-btn:hover {
-    background: var(--tertiary-color);
-    color: var(--button-alt);
-    box-shadow: 0 0 8px var(--tertiary-color);
-    transform: scale(1.1);
+    color: var(--button-color);
+    background-color: var(--secondary-color);
+    text-shadow: var(--nav-color) 0.3vw 0.3vw 0.3vw;
+    border: var(--button-color) outset 0.3vw;
+    box-shadow: 0 0 15px var(--button-color), 0 0 25px rgba(var(--button-color-rgb), 0.5);
   }
   
   .emoji-btn:active {
-    background: var(--nav-alt);
-    color: var(--button-alt);
-    box-shadow: 0 0 15px var(--nav-alt);
-    transform: scale(0.95);
+    background-color: var(--tertiary-alt);
+    color: var(--nav-alt);
+    border-color: var(--primary-alt);
+    transform: translateY(0);
   }
   
   .chat-input .send-btn {
-    background: var(--button-color);
-    border: 1px solid var(--button-alt);
-    color: var(--button-alt);
-    padding: 12px 24px;
-    border-radius: 25px;
+    /* Use main button styles from style.css */
+    color: var(--secondary-color);
+    background-color: var(--button-color);
+    text-shadow: var(--tertiary-color) 0.3vw 0.3vw 0.3vw;
+    border: var(--secondary-color) outset 0.3vw;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 0.6vw;
     cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+    box-sizing: border-box;
     font-family: "Audiowide", cursive;
-    font-size: 14px;
     font-weight: bold;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    text-shadow: none;
     flex-shrink: 0;
-    white-space: nowrap;
   }
   
   .chat-input .send-btn:hover {
-    background: var(--tertiary-color);
-    color: var(--nav-alt);
-    box-shadow: 0 0 12px var(--tertiary-color);
-    transform: scale(1.05);
+    color: var(--button-color);
+    background-color: var(--secondary-color);
+    text-shadow: var(--nav-color) 0.3vw 0.3vw 0.3vw;
+    border: var(--button-color) outset 0.3vw;
+    box-shadow: 0 0 15px var(--button-color), 0 0 25px rgba(var(--button-color-rgb), 0.5);
   }
   
   .chat-input .send-btn:active {
-    background: var(--nav-alt);
-    color: var(--button-alt);
-    box-shadow: 0 0 20px var(--nav-alt);
-    transform: scale(0.95);
+    background-color: var(--tertiary-alt);
+    color: var(--nav-alt);
+    border-color: var(--primary-alt);
+    transform: translateY(0);
   }
   
   .emoji-picker {
