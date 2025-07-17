@@ -8,39 +8,7 @@
 
 <div class="container">
   <div class="row">
-    <div class="col-md-3">
-      <div class="sidebar">
-        <div class="profile-section">
-          <% if (profile) { %>
-            <h3>Profile: <%= username %></h3>
-            <div class="profile-stats">
-              <p>Level: <span id="user-level"><%= Math.floor(profile.xp / 1000) %></span></p>
-              <p>XP: <span id="user-xp"><%= profile.xp %></span></p>
-            </div>
-          <% } else { %>
-            <h3>Welcome, <%= username %></h3>
-            <p>Create a profile to track your progress</p>
-          <% } %>
-        </div>
-        
-        <div class="triggers-section">
-          <h3>Triggers</h3>
-          <div class="trigger-list">
-            <% if (triggers && triggers.length > 0) { %>
-              <% triggers.forEach(trigger => { %>
-                <button class="trigger-btn" data-trigger="<%= trigger.name %>">
-                  <%= trigger.name %>
-                </button>
-              <% }); %>
-            <% } else { %>
-              <p>No triggers available</p>
-            <% } %>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="col-md-9">
+    <div class="col-md-12">
       <div class="chat-container">
         <div class="chat-header">
           <h2>BambiSleep Chat</h2>
@@ -73,36 +41,12 @@
           </form>
         </div>
       </div>
-      
-      <div class="aigf-container">
-        <div class="aigf-header">
-          <h3>AI Chat</h3>
-        </div>
-        
-        <div class="aigf-response">
-          <div id="response"></div>
-        </div>
-        
-        <div class="aigf-input">
-          <form id="aigf-form">
-            <div class="input-group">
-              <input type="text" id="user-prompt" class="form-control" placeholder="Talk to Bambi..." autocomplete="off">
-              <div class="input-group-append">
-                <button class="btn btn-secondary" id="submit" type="submit">Ask</button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
     </div>
   </div>
 </div>
 
-<audio id="audio" style="display: none;"></audio>
-
 <!-- Include Scripts -->
 <script src="/socket.io/socket.io.js"></script>
-<script src="/js/aigf-core.js"></script>
 <script src="/js/enhanced-chat.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -120,86 +64,6 @@
         chatInput.value = '';
       }
     });
-    
-    // Set up trigger buttons
-    const triggerButtons = document.querySelectorAll('.trigger-btn');
-    triggerButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        const triggerName = this.getAttribute('data-trigger');
-        socket.emit('triggers', { triggerNames: [triggerName] });
-        
-        // Flash visual feedback
-        this.classList.add('active');
-        setTimeout(() => {
-          this.classList.remove('active');
-        }, 300);
-      });
-    });
-    
-    // XP update handling
-    socket.on('xp:update', function(data) {
-      const xpElement = document.getElementById('user-xp');
-      const levelElement = document.getElementById('user-level');
-      
-      if (xpElement) xpElement.textContent = data.xp;
-      if (levelElement) levelElement.textContent = data.level;
-      
-      // Show XP gain notification
-      showXpNotification(data.xpEarned, data.reason);
-    });
-    
-    // Level up handling
-    socket.on('level-up', function(data) {
-      showLevelUpNotification(data.level);
-    });
-    
-    // Show XP notification
-    function showXpNotification(amount, reason) {
-      const notificationArea = document.getElementById('notification-area') || createNotificationArea();
-      
-      const notification = document.createElement('div');
-      notification.className = 'in-app-notification xp-notification';
-      notification.innerHTML = `
-        <span class="notification-title">+${amount} XP Gained</span>
-        <span class="notification-message">From: ${reason}</span>
-      `;
-      
-      notificationArea.appendChild(notification);
-      
-      // Remove after 3 seconds
-      setTimeout(() => {
-        notification.classList.add('notification-hiding');
-        setTimeout(() => notification.remove(), 500);
-      }, 3000);
-    }
-    
-    // Show level up notification
-    function showLevelUpNotification(level) {
-      const notificationArea = document.getElementById('notification-area') || createNotificationArea();
-      
-      const notification = document.createElement('div');
-      notification.className = 'in-app-notification level-notification';
-      notification.innerHTML = `
-        <span class="notification-title">Level Up!</span>
-        <span class="notification-message">You are now level ${level}</span>
-      `;
-      
-      notificationArea.appendChild(notification);
-      
-      // Remove after 5 seconds
-      setTimeout(() => {
-        notification.classList.add('notification-hiding');
-        setTimeout(() => notification.remove(), 500);
-      }, 5000);
-    }
-    
-    // Create notification area if needed
-    function createNotificationArea() {
-      const notificationArea = document.createElement('div');
-      notificationArea.id = 'notification-area';
-      document.body.appendChild(notificationArea);
-      return notificationArea;
-    }
   });
 </script>
 
