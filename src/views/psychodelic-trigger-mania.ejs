@@ -1,7 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
     <%- include('partials/head') %>
     <title>Psychodelic Trigger Mania</title>
     <style>
@@ -69,8 +67,21 @@
             border-radius: 5px;
             line-height: 1.5;
         }
+        
+        .response-text .trigger-highlight {
+            color: #ff00ff;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-shadow: 0 0 5px #ff00ff;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
     </style>
-</head>
 
 <body>
     <%- include('partials/nav', { path: '/triggers/mania' }) %>
@@ -95,6 +106,7 @@
             <div class="response-container" id="response-container">
                 <div class="response-text">Ready to process trigger sequences...</div>
             </div>
+            <audio id="audio" style="display: none;"></audio>
         </div>
     </div>
 
@@ -115,9 +127,16 @@
             const statusMessage = document.getElementById('status-message');
             const responseContainer = document.getElementById('response-container');
             
+            // Set up audio element for TTS (same as aigf-core.js)
+            window.audio = document.getElementById('audio');
+            
             let currentFile = null;
-            let audio = document.createElement('audio');
-            document.body.appendChild(audio);
+            let triggerData = [];
+            let audioArray = [];
+            let isProcessing = false;
+            
+            // Load trigger data first
+            loadTriggerData();
             
             // File input handler
             fileInput.addEventListener('change', function(event) {
@@ -135,7 +154,10 @@
             
             // Process button handler
             processBtn.addEventListener('click', function() {
-                if (!currentFile) return;
+                if (!currentFile || isProcessing) return;
+                
+                isProcessing = true;
+                processBtn.disabled = true;
                 
                 const reader = new FileReader();
                 reader.onload = function(e) {
@@ -145,65 +167,136 @@
                 reader.readAsText(currentFile);
             });
             
+            function loadTriggerData() {
+                fetch('/config/triggers.json')
+                    .then(response => response.json())
+                    .then(data => {
+                        triggerData = data.triggers || [];
+                        console.log('Loaded trigger data:', triggerData);
+                    })
+                    .catch(error => {
+                        console.error('Error loading trigger data:', error);
+                        triggerData = [];
+                    });
+            }
+            
             function processTextContent(content) {
                 showStatus('Processing text content...', false);
                 
                 // Split into sentences
-                const sentences = content.split(/(?<=[:;,.!?]["']?)\s+|\n+/g)
+                const sentences = content.split(/(?<=[:;,.!?-*]["']?)\s+|\n+/g)
                     .filter(sentence => sentence.trim() !== '');
                 
                 if (sentences.length === 0) {
                     showStatus('No valid sentences found in file', true);
+                    isProcessing = false;
+                    processBtn.disabled = false;
                     return;
                 }
                 
-                showStatus(`Processing ${sentences.length} trigger sequences...`, false);
+                // Count triggers in the text
+                const triggerCount = countTriggersInText(content);
+                const triggerInfo = triggerCount > 0 ? ` (${triggerCount} triggers detected)` : '';
+                
+                showStatus(`Processing ${sentences.length} trigger sequences${triggerInfo}...`, false);
                 
                 // Clear response container
                 responseContainer.innerHTML = '';
+                
+                // Clear audio array
+                audioArray = [];
                 
                 // Process each sentence
                 processSentences(sentences);
             }
             
-            async function processSentences(sentences) {
-                for (let i = 0; i < sentences.length; i++) {
-                    const sentence = sentences[i].trim();
-                    if (!sentence) continue;
-                    
-                    // Add to response container
-                    const responseDiv = document.createElement('div');
-                    responseDiv.className = 'response-text';
-                    responseDiv.textContent = sentence;
-                    responseContainer.appendChild(responseDiv);
-                    
-                    // Try TTS
-                    try {
-                        const ttsUrl = `/api/tts?text=${encodeURIComponent(sentence)}`;
-                        await playAudio(ttsUrl);
-                        
-                        // Brief pause between sentences
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                    } catch (error) {
-                        console.error('Error playing TTS:', error);
-                    }
-                }
+            function countTriggersInText(text) {
+                if (!triggerData || triggerData.length === 0) return 0;
                 
-                showStatus('Processing complete!', false);
+                let count = 0;
+                triggerData.forEach(trigger => {
+                    const regex = new RegExp(`\\b${trigger.name}\\b`, 'gi');
+                    const matches = text.match(regex);
+                    if (matches) count += matches.length;
+                });
+                
+                return count;
             }
             
-            function playAudio(url) {
-                return new Promise((resolve, reject) => {
-                    audio.src = url;
-                    audio.load();
+            function processSentences(sentences) {
+                let currentIndex = 0;
+                
+                // Process sentences sequentially
+                function processNext() {
+                    if (currentIndex >= sentences.length) {
+                        // All sentences processed, now start TTS
+                        if (audioArray.length > 0 && window.do_tts) {
+                            showStatus('Starting audio playback...', false);
+                            window.do_tts(audioArray);
+                        } else {
+                            showStatus('Processing complete!', false);
+                            isProcessing = false;
+                            processBtn.disabled = false;
+                        }
+                        return;
+                    }
                     
-                    audio.onloadedmetadata = function() {
-                        audio.play().then(resolve).catch(reject);
+                    const sentence = sentences[currentIndex].trim();
+                    if (!sentence) {
+                        currentIndex++;
+                        processNext();
+                        return;
+                    }
+                    
+                    // Add to response container with trigger highlighting
+                    const responseDiv = document.createElement('div');
+                    responseDiv.className = 'response-text';
+                    responseDiv.innerHTML = highlightTriggers(sentence);
+                    responseContainer.appendChild(responseDiv);
+                    
+                    // Add to TTS queue using the same system as aigf-core.js
+                    if (window.tts && typeof window.tts.arrayPush === 'function') {
+                        window.tts.arrayPush(audioArray, sentence);
+                    }
+                    
+                    currentIndex++;
+                    
+                    // Process next sentence after brief delay
+                    setTimeout(processNext, 50);
+                }
+                
+                // Set up audio end handler to reset state when all audio is done
+                if (window.audio) {
+                    const originalOnEnded = window.audio.onended;
+                    window.audio.onended = function() {
+                        if (originalOnEnded) originalOnEnded();
+                        // If audio queue is empty, reset processing state
+                        if (audioArray.length === 0) {
+                            showStatus('All audio playback complete!', false);
+                            isProcessing = false;
+                            processBtn.disabled = false;
+                        }
                     };
-                    
-                    audio.onended = resolve;
-                    audio.onerror = reject;
+                }
+                
+                // Start processing
+                processNext();
+            }
+            
+            function highlightTriggers(text) {
+                if (!triggerData || triggerData.length === 0) return text;
+                
+                let highlightedText = text;
+                
+                // Find and highlight triggers
+                triggerData.forEach(trigger => {
+                    const regex = new RegExp(`\\b${trigger.name}\\b`, 'gi');
+                    highlightedText = highlightedText.replace(regex, match => 
+                        `<span class="trigger-highlight">${match.toUpperCase()}</span>`
+                    );
                 });
+                
+                return highlightedText;
             }
             
             function showStatus(message, isError = false) {
