@@ -230,7 +230,7 @@ socket.on('response', async (message) => {
     const messageText = message.trim();
     console.log('Processing message text:', messageText);
 
-    const sentences = messageText.split(/(?<=[:;,.!?]["']?)\s+/g);
+    const sentences = messageText.split(/(?<=[:;,.!?*-]["']?)\s+/g);
     console.log('Split into sentences:', sentences);
     // Send response processing through control network
     if (window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
