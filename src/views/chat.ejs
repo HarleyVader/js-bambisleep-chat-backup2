@@ -64,8 +64,100 @@
         chatInput.value = '';
       }
     });
+
+    // TTS functionality
+    function speakText(text, count = 1) {
+      if ('speechSynthesis' in window) {
+        let spoken = 0;
+        const speakOnce = () => {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 0.8;
+          utterance.pitch = 1;
+          utterance.onend = () => {
+            spoken++;
+            if (spoken < count) {
+              setTimeout(speakOnce, 500);
+            }
+          };
+          speechSynthesis.speak(utterance);
+        };
+        speakOnce();
+      }
+    }
+
+    // Add glow effect to user
+    function addGlowEffect() {
+      document.body.classList.add('mentioned');
+      setTimeout(() => {
+        document.body.classList.remove('mentioned');
+      }, 3000);
+    }
+
+    // Show countdown in chat
+    function showCountdown(count, trigger) {
+      const countdownLi = document.createElement('li');
+      countdownLi.className = 'system-message countdown-message';
+      countdownLi.innerHTML = `<span class="countdown">Speaking "${trigger}" ${count} times...</span>`;
+      document.getElementById('chat-response').appendChild(countdownLi);
+      
+      let remaining = count;
+      const countdownInterval = setInterval(() => {
+        remaining--;
+        if (remaining > 0) {
+          countdownLi.innerHTML = `<span class="countdown">Speaking "${trigger}" ${remaining} more times...</span>`;
+        } else {
+          countdownLi.innerHTML = `<span class="countdown">Finished speaking "${trigger}"</span>`;
+          clearInterval(countdownInterval);
+          setTimeout(() => {
+            countdownLi.remove();
+          }, 2000);
+        }
+      }, 1000);
+    }
+
+    // Handle special chat events
+    socket.on('chat mention', function(data) {
+      if (data.mentionedUser === '<%= user.username %>') {
+        addGlowEffect();
+      }
+    });
+
+    socket.on('chat trigger', function(data) {
+      speakText(data.trigger);
+    });
+
+    socket.on('chat mention trigger', function(data) {
+      if (data.mentionedUser === '<%= user.username %>') {
+        addGlowEffect();
+        const count = data.count || 1;
+        if (count > 1) {
+          showCountdown(count, data.trigger);
+        }
+        speakText(data.trigger, count);
+      }
+    });
   });
 </script>
+
+<style>
+  .mentioned {
+    animation: glow 3s ease-in-out;
+  }
+  
+  @keyframes glow {
+    0%, 100% { box-shadow: none; }
+    50% { box-shadow: 0 0 20px rgba(255, 105, 180, 0.8); }
+  }
+  
+  .countdown-message {
+    font-style: italic;
+    color: #007bff;
+  }
+  
+  .countdown {
+    font-weight: bold;
+  }
+</style>
 
 <link rel="stylesheet" href="/css/enhanced-chat.css">
 

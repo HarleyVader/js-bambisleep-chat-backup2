@@ -1,9 +1,9 @@
-import express from 'express';
-import sessionService from '../services/sessionService.js';
 import Logger from '../utils/logger.js';
-import footerConfig from '../config/footer.config.js';
-import config from '../config/config.js';
 import Profile from '../models/Profile.js';
+import config from '../config/config.js';
+import express from 'express';
+import footerConfig from '../config/footer.config.js';
+import sessionService from '../services/sessionService.js';
 
 const router = express.Router();
 const logger = new Logger('Chat');
@@ -67,18 +67,21 @@ router.get('/', async (req, res) => {
     res.render('chat', {
       title: 'BambiSleep Chat',
       profile,
+      user: { username }, // Add user object for template
       username,
       footerLinks,
       footer: footerConfig,
       chatMessages,
       triggers
-    });  } catch (error) {
+    });
+  } catch (error) {
     logger.error('Error rendering chat page:', error);
     
     // Fallback with minimal data
     res.render('chat', {
       title: 'BambiSleep Chat',
       profile: null,
+      user: { username: '' }, // Add user object for template
       username: '',
       footerLinks: config?.FOOTER_LINKS || footerConfig?.links || [],
       footer: footerConfig,

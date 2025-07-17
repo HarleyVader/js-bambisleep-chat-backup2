@@ -1184,7 +1184,8 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
       socketStoreManager.addSocket(socketStore, socket.id, { socket, worker: lmstudio, files: [] });
       logger.info(`Client connected: ${socket.id} sockets: ${socketStore.size}`);        // Enhanced chat message handling
       socket.on('chat message', async (msg) => {
-        try {            // Validate message format
+        try {
+          // Validate message format
           if (!msg || !msg.data || typeof msg.data !== 'string') {
             logger.warning('Received invalid message format');
             emitSocketError(socket, 'Invalid message format');
@@ -1192,27 +1193,104 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
           }
 
           const timestamp = new Date().toISOString();
+          const messageText = msg.data;
+          const senderUsername = socket.bambiUsername || 'anonbambi';
 
           // Create message object with consistent structure
           const messageData = {
-            username: socket.bambiUsername || 'anonymous',
-            data: msg.data,
+            username: senderUsername,
+            data: messageText,
             timestamp: timestamp
           };
 
+          // Parse message for mentions and triggers
+          const mentionRegex = /@(\w+)/g;
+          const triggerRegex = /#(\w+)/g;
+          const mentionTriggerRegex = /@(\w+)\s+#(\w+)(?:\s+(\d+))?/g;
+
+          let match;
+          const mentions = [];
+          const triggers = [];
+          const mentionTriggers = [];
+
+          // Check for @username #trigger [number] pattern first
+          while ((match = mentionTriggerRegex.exec(messageText)) !== null) {
+            mentionTriggers.push({
+              mentionedUser: match[1],
+              trigger: match[2],
+              count: parseInt(match[3]) || 1
+            });
+          }
+
+          // If no mention+trigger combos, check for standalone patterns
+          if (mentionTriggers.length === 0) {
+            // Check for standalone mentions
+            while ((match = mentionRegex.exec(messageText)) !== null) {
+              mentions.push(match[1]);
+            }
+
+            // Check for standalone triggers
+            while ((match = triggerRegex.exec(messageText)) !== null) {
+              triggers.push(match[2]);
+            }
+          }
+
           // Broadcast message to all connected clients first for responsiveness
-          io.emit('chat message', messageData);            // Process message for enhanced features (URLs, mentions, triggers)
-          try {              // Use sessionService for message handling with cached models
+          io.emit('chat message', messageData);
+
+          // Handle mention+trigger combinations
+          for (const mt of mentionTriggers) {
+            // Find target user socket
+            for (const [id, data] of socketStore.entries()) {
+              if (data.socket?.bambiUsername?.toLowerCase() === mt.mentionedUser.toLowerCase()) {
+                // Emit mention+trigger event to target user
+                data.socket.emit('chat mention trigger', {
+                  mentionedUser: mt.mentionedUser,
+                  trigger: mt.trigger,
+                  count: mt.count,
+                  sourceUsername: senderUsername
+                });
+                break;
+              }
+            }
+          }
+
+          // Handle standalone mentions
+          for (const mentionedUser of mentions) {
+            // Find target user socket
+            for (const [id, data] of socketStore.entries()) {
+              if (data.socket?.bambiUsername?.toLowerCase() === mentionedUser.toLowerCase()) {
+                // Emit mention event to target user
+                data.socket.emit('chat mention', {
+                  mentionedUser: mentionedUser,
+                  sourceUsername: senderUsername
+                });
+                break;
+              }
+            }
+          }
+
+          // Handle standalone triggers - broadcast to all users
+          for (const trigger of triggers) {
+            io.emit('chat trigger', {
+              trigger: trigger,
+              sourceUsername: senderUsername
+            });
+          }
+
+          // Process message for enhanced features (URLs, mentions, triggers)
+          try {
+            // Use sessionService for message handling with cached models
             const AudioInteraction = await modelCache.getModel('AudioInteraction');
             const UserInteraction = await modelCache.getModel('UserInteraction');
 
             // Load triggers for audio detection
-            let triggers = [];
+            let triggersList = [];
             try {
               const fs = await import('fs/promises');
               const triggersPath = path.resolve(path.dirname(__dirname), 'config', 'triggers.json');
               const triggerData = await fs.readFile(triggersPath, 'utf8');
-              triggers = JSON.parse(triggerData).triggers || [];
+              triggersList = JSON.parse(triggerData).triggers || [];
             } catch (triggerError) {
               logger.error('Error loading triggers:', triggerError);
             }
@@ -1222,11 +1300,11 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
             logger.debug(`Enhanced chat message saved to database: ${savedMessage._id}`);
 
             // Check for audio triggers
-            const detectedTriggers = audioTriggers.detectAudioTriggers(msg.data, triggers);
+            const detectedTriggers = audioTriggers.detectAudioTriggers(messageText, triggersList);
             if (detectedTriggers.length > 0) {
               // Emit triggers to all clients
               io.emit('audio triggers', {
-                username: socket.bambiUsername,
+                username: senderUsername,
                 triggers: detectedTriggers
               });
 
@@ -1234,7 +1312,7 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
               for (const trigger of detectedTriggers) {
                 await audioTriggers.logAudioInteraction(
                   AudioInteraction,
-                  socket.bambiUsername,
+                  senderUsername,
                   trigger.name,
                   'chat',
                   null, // No specific target
@@ -1243,32 +1321,14 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
               }
             }
 
-            // Process user mentions
-            const mentions = userMentions.detectUserMentions(msg.data);
-            if (mentions.length > 0) {
-              // Notify mentioned users
-              for (const mention of mentions) {
-                // Find sockets for the mentioned user
-                const mentionedSockets = [];
-                for (const [id, data] of socketStore.entries()) {
-                  if (data.socket?.bambiUsername?.toLowerCase() === mention.username.toLowerCase()) {
-                    mentionedSockets.push(data.socket);
-                  }
-                }
-
-                // Send notification to mentioned users
-                for (const mentionedSocket of mentionedSockets) {
-                  mentionedSocket.emit('mention', {
-                    from: socket.bambiUsername,
-                    message: msg.data,
-                    timestamp: timestamp
-                  });
-                }
-
-                // Log user mention interaction
+            // Process user mentions for logging
+            const userMentionsList = userMentions.detectUserMentions(messageText);
+            if (userMentionsList.length > 0) {
+              // Log user mention interactions
+              for (const mention of userMentionsList) {
                 await userMentions.logUserMention(
                   UserInteraction,
-                  socket.bambiUsername,
+                  senderUsername,
                   mention.username,
                   savedMessage._id
                 );
@@ -1302,7 +1362,9 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
                   logger.error(`URL validation error: ${error.message}`);
                 });
               }
-            }              // Give XP for chat interactions
+            }
+
+            // Give XP for chat interactions
             awardUserXP(socket, xpSystem, 1, 'chat');
           } catch (dbError) {
             // Log database error but don't disrupt the user experience
