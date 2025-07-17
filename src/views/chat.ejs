@@ -50,6 +50,10 @@
 <script src="/js/enhanced-chat.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Initialize socket
+    const socket = io();
+    window.socket = socket;
+    
     // Chat form submission
     const chatForm = document.getElementById('chat-form');
     const chatInput = document.getElementById('chat-message');
@@ -59,7 +63,6 @@
       
       const message = chatInput.value.trim();
       if (message) {
-        // Send message to server
         socket.emit('chat message', { data: message });
         chatInput.value = '';
       }
@@ -117,7 +120,7 @@
 
     // Handle special chat events
     socket.on('chat mention', function(data) {
-      if (data.mentionedUser === '<%= user.username %>') {
+      if (data.mentionedUser === '<%= username %>') {
         addGlowEffect();
       }
     });
@@ -127,7 +130,7 @@
     });
 
     socket.on('chat mention trigger', function(data) {
-      if (data.mentionedUser === '<%= user.username %>') {
+      if (data.mentionedUser === '<%= username %>') {
         addGlowEffect();
         const count = data.count || 1;
         if (count > 1) {
@@ -135,6 +138,21 @@
         }
         speakText(data.trigger, count);
       }
+    });
+
+    // Handle regular chat messages
+    socket.on('chat message', function(data) {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <span class="chat-time">${new Date(data.timestamp).toLocaleTimeString([], {hour12: false})}</span> -
+        <span class="chat-username"><a href="/profile/${data.username}" class="username-link">${data.username}</a>:</span>
+        <span class="chat-message">${data.data}</span>
+      `;
+      document.getElementById('chat-response').appendChild(li);
+      
+      // Scroll to bottom
+      const chatResponse = document.getElementById('chat-response');
+      chatResponse.scrollTop = chatResponse.scrollHeight;
     });
   });
 </script>
@@ -156,6 +174,11 @@
   
   .countdown {
     font-weight: bold;
+  }
+  
+  .chat-messages {
+    max-height: 400px;
+    overflow-y: auto;
   }
 </style>
 
