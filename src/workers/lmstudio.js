@@ -1,18 +1,18 @@
-import { parentPort } from 'worker_threads';
-import axios from 'axios';
-import dotenv from 'dotenv';
-import Logger from '../utils/logger.js';
 import { handleWorkerShutdown, setupWorkerShutdownHandlers } from '../utils/gracefulShutdown.js';
-import mongoose from 'mongoose';
-import db from '../config/db.js';
-const { withDbConnection } = db;
-// Import config
+
+import Logger from '../utils/logger.js';
+import axios from 'axios';
 import config from '../config/config.js';
-// Use a lazy import for SessionHistoryModel to handle database failures more gracefully
-let SessionHistoryModel = null;
-import fs from 'fs';
-import path from 'path';
+import db from '../config/db.js';
+import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
+import mongoose from 'mongoose';
+import { parentPort } from 'worker_threads';
+import path from 'path';
+
+const { withDbConnection } = db;
+let SessionHistoryModel = null;
 
 // Initialize logger first before using it
 const logger = new Logger('LMStudio');
@@ -328,7 +328,7 @@ async function updateUserXP(username, wordCount, currentSocketId) {
     ? wordCount.trim().split(/\s+/).length 
     : wordCount;
   try {
-    const xpToAdd = Math.ceil(wordCount / 10);
+    const xpToAdd = Math.ceil(actualWordCount / 2);
 
     // Get the profiles database connection
     const profilesConn = global.connections?.profiles;
