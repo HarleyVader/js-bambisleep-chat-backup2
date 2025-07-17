@@ -753,7 +753,7 @@ a:hover {
     max-height: 300px;
     overflow-y: auto;
     padding-right: 8px;
-    gap: 4px;
+    gap: 1px;
 }
 
 .trigger-toggle-item {
@@ -762,7 +762,8 @@ a:hover {
     background-color: rgba(var(--nav-color-rgb), 0.3);
     border-radius: 4px;
     transition: all 0.2s ease;
-    padding: 4px;
+    padding: 0;
+    margin: 0;
 }
 
 .trigger-toggle-item:hover {
@@ -815,8 +816,8 @@ a:hover {
     text-transform: capitalize;
     border: var(--secondary-color) 3px ridge;
     border-radius: 0.5rem;
-    margin: 0.105rem;
-    padding: 0.35rem 0.7rem;
+    margin: 0;
+    padding: 0.1rem 0.2rem;
     font-size: 13px;
     text-shadow: var(--secondary-color) 2px 2px 2px;
 }
@@ -825,8 +826,8 @@ a:hover {
     background-color: var(--primary-alt);
     color: var (--secondary-color);
     text-shadow: none;
-    margin: 0.105rem;
-    padding: 0.35rem 0.7rem;
+    margin: 0;
+    padding: 0.1rem 0.2rem;
 }
 
 .toggle-input:checked+.toggle-label {
