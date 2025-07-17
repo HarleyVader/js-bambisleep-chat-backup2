@@ -45,42 +45,31 @@ async function do_tts(array) {
     let currentURL = arrayShift(array);
     if (!currentURL) return;
     
-    let retries = 3; // Increased retry attempts
+    let retries = 2; // Number of retry attempts
     let audioUrl = null; // Track the blob URL for cleanup
     
     while (retries >= 0) {
         try {
-            console.log(`Fetching TTS audio from: ${currentURL}`);
-            
             // Fetch the audio from the server
             const response = await fetch(currentURL, {
-                method: 'GET',
                 credentials: 'same-origin', // Include cookies for authentication
                 headers: {
-                    'Accept': 'audio/mpeg, audio/*' // Accept multiple audio formats
+                    'Accept': 'audio/mpeg' // Expect MP3 format as set in app.js
                 }
             });
             
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error(`TTS request failed with status ${response.status}: ${errorText}`);
-                
                 if (retries > 0) {
                     console.log(`Retrying TTS request (${retries} attempts left)...`);
                     retries--;
                     await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
                     continue;
                 }
-                throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+                throw new Error(`HTTP error! Status: ${response.status}`);
             }
             
             // Get audio data as blob
             const audioBlob = await response.blob();
-            
-            // Verify we received audio data
-            if (audioBlob.size === 0) {
-                throw new Error('Received empty audio data');
-            }
             
             // Create object URL from blob
             audioUrl = URL.createObjectURL(audioBlob);
@@ -168,7 +157,6 @@ async function do_tts(array) {
                 }
             } else {
                 retries--;
-                console.log(`Retrying after error (${retries} attempts left): ${error.message}`);
                 await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
             }
         }
@@ -181,73 +169,16 @@ async function do_tts(array) {
  */
 async function fetchAvailableVoices() {
     try {
-        const response = await fetch('/api/tts/voices', {
-            method: 'GET',
-            credentials: 'same-origin',
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-        
+        const response = await fetch('/api/tts/voices');
         if (!response.ok) {
-            if (response.status === 503) {
-                console.warn('TTS service not configured on server');
-                return [];
-            }
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        
-        const data = await response.json();
-        console.log('Available TTS voices:', data);
-        return data.voices || data || [];
+        return await response.json();
     } catch (error) {
         console.error("Error fetching available voices:", error);
         return [];
     }
 }
-
-/**
- * Check if TTS service is available
- * @returns {Promise<boolean>} - True if TTS service is available
- */
-async function checkTTSServiceAvailability() {
-    try {
-        const response = await fetch('/api/tts/voices', {
-            method: 'GET',
-            credentials: 'same-origin'
-        });
-        
-        return response.ok && response.status !== 503;
-    } catch (error) {
-        console.warn('TTS service check failed:', error);
-        return false;
-    }
-}
-
-// Initialize TTS service check on page load
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log('Checking TTS service availability...');
-    const isAvailable = await checkTTSServiceAvailability();
-    
-    if (!isAvailable) {
-        console.warn('TTS service is not available. Audio synthesis will be disabled.');
-        
-        // Show a user-friendly message if there's a message element
-        const messageEl = document.querySelector("#message");
-        if (messageEl) {
-            messageEl.textContent = "TTS service unavailable";
-            messageEl.style.color = "#ff6b6b";
-        }
-    } else {
-        console.log('TTS service is available');
-        
-        // Optionally load available voices
-        const voices = await fetchAvailableVoices();
-        if (voices.length > 0) {
-            console.log(`Found ${voices.length} available voices`);
-        }
-    }
-});
 
 // Make functions available globally
 window.do_tts = do_tts;
@@ -255,6 +186,5 @@ window.tts = {
     arrayPush,
     arrayShift,
     setVoice,
-    fetchAvailableVoices,
-    checkTTSServiceAvailability
+    fetchAvailableVoices
 };

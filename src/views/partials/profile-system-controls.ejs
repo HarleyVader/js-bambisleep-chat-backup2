@@ -171,6 +171,12 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
               <input type="range" id="loop-volume" min="0" max="10" value="8" class="volume-slider">
               <span id="volume-value">80%</span>
             </div>
+            
+            <div class="tts-test-control">
+              <label for="tts-test-input">Test TTS Voice:</label>
+              <input type="text" id="tts-test-input" placeholder="Enter text to test..." value="brandynette-is-the-bestest-bambi">
+              <button id="tts-test-btn" class="secondary-btn">Test Voice</button>
+            </div>
           </div>
         </div>
       <% } %>
@@ -198,7 +204,9 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
             
             <div id="frequency-description" class="frequency-description">
               Alpha waves (8-14Hz) promote relaxed focus and are ideal for gentle trance states.
-            </div>              <div id="custom-freq-container" class="brainwave-control-group" style="<%= (systemControls.brainwaveMode === 'custom') ? '' : 'display: none;' %>">
+            </div>
+            
+            <div id="custom-freq-container" class="brainwave-control-group" style="<%= (systemControls.brainwaveMode === 'custom') ? '' : 'display: none;' %>">
               <label for="custom-frequency">Beat Frequency:</label>
               <div class="slider-container">
                 <input type="range" id="custom-frequency" min="1" max="30" value="<%= systemControls.customFrequency || 10 %>" step="0.5" class="brainwave-slider">
@@ -412,6 +420,34 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
       } else {
         element.textContent = 'Faster ' + (speedVal - 5) + 'x';
       }
+    }
+    
+    // TTS Test functionality
+    const ttsTestBtn = document.getElementById('tts-test-btn');
+    const ttsTestInput = document.getElementById('tts-test-input');
+    if (ttsTestBtn && ttsTestInput) {
+      ttsTestBtn.addEventListener('click', function() {
+        const testText = ttsTestInput.value.trim();
+        if (testText && window.tts && window.do_tts) {
+          const audioArray = [];
+          window.tts.arrayPush(audioArray, testText);
+          window.do_tts(audioArray);
+          
+          // Show feedback
+          ttsTestBtn.textContent = 'Playing...';
+          ttsTestBtn.disabled = true;
+          
+          // Re-enable button after a delay
+          setTimeout(() => {
+            ttsTestBtn.textContent = 'Test Voice';
+            ttsTestBtn.disabled = false;
+          }, 2000);
+        } else if (!testText) {
+          alert('Please enter text to test');
+        } else {
+          alert('TTS system not available');
+        }
+      });
     }
     
     // Initialize triggers
