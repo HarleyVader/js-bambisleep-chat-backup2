@@ -187,12 +187,15 @@
       }, 3000);
     }
 
-    // Auto-scroll to bottom if window is active
+    // Auto-scroll to bottom and maintain 50 messages max
     function autoScrollToBottom() {
-      if (!document.hidden && document.hasFocus()) {
-        const chatResponse = document.getElementById('chat-response');
-        chatResponse.scrollTop = chatResponse.scrollHeight;
+      const chatResponse = document.getElementById('chat-response');
+      // Remove oldest messages if we have more than 50
+      while (chatResponse.children.length > 50) {
+        chatResponse.removeChild(chatResponse.firstChild);
       }
+      // Always scroll to bottom
+      chatResponse.scrollTop = chatResponse.scrollHeight;
     }
 
     // Show countdown in chat
@@ -201,6 +204,9 @@
       countdownLi.className = 'system-message countdown-message';
       countdownLi.innerHTML = `<span class="countdown">Speaking "${trigger}" ${count} times...</span>`;
       document.getElementById('chat-response').appendChild(countdownLi);
+      
+      // Auto-scroll after adding countdown
+      autoScrollToBottom();
       
       let remaining = count;
       const countdownInterval = setInterval(() => {
@@ -212,6 +218,7 @@
           clearInterval(countdownInterval);
           setTimeout(() => {
             countdownLi.remove();
+            autoScrollToBottom();
           }, 2000);
         }
       }, 1000);
@@ -249,9 +256,14 @@
       `;
       document.getElementById('chat-response').appendChild(li);
       
-      // Auto-scroll to bottom if window is active
+      // Auto-scroll to bottom and maintain message limit
       autoScrollToBottom();
     });
+
+    // Initial scroll to bottom on page load
+    setTimeout(() => {
+      autoScrollToBottom();
+    }, 100);
   });
 </script>
 
@@ -267,7 +279,7 @@
   
   .countdown-message {
     font-style: italic;
-    color: #007bff;
+    color: var(--tertiary-alt);
   }
   
   .countdown {
@@ -275,8 +287,12 @@
   }
   
   .chat-messages {
-    max-height: 400px;
-    overflow-y: auto;
+    height: 400px;
+    overflow: hidden;
+    background: rgba(var(--nav-color-rgb), 0.3);
+    border-radius: var(--border-radius);
+    padding: 10px;
+    margin-bottom: 15px;
   }
   
   .chat-container {
@@ -292,7 +308,7 @@
   }
   
   .chat-header h2 {
-    color: #00ccff;
+    color: var(--nav-alt);
     margin: 0;
   }
   
@@ -302,8 +318,9 @@
     align-items: center;
     margin-bottom: 10px;
     padding: 10px;
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
+    background: rgba(var(--nav-color-rgb), 0.4);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
   }
   
   .font-controls {
@@ -322,11 +339,15 @@
     background: var(--button-color);
     border: 1px solid var(--button-alt);
     color: var(--button-alt);
-    padding: 5px 10px;
-    border-radius: var(--border-radius);
+    padding: 8px 12px;
+    border-radius: 50%;
     cursor: pointer;
     font-size: 12px;
-    min-width: 32px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-family: "Audiowide", cursive;
     transition: all 0.3s ease;
     text-shadow: none;
@@ -336,7 +357,14 @@
     background: var(--tertiary-color);
     color: var(--nav-alt);
     box-shadow: 0 0 8px var(--tertiary-color);
-    transform: translateY(-1px);
+    transform: scale(1.1);
+  }
+  
+  .font-controls button:active {
+    background: var(--nav-alt);
+    color: var(--button-alt);
+    box-shadow: 0 0 15px var(--nav-alt);
+    transform: scale(0.95);
   }
   
   #font-size-display {
@@ -392,7 +420,7 @@
   .input-group {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
   }
   
   .input-group input {
@@ -417,36 +445,63 @@
     border: 1px solid var(--border-color);
     font-size: 18px;
     cursor: pointer;
-    padding: 8px;
-    border-radius: var(--border-radius);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.3s ease;
     color: var(--nav-alt);
+    flex-shrink: 0;
   }
   
   .emoji-btn:hover {
     background: var(--tertiary-color);
     color: var(--button-alt);
-    box-shadow: 0 0 5px var(--tertiary-color);
+    box-shadow: 0 0 8px var(--tertiary-color);
+    transform: scale(1.1);
+  }
+  
+  .emoji-btn:active {
+    background: var(--nav-alt);
+    color: var(--button-alt);
+    box-shadow: 0 0 15px var(--nav-alt);
+    transform: scale(0.95);
   }
   
   .chat-input .send-btn {
     background: var(--button-color);
     border: 1px solid var(--button-alt);
     color: var(--button-alt);
-    padding: 10px 20px;
-    border-radius: var(--border-radius);
+    padding: 12px 24px;
+    border-radius: 25px;
     cursor: pointer;
     font-family: "Audiowide", cursive;
     font-size: 14px;
+    font-weight: bold;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.3s ease;
     text-shadow: none;
+    flex-shrink: 0;
+    white-space: nowrap;
   }
   
   .chat-input .send-btn:hover {
     background: var(--tertiary-color);
     color: var(--nav-alt);
-    box-shadow: 0 0 10px var(--tertiary-color);
-    transform: translateY(-1px);
+    box-shadow: 0 0 12px var(--tertiary-color);
+    transform: scale(1.05);
+  }
+  
+  .chat-input .send-btn:active {
+    background: var(--nav-alt);
+    color: var(--button-alt);
+    box-shadow: 0 0 20px var(--nav-alt);
+    transform: scale(0.95);
   }
   
   .emoji-picker {
