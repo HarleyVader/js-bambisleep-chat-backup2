@@ -38,32 +38,11 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
       <button class="control-btn disabled" title="Reach Level 2 to unlock">Collar 🔒</button>
     <% } %>
     
-    <!-- Show session history feature if user level ≥ 3 -->
-    <% if (userLevel >= 3) { %>
-      <button id="session-history-btn" class="control-btn" data-target="session-history-panel">Session History</button>
-    <% } else { %>
-      <button class="control-btn disabled" title="Reach Level 3 to unlock">Session History 🔒</button>
-    <% } %>
-    
     <!-- Show spirals feature if user level ≥ 4 -->
     <% if (userLevel >= 4) { %>
       <button id="spirals-btn" class="control-btn" data-target="spirals-panel">Spirals</button>
     <% } else { %>
       <button class="control-btn disabled" title="Reach Level 4 to unlock">Spirals 🔒</button>
-    <% } %>
-    
-    <!-- Show advanced spirals feature if user level ≥ 4 -->
-    <% if (userLevel >= 4) { %>
-      <button id="advanced-spirals-btn" class="control-btn" data-target="advanced-spirals-panel">Advanced Spirals</button>
-    <% } else { %>
-      <button class="control-btn disabled" title="Reach Level 4 to unlock">Advanced Spirals 🔒</button>
-    <% } %>
-    
-    <!-- Show hypnosis feature if user level ≥ 5 -->
-    <% if (userLevel >= 5) { %>
-      <button id="hypnosis-btn" class="control-btn" data-target="hypnosis-panel">Hypnosis</button>
-    <% } else { %>
-      <button class="control-btn disabled" title="Reach Level 5 to unlock">Hypnosis 🔒</button>
     <% } %>
     
     <!-- Show audios feature if user level ≥ 6 -->
@@ -119,47 +98,6 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
         </div>
       <% } %>
       
-      <% if (userLevel >= 3) { %>
-        <!-- Session history panel -->
-        <div id="session-history-panel" class="control-panel">
-          <h3>Session History</h3>
-          
-          <div id="session-history-status" class="session-history-status">
-            Click "Load History" to view your sessions
-          </div>
-          
-          <div class="session-select-container" style="display: none">
-            <select id="session-select">
-              <option value="">Select a session...</option>
-            </select>
-            <div id="active-session-info" class="active-session-info" style="display: none">
-              <span class="info-label">Active Session:</span>
-              <span id="active-session-date">None</span>
-            </div>
-          </div>
-          
-          <div class="session-stats-container" style="display: none">
-            <div class="session-stat">
-              <div class="stat-value" id="session-count">0</div>
-              <div class="stat-label">Sessions</div>
-            </div>
-            <div class="session-stat">
-              <div class="stat-value" id="message-count">0</div>
-              <div class="stat-label">Messages</div>
-            </div>
-            <div class="session-stat">
-              <div class="stat-value" id="word-count">0</div>
-              <div class="stat-label">Words</div>
-            </div>
-          </div>
-          
-          <div class="session-history-actions">
-            <button id="load-history-btn" class="control-btn">Load History</button>
-            <button id="replay-history-btn" class="control-btn" disabled>Replay Random</button>
-          </div>
-        </div>
-      <% } %>
-      
       <% if (userLevel >= 4) { %>
         <!-- Spirals panel -->
         <div id="spirals-panel" class="control-panel">
@@ -205,29 +143,6 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
           
           <div class="spirals-actions">
             <button id="save-spirals" class="save-btn">Save Spiral Settings</button>
-          </div>
-        </div>
-      <% } %>        <% if (userLevel >= 5) { %>
-        <!-- Hypnosis panel -->
-        <div id="hypnosis-panel" class="control-panel">
-          <h3>Hypnosis Settings</h3>
-          <div class="hypnosis-toggle">
-            <input type="checkbox" id="hypnosis-enable" <%= systemControls.hypnosisEnabled ? 'checked' : '' %>>
-            <label for="hypnosis-enable">Enable Hypnosis</label>
-          </div>
-          <div class="hypnosis-settings">
-            <!-- Hypnosis settings would go here -->
-            <p>Hypnosis settings will appear here in a future update.</p>
-          </div>
-          
-          <!-- Streaming response settings -->
-          <div class="streaming-settings">
-            <h4>Response Streaming</h4>
-            <div class="streaming-toggle">
-              <input type="checkbox" id="streaming-enable" <%= systemControls.useStreaming ? 'checked' : '' %>>
-              <label for="streaming-enable">Enable streaming responses</label>
-            </div>
-            <p class="setting-description">Streaming responses appear word by word in real-time, creating a more hypnotic effect.</p>
           </div>
         </div>
       <% } %>
