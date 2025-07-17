@@ -232,6 +232,13 @@ socket.on('response', async (message) => {
 
     const sentences = messageText.split(/(?<=[:;,.!?*-]["']?)\s+/g);
     console.log('Split into sentences:', sentences);
+    
+    // Remove punctuation from sentences
+    const cleanedSentences = sentences.map(sentence => 
+        sentence.replace(/\*\*|[.,?!;:\-*&"'`]/g, '').trim()
+    ).filter(sentence => sentence.length > 0);
+    console.log('Cleaned sentences:', cleanedSentences);
+    
     // Send response processing through control network
     if (window.bambiControlNetwork && typeof window.bambiControlNetwork.processControlSignal === 'function') {
         const nodeId = window.bambiControlNetwork.clientNodeId || 'aigf-core';
@@ -246,7 +253,7 @@ socket.on('response', async (message) => {
         if (typeof window.bambiControlNetwork.updateNodeActivity === 'function') {
             window.bambiControlNetwork.updateNodeActivity(nodeId);
         }
-    }    for (let sentence of sentences) {
+    }    for (let sentence of cleanedSentences) {
         sentence = sentence.trim();
         if (sentence.length > 0) { // Only add non-empty sentences
             if (_textArray && Array.isArray(_textArray)) {
