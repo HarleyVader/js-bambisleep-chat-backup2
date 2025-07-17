@@ -60,7 +60,7 @@ const ProfileSchema = new mongoose.Schema({
 
 // Calculate user level based on XP
 ProfileSchema.virtual('level').get(function() {
-  const requirements = [100, 250, 450, 700, 1200];
+  const requirements = [1000, 2500, 4500, 7000, 12000, 36000, 112000, 332000];
   let level = 0;
   
   while (level < requirements.length && this.xp >= requirements[level]) {

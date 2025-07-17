@@ -77,11 +77,10 @@
         let unlockLevel = 0;
         if (featureName === 'Triggers') unlockLevel = 1;
         else if (featureName === 'Collar') unlockLevel = 2;
-        else if (featureName === 'Session History') unlockLevel = 3;
-        else if (featureName === 'Spirals') unlockLevel = 4;
-        else if (featureName === 'Hypnosis') unlockLevel = 5;
-        else if (featureName === 'Audios') unlockLevel = 6;
-        else if (featureName === 'Brainwaves') unlockLevel = 7;
+        else if (featureName === 'Spirals') unlockLevel = 3;
+        else if (featureName === 'Audios') unlockLevel = 4;
+        else if (featureName === 'Brainwaves') unlockLevel = 5;
+        else if (featureName === 'Advanced Binaural') unlockLevel = 6;
         
         // If new level unlocks this feature, update the button
         if (newLevel >= unlockLevel) {

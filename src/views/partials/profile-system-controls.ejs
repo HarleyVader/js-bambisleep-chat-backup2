@@ -38,32 +38,32 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
       <button class="control-btn disabled" title="Reach Level 2 to unlock">Collar 🔒</button>
     <% } %>
     
-    <!-- Show spirals feature if user level ≥ 4 -->
-    <% if (userLevel >= 4) { %>
+    <!-- Show spirals feature if user level ≥ 3 -->
+    <% if (userLevel >= 3) { %>
       <button id="spirals-btn" class="control-btn" data-target="spirals-panel">Spirals</button>
     <% } else { %>
-      <button class="control-btn disabled" title="Reach Level 4 to unlock">Spirals 🔒</button>
+      <button class="control-btn disabled" title="Reach Level 3 to unlock">Spirals 🔒</button>
     <% } %>
     
-    <!-- Show audios feature if user level ≥ 6 -->
-    <% if (userLevel >= 6) { %>
+    <!-- Show audios feature if user level ≥ 4 -->
+    <% if (userLevel >= 4) { %>
       <button id="audios-btn" class="control-btn" data-target="audios-panel">Audios</button>
     <% } else { %>
-      <button class="control-btn disabled" title="Reach Level 6 to unlock">Audios 🔒</button>
+      <button class="control-btn disabled" title="Reach Level 4 to unlock">Audios 🔒</button>
     <% } %>
 
-    <!-- Show brainwave feature if user level ≥ 7 -->
-    <% if (userLevel >= 7) { %>
+    <!-- Show brainwave feature if user level ≥ 5 -->
+    <% if (userLevel >= 5) { %>
       <button id="brainwave-btn" class="control-btn" data-target="brainwave-panel">Brainwaves</button>
     <% } else { %>
-      <button class="control-btn disabled" title="Reach Level 7 to unlock">Brainwaves 🔒</button>
+      <button class="control-btn disabled" title="Reach Level 5 to unlock">Brainwaves 🔒</button>
     <% } %>
     
-    <!-- Show advanced binaural feature if user level ≥ 8 -->
-    <% if (userLevel >= 8) { %>
+    <!-- Show advanced binaural feature if user level ≥ 6 -->
+    <% if (userLevel >= 6) { %>
       <button id="advanced-binaural-btn" class="control-btn" data-target="advanced-binaural-panel">Advanced Binaural</button>
     <% } else { %>
-      <button class="control-btn disabled" title="Reach Level 8 to unlock">Advanced Binaural 🔒</button>
+      <button class="control-btn disabled" title="Reach Level 6 to unlock">Advanced Binaural 🔒</button>
     <% } %>
   </div>
 
@@ -98,7 +98,7 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
         </div>
       <% } %>
       
-      <% if (userLevel >= 4) { %>
+      <% if (userLevel >= 3) { %>
         <!-- Spirals panel -->
         <div id="spirals-panel" class="control-panel">
           <h3>Spirals Settings</h3>
@@ -147,7 +147,7 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
         </div>
       <% } %>
       
-      <% if (userLevel >= 6) { %>
+      <% if (userLevel >= 4) { %>
         <!-- Audio panel -->
         <div id="audios-panel" class="control-panel">
           <h3>Trigger Audios</h3>
@@ -175,7 +175,7 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
         </div>
       <% } %>
 
-      <% if (userLevel >= 7) { %>
+      <% if (userLevel >= 5) { %>
         <!-- Brainwave panel -->
         <div id="brainwave-panel" class="control-panel">
           <h3>Brainwave Entrainment</h3>
@@ -230,7 +230,7 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
           </div>
         </div>
       <% } %>
-        <% if (userLevel >= 8) { %>
+        <% if (userLevel >= 6) { %>
         <!-- Advanced Binaural panel -->
         <div id="advanced-binaural-panel" class="control-panel">
           <h3>Advanced Binaural Patterns</h3>
