@@ -30,14 +30,26 @@
           </ul>
         </div>
         
+        <div class="chat-controls">
+          <div class="font-controls">
+            <button id="font-decrease" class="btn btn-sm">A-</button>
+            <button id="font-increase" class="btn btn-sm">A+</button>
+          </div>
+          <div class="online-users">
+            <span class="online-label">Online:</span>
+            <span id="online-count">0</span>
+            <ul id="online-list"></ul>
+          </div>
+        </div>
+        
         <div class="chat-input">
           <form id="chat-form">
             <div class="input-group">
               <input type="text" id="chat-message" class="form-control" placeholder="Type your message..." autocomplete="off">
-              <div class="input-group-append">
-                <button class="btn btn-primary" type="submit">Send</button>
-              </div>
+              <button class="emoji-btn" type="button">😊</button>
+              <button class="btn btn-primary send-btn" type="submit">Send</button>
             </div>
+            <div class="emoji-picker" id="emoji-picker" style="display: none;"></div>
           </form>
         </div>
       </div>
@@ -65,6 +77,70 @@
       if (message) {
         socket.emit('chat message', { data: message });
         chatInput.value = '';
+      }
+    });
+
+    // Font size controls
+    let fontSize = parseInt(localStorage.getItem('chatFontSize') || '16');
+    const chatResponse = document.getElementById('chat-response');
+    
+    document.getElementById('font-increase').addEventListener('click', function() {
+      fontSize = Math.min(fontSize + 2, 24);
+      chatResponse.style.fontSize = fontSize + 'px';
+      localStorage.setItem('chatFontSize', fontSize);
+    });
+    
+    document.getElementById('font-decrease').addEventListener('click', function() {
+      fontSize = Math.max(fontSize - 2, 12);
+      chatResponse.style.fontSize = fontSize + 'px';
+      localStorage.setItem('chatFontSize', fontSize);
+    });
+    
+    // Apply saved font size
+    chatResponse.style.fontSize = fontSize + 'px';
+
+    // Online users functionality
+    const onlineCount = document.getElementById('online-count');
+    const onlineList = document.getElementById('online-list');
+    
+    socket.on('online users', function(users) {
+      onlineCount.textContent = users.length;
+      onlineList.innerHTML = '';
+      users.forEach(user => {
+        const li = document.createElement('li');
+        li.textContent = user;
+        li.className = 'online-user';
+        onlineList.appendChild(li);
+      });
+    });
+
+    // Emoji picker functionality
+    const emojis = ['😊', '😂', '😍', '😘', '😋', '😎', '😇', '🤗', '🤔', '😱', '😭', '😤', '😡', '🤤', '😵', '🤯', '💕', '💖', '💗', '💯', '🔥', '✨', '💫', '⭐', '🌟'];
+    const emojiBtn = document.querySelector('.emoji-btn');
+    const emojiPicker = document.getElementById('emoji-picker');
+    
+    // Create emoji picker
+    emojis.forEach(emoji => {
+      const span = document.createElement('span');
+      span.textContent = emoji;
+      span.className = 'emoji-option';
+      span.onclick = function() {
+        chatInput.value += emoji;
+        emojiPicker.style.display = 'none';
+        chatInput.focus();
+      };
+      emojiPicker.appendChild(span);
+    });
+    
+    emojiBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      emojiPicker.style.display = emojiPicker.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    // Close emoji picker when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!emojiBtn.contains(e.target) && !emojiPicker.contains(e.target)) {
+        emojiPicker.style.display = 'none';
       }
     });
 
@@ -198,7 +274,149 @@
     margin: 0;
   }
   
+  .chat-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+  
+  .font-controls {
+    display: flex;
+    gap: 5px;
+  }
+  
+  .font-controls button {
+    background: var(--button-color);
+    border: 1px solid var(--button-alt);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  
+  .font-controls button:hover {
+    background: var(--button-alt);
+    box-shadow: 0 0 5px var(--nav-alt);
+  }
+  
+  .online-users {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #00ccff;
+    font-size: 14px;
+  }
+  
+  .online-label {
+    font-weight: bold;
+  }
+  
+  #online-count {
+    background: var(--tertiary-color);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 12px;
+  }
+  
+  #online-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-width: 200px;
+  }
+  
+  .online-user {
+    background: rgba(0, 204, 255, 0.2);
+    color: #00ccff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+  }
+  
+  .input-group {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .input-group input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--nav-color);
+    color: var(--primary-alt);
+  }
+  
+  .emoji-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background 0.3s;
+  }
+  
+  .emoji-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .chat-input .send-btn {
+    background: var(--button-color);
+    border: 1px solid var(--button-alt);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: "Audiowide", cursive;
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
+  
+  .chat-input .send-btn:hover {
+    background: var(--button-alt);
+    box-shadow: 0 0 10px var(--nav-alt);
+    transform: translateY(-1px);
+  }
+  
+  .emoji-picker {
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    background: rgba(0, 0, 0, 0.9);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    max-width: 200px;
+    z-index: 1000;
+  }
+  
+  .emoji-option {
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background 0.3s;
+  }
+  
+  .emoji-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
   .chat-input {
+    position: relative;
     margin-top: 20px;
   }
   

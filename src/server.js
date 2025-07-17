@@ -1184,7 +1184,16 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
         });
       }        // Add socket to global store with worker reference  
       socketStoreManager.addSocket(socketStore, socket.id, { socket, worker: lmstudio, files: [] });
-      logger.info(`Client connected: ${socket.id} sockets: ${socketStore.size}`);        // Enhanced chat message handling
+      logger.info(`Client connected: ${socket.id} sockets: ${socketStore.size}`);
+
+      // Emit current online users to all clients
+      const onlineUsers = Array.from(socketStore.values())
+        .map(data => data.socket?.bambiUsername || 'anonBambi')
+        .filter(username => username !== 'anonBambi');
+      
+      io.emit('online users', onlineUsers);
+
+      // Enhanced chat message handling
       socket.on('chat message', async (msg) => {
         try {
           // Validate message format
@@ -1546,16 +1555,25 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
           logger.error('Error in collar handler:', error);
         }
       });        // Clean up resources when users disconnect to prevent memory leaks
-      socket.on('disconnect', (reason) => {
-        try {
-          logger.info('Client disconnected:', socket.id, 'Reason:', reason);            // Get socket data and clean up using centralized management
-          socketStoreManager.removeSocket(socketStore, socket.id);
+        socket.on('disconnect', (reason) => {
+          try {
+            logger.info('Client disconnected:', socket.id, 'Reason:', reason);
+            
+            // Get socket data and clean up using centralized management
+            socketStoreManager.removeSocket(socketStore, socket.id);
 
-          logger.info(`Client disconnected: ${socket.id} sockets: ${socketStore.size}`);
-        } catch (error) {
-          logger.error('Error in disconnect handler:', error);
-        }
-      });
+            // Emit updated online users to all remaining clients
+            const onlineUsers = Array.from(socketStore.values())
+              .map(data => data.socket?.bambiUsername || 'anonBambi')
+              .filter(username => username !== 'anonBambi');
+            
+            io.emit('online users', onlineUsers);
+
+            logger.info(`Client disconnected: ${socket.id} sockets: ${socketStore.size}`);
+          } catch (error) {
+            logger.error('Error in disconnect handler:', error);
+          }
+        });
 
       // Bridge between client UI and worker thread for real-time settings updates
       socket.on('worker:settings:update', (data) => {
