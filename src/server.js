@@ -25,6 +25,7 @@ import indexRoute from './routes/index.js';
 import mongoose from 'mongoose';
 import os from 'os';
 import path from 'path';
+import profileRoute from './routes/profile.js';
 import psychodelicTriggerManiaRouter from './routes/psychodelic-trigger-mania.js';
 import sessionService from './services/sessionService.js';
 import spiralsWorker from './workers/spirals.js';
@@ -344,11 +345,11 @@ async function initializeApp() {
     const db = await import('./config/db.js');
     const dbInitResults = await db.default.connectAllDatabases(3);
 
-    if (!dbInitResults.main || !dbInitResults.profiles || !dbInitResults.chat || !dbInitResults.aigfLogs) {
+    if (!dbInitResults.main || !dbInitResults.profiles) {
       logger.warning('Some database connections failed, server running in limited mode');
-      logger.warning(`Connection status: main=${dbInitResults.main}, profiles=${dbInitResults.profiles}, chat=${dbInitResults.chat}, aigfLogs=${dbInitResults.aigfLogs}`);
+      logger.warning(`Connection status: main=${dbInitResults.main}, profiles=${dbInitResults.profiles}`);
     } else {
-      logger.success('All database connections established successfully');
+      logger.success('Database connections established successfully');
     }
 
     // Register models after DB connection
@@ -977,7 +978,12 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
     const lmstudio = new Worker(path.join(__dirname, 'workers/lmstudio.js'));
 
     // Set up worker handlers
-    setupWorkerHandlers(lmstudio, io);
+    const workerHandlers = setupWorkerHandlers(lmstudio, io);
+    
+    // Store references for restart
+    if (workerHandlers && workerHandlers.setReferences) {
+      workerHandlers.setReferences(socketStore, filteredWords);
+    }
 
     // Set up XP system
     const xpSystem = createXPSystem();
@@ -994,6 +1000,10 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
  * Set up worker message handlers
  */
 function setupWorkerHandlers(lmstudio, io) {
+  // Store references for restart
+  let currentSocketStore = null;
+  let currentFilteredWords = null;
+
   // Restart the worker automatically to maintain AI service availability
   lmstudio.on('exit', (code) => {
     logger.error(`Worker thread exited with code ${code}`);
@@ -1001,9 +1011,17 @@ function setupWorkerHandlers(lmstudio, io) {
       io.emit('system', { message: 'AI service restarting, please wait...' });
     }
     setTimeout(() => {
-      setupSocketHandlers(io, socketStore, filteredWords);
+      if (currentSocketStore && currentFilteredWords) {
+        setupSocketHandlers(io, currentSocketStore, currentFilteredWords);
+      }
     }, 1000);
   });
+
+  // Store references for later use
+  this.setReferences = (socketStore, filteredWords) => {
+    currentSocketStore = socketStore;
+    currentFilteredWords = filteredWords;
+  };
 
   // Set up worker message handlers
   lmstudio.on("message", async (msg) => {
@@ -1527,6 +1545,11 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
           logger.info(`Admin command received: ${command} from ${socket.id}`);
 
           let result = { command, success: false, output: '' };
+
+          // Import exec and create promisified version
+          const { exec } = await import('child_process');
+          const { promisify } = await import('util');
+          const execAsync = promisify(exec);
 
           switch (command) {
             case 'git-pull':
