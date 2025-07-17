@@ -328,7 +328,7 @@ async function updateUserXP(username, wordCount, currentSocketId) {
     ? wordCount.trim().split(/\s+/).length 
     : wordCount;
   try {
-    const xpToAdd = Math.ceil(actualWordCount / 2);
+    const xpToAdd = Math.ceil(actualWordCount * 10);
 
     // Get the profiles database connection
     const profilesConn = global.connections?.profiles;
