@@ -32,7 +32,7 @@ router.get('/', async (req, res) => {
     let profile = null;
     if (username && username !== 'anonBambi') {
       try {
-        profile = await Profile.findByUsername(username);
+        profile = await Profile.findOne({ username: username });
       } catch (error) {
         logger.error(`Error fetching profile for ${username}:`, error);
       }

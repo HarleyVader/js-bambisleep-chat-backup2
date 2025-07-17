@@ -5,16 +5,25 @@
 
 // Initialize when document is ready
 document.addEventListener('DOMContentLoaded', () => {
-  setupEnhancedChat();
+  // Wait for socket to be available from chat.ejs
+  setTimeout(() => {
+    if (window.socket) {
+      setupEnhancedChat();
+    }
+  }, 100);
 });
 
 /**
  * Set up enhanced chat features
  */
 function setupEnhancedChat() {
-  // Get socket from global scope
-  const socket = window.socket || io();
-  window.socket = socket;
+  // Use existing socket from global scope
+  const socket = window.socket;
+  
+  if (!socket) {
+    console.warn('Socket not available for enhanced chat features');
+    return;
+  }
   
   // Set up event listeners for enhanced features
   setupURLHandling(socket);

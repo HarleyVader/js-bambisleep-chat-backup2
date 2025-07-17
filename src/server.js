@@ -1017,12 +1017,6 @@ function setupWorkerHandlers(lmstudio, io) {
     }, 1000);
   });
 
-  // Store references for later use
-  this.setReferences = (socketStore, filteredWords) => {
-    currentSocketStore = socketStore;
-    currentFilteredWords = filteredWords;
-  };
-
   // Set up worker message handlers
   lmstudio.on("message", async (msg) => {
     try {
@@ -1048,6 +1042,14 @@ function setupWorkerHandlers(lmstudio, io) {
 
   lmstudio.on('info', (info) => logger.info('Worker info:', info));
   lmstudio.on('error', (err) => handleWorkerError(err, io));
+  
+  // Return the handlers object with setReferences method
+  return {
+    setReferences: (socketStore, filteredWords) => {
+      currentSocketStore = socketStore;
+      currentFilteredWords = filteredWords;
+    }
+  };
 }
 
 /**
@@ -1194,7 +1196,7 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
 
           const timestamp = new Date().toISOString();
           const messageText = msg.data;
-          const senderUsername = socket.bambiUsername || 'anonbambi';
+          const senderUsername = socket.bambiUsername || 'anonBambi';
 
           // Create message object with consistent structure
           const messageData = {
