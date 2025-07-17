@@ -12,6 +12,10 @@ const submit = document.getElementById('submit');
 const response = document.getElementById('response');
 const userPrompt = document.getElementById('user-prompt');
 
+// Ensure arrays are always defined
+window._textArray = _textArray;
+window._audioArray = _audioArray;
+
 // Check for missing critical elements
 if (!textarea) console.warn('textarea element not found');
 if (!submit) console.warn('submit button not found');
@@ -142,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function arrayPush(array, text) {
-    if (Array.isArray(array)) {
+    if (Array.isArray(array) && text) {
         array.push(text);
     }
 }
@@ -242,10 +246,10 @@ socket.on('response', async (message) => {
         if (typeof window.bambiControlNetwork.updateNodeActivity === 'function') {
             window.bambiControlNetwork.updateNodeActivity(nodeId);
         }
-    } for (let sentence of sentences) {
+    }    for (let sentence of sentences) {
         sentence = sentence.trim();
         if (sentence.length > 0) { // Only add non-empty sentences
-            if (_textArray) {
+            if (_textArray && Array.isArray(_textArray)) {
                 _textArray.push(sentence);
                 console.log('Text array:', _textArray);
             }
@@ -346,15 +350,17 @@ function displayChatMessage(messageData) {
 }
 
 function handleAudioEnded() {
-    if (_textArray.length > 0) {
+    if (_textArray && _textArray.length > 0) {
         state = false;
         text = _textArray.shift();
-    } else if (_textArray.length === 0) {
+    } else if (_textArray && _textArray.length === 0) {
         state = true;
         return;
     }
-    arrayPush(_audioArray, text);
-    do_tts(_audioArray);
+    if (_audioArray && Array.isArray(_audioArray)) {
+        _audioArray.push(text);
+        do_tts(_audioArray);
+    }
 }
 
 function handleAudioPlay() {
