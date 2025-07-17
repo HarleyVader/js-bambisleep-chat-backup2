@@ -358,7 +358,13 @@ function handleAudioEnded() {
         return;
     }
     if (_audioArray && Array.isArray(_audioArray)) {
-        _audioArray.push(text);
+        // Use the proper TTS function from text2speech.js
+        if (window.tts && typeof window.tts.arrayPush === 'function') {
+            window.tts.arrayPush(_audioArray, text);
+        } else {
+            // Fallback to direct array push if TTS module not available
+            _audioArray.push(text);
+        }
         do_tts(_audioArray);
     }
 }
