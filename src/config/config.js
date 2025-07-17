@@ -27,7 +27,7 @@ const configSchemas = {
   KOKORO_HOST: { type: 'string', default: 'localhost' },
   KOKORO_PORT: { type: 'number', default: 8880, min: 1, max: 65535 },
   KOKORO_API_URL: { type: 'string', default: null },
-  KOKORO_DEFAULT_VOICE: { type: 'string', default: 'af_sky' },
+  KOKORO_DEFAULT_VOICE: { type: 'string', default: 'af_bella' },
   KOKORO_API_KEY: { type: 'string', default: 'not-needed', sensitive: true },
   SOCKET_PING_TIMEOUT: { type: 'number', default: 480000, min: 260000 },
   SOCKET_PING_INTERVAL: { type: 'number', default: 25000, min: 1000 },

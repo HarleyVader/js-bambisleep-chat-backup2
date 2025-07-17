@@ -32,7 +32,9 @@
         
         <div class="chat-controls">
           <div class="font-controls">
+            <label>Font Size:</label>
             <button id="font-decrease" class="btn btn-sm">A-</button>
+            <span id="font-size-display">16px</span>
             <button id="font-increase" class="btn btn-sm">A+</button>
           </div>
           <div class="online-users">
@@ -83,21 +85,26 @@
     // Font size controls
     let fontSize = parseInt(localStorage.getItem('chatFontSize') || '16');
     const chatResponse = document.getElementById('chat-response');
+    const fontSizeDisplay = document.getElementById('font-size-display');
+    
+    function updateFontSize() {
+      chatResponse.style.fontSize = fontSize + 'px';
+      fontSizeDisplay.textContent = fontSize + 'px';
+      localStorage.setItem('chatFontSize', fontSize);
+    }
     
     document.getElementById('font-increase').addEventListener('click', function() {
       fontSize = Math.min(fontSize + 2, 24);
-      chatResponse.style.fontSize = fontSize + 'px';
-      localStorage.setItem('chatFontSize', fontSize);
+      updateFontSize();
     });
     
     document.getElementById('font-decrease').addEventListener('click', function() {
       fontSize = Math.max(fontSize - 2, 12);
-      chatResponse.style.fontSize = fontSize + 'px';
-      localStorage.setItem('chatFontSize', fontSize);
+      updateFontSize();
     });
     
     // Apply saved font size
-    chatResponse.style.fontSize = fontSize + 'px';
+    updateFontSize();
 
     // Online users functionality
     const onlineCount = document.getElementById('online-count');
@@ -144,7 +151,7 @@
       }
     });
 
-    // TTS functionality
+    // TTS functionality with af_bella voice
     function speakText(text, count = 1) {
       if ('speechSynthesis' in window) {
         let spoken = 0;
@@ -152,6 +159,14 @@
           const utterance = new SpeechSynthesisUtterance(text);
           utterance.rate = 0.8;
           utterance.pitch = 1;
+          
+          // Try to use af_bella voice if available
+          const voices = speechSynthesis.getVoices();
+          const bellaVoice = voices.find(voice => voice.name.includes('bella') || voice.name.includes('Bella'));
+          if (bellaVoice) {
+            utterance.voice = bellaVoice;
+          }
+          
           utterance.onend = () => {
             spoken++;
             if (spoken < count) {
@@ -170,6 +185,14 @@
       setTimeout(() => {
         document.body.classList.remove('mentioned');
       }, 3000);
+    }
+
+    // Auto-scroll to bottom if window is active
+    function autoScrollToBottom() {
+      if (!document.hidden && document.hasFocus()) {
+        const chatResponse = document.getElementById('chat-response');
+        chatResponse.scrollTop = chatResponse.scrollHeight;
+      }
     }
 
     // Show countdown in chat
@@ -226,9 +249,8 @@
       `;
       document.getElementById('chat-response').appendChild(li);
       
-      // Scroll to bottom
-      const chatResponse = document.getElementById('chat-response');
-      chatResponse.scrollTop = chatResponse.scrollHeight;
+      // Auto-scroll to bottom if window is active
+      autoScrollToBottom();
     });
   });
 </script>
@@ -286,7 +308,14 @@
   
   .font-controls {
     display: flex;
-    gap: 5px;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .font-controls label {
+    font-size: 12px;
+    color: #00ccff;
+    font-weight: bold;
   }
   
   .font-controls button {
@@ -297,11 +326,22 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 12px;
+    min-width: 32px;
   }
   
   .font-controls button:hover {
     background: var(--button-alt);
     box-shadow: 0 0 5px var(--nav-alt);
+  }
+  
+  #font-size-display {
+    font-size: 12px;
+    color: #00ccff;
+    background: rgba(0, 204, 255, 0.1);
+    padding: 2px 6px;
+    border-radius: 3px;
+    min-width: 40px;
+    text-align: center;
   }
   
   .online-users {
