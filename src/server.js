@@ -531,7 +531,7 @@ function setupTTSRoutes(app) {
     try {
       const response = await axios({
         method: 'get',
-        url: `${config.KOKORO_API_URL}/voices`,
+        url: `${config.KOKORO_API_URL}/v1/audio/voices`,
         headers: {
           'Authorization': `Bearer ${config.KOKORO_API_KEY}`
         },
@@ -649,7 +649,7 @@ async function fetchTTSFromKokoro(text, voice = config.KOKORO_DEFAULT_VOICE) {
 
       const response = await axios({
         method: 'post',
-        url: `${config.KOKORO_API_URL}/audio/speech`,
+        url: `${config.KOKORO_API_URL}/v1/audio/speech`,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${config.KOKORO_API_KEY}`

@@ -1,8 +1,9 @@
 // src/utils/config.js
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
+
 import Logger from '../utils/logger.js';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import path from 'path';
 
 // Initialize logger
 const logger = new Logger('Config');
@@ -123,7 +124,7 @@ function buildConfig() {
   
   // Generate derived values
   if (!config.KOKORO_API_URL) {
-    config.KOKORO_API_URL = `http://${config.KOKORO_HOST}:${config.KOKORO_PORT}/v1`;
+    config.KOKORO_API_URL = `http://${config.KOKORO_HOST}:${config.KOKORO_PORT}`;
   }
   
   return config;
