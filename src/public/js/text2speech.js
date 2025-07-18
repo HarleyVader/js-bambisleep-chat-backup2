@@ -59,6 +59,16 @@ async function do_tts(array) {
             });
             
             if (!response.ok) {
+                // Handle 503 Service Unavailable specially - don't retry
+                if (response.status === 503) {
+                    try {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'TTS service unavailable');
+                    } catch (parseError) {
+                        throw new Error('TTS service not configured');
+                    }
+                }
+                
                 if (retries > 0) {
                     console.log(`Retrying TTS request (${retries} attempts left)...`);
                     retries--;
@@ -171,6 +181,10 @@ async function fetchAvailableVoices() {
     try {
         const response = await fetch('/api/tts/voices');
         if (!response.ok) {
+            if (response.status === 503) {
+                console.warn("TTS service not configured");
+                return [];
+            }
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
         return await response.json();
