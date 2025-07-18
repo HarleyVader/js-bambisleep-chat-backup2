@@ -37,6 +37,8 @@ const configSchemas = {
   ALLOWED_ORIGINS: { type: 'array', default: ['https://bambisleep.chat', 'https://fickdichselber.com'] },
   MAX_WORKER_THREADS: { type: 'number', default: 4, min: 1, max: 16 },  WORKER_TIMEOUT: { type: 'number', default: 60000, min: 1000 },
   LOG_LEVEL: { type: 'string', default: 'info', enum: ['error', 'warn', 'info', 'debug'] },
+  LMS_HOST: { type: 'string', default: '192.168.0.69' },
+  LMS_PORT: { type: 'number', default: 7777, min: 1, max: 65535 },
   RUNPOD_API_KEY: { type: 'string', default: '', sensitive: true },
   RUNPOD_API_URL: { type: 'string', default: 'https://api.runpod.ai/v2/ttz08s667h5t9r/run' },
 };
