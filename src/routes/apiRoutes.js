@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import { getProfile } from '../models/Profile.js';
 import Logger from '../utils/logger.js';
+import realtimeStatsService from '../services/realtimeStatsService.js';
 
 const router = express.Router();
 const logger = new Logger('API Routes');
@@ -324,6 +325,47 @@ router.get('/sessions/:username', async (req, res) => {
   } catch (error) {
     logger.error(`Error fetching session history: ${error.message}`);
     res.status(500).json({ error: 'Error fetching session history', sessions: [] });
+  }
+});
+
+/**
+ * Route to get realtime stats for a user
+ * Endpoint: GET /api/stats/realtime/:username
+ */
+router.get('/stats/realtime/:username', async (req, res) => {
+  try {
+    const username = req.params.username;
+    
+    if (!username || username === 'anonBambi') {
+      return res.status(400).json({ error: 'Valid username is required' });
+    }
+    
+    // Get realtime stats
+    const stats = await realtimeStatsService.getDashboardData(username);
+    
+    res.json(stats);
+  } catch (error) {
+    logger.error(`Error fetching realtime stats for ${req.params.username}:`, error);
+    res.status(500).json({ error: 'Error fetching realtime stats' });
+  }
+});
+
+/**
+ * Route to get overall dashboard data
+ * Endpoint: GET /api/stats/dashboard
+ */
+router.get('/stats/dashboard', async (req, res) => {
+  try {
+    // Get global dashboard data - you could modify this to show aggregate stats
+    const dashboardData = {
+      message: 'Dashboard data endpoint - implement based on your needs',
+      timestamp: new Date().toISOString()
+    };
+    
+    res.json(dashboardData);
+  } catch (error) {
+    logger.error('Error fetching dashboard data:', error);
+    res.status(500).json({ error: 'Error fetching dashboard data' });
   }
 });
 

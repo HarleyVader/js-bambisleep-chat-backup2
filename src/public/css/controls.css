@@ -550,3 +550,177 @@
   padding-top: 10px;
   margin-top: 20px;
 }
+
+/* Realtime Stats Panel Styling */
+.stats-panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 280px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid #00ffff;
+  border-radius: 8px;
+  padding: 15px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+  color: #00ffff;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.stats-panel.active {
+  transform: translateX(0);
+}
+
+.stats-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.stats-panel-title {
+  font-size: 1em;
+  font-weight: bold;
+  color: #ff00ff;
+  text-transform: uppercase;
+}
+
+.stats-toggle-btn {
+  background: none;
+  border: none;
+  color: #00ffff;
+  cursor: pointer;
+  font-size: 1.2em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.stats-toggle-btn:hover {
+  background: rgba(0, 255, 255, 0.2);
+}
+
+.stats-section {
+  margin-bottom: 12px;
+}
+
+.stats-section-title {
+  font-size: 0.8em;
+  color: #ff00ff;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stats-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px;
+  background: rgba(0, 255, 255, 0.1);
+  border-radius: 4px;
+  border: 1px solid rgba(0, 255, 255, 0.2);
+}
+
+.stats-value {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #00ffff;
+  line-height: 1;
+}
+
+.stats-label {
+  font-size: 0.7em;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.stats-value.xp-rate {
+  color: #00ff00;
+  font-weight: bold;
+}
+
+.stats-value.xp-rate.declining {
+  color: #ffaa00;
+}
+
+.stats-value.session-time {
+  color: #ff00ff;
+}
+
+/* Pulse animation for active stats */
+.stats-value.pulse {
+  animation: pulse 0.6s ease-in-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); color: #ffffff; }
+  100% { transform: scale(1); }
+}
+
+/* XP Progress updates with stats integration */
+.xp-progress-label.updating {
+  animation: xp-update 0.6s ease-in-out;
+}
+
+@keyframes xp-update {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); color: #00ff00; }
+  100% { transform: scale(1); }
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .stats-panel {
+    width: 260px;
+    right: 10px;
+    top: 10px;
+    font-size: 0.8em;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+/* Stats panel trigger button in main UI */
+.stats-trigger-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 255, 255, 0.2);
+  border: 1px solid #00ffff;
+  color: #00ffff;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+  transition: all 0.3s ease;
+  z-index: 999;
+}
+
+.stats-trigger-btn:hover {
+  background: rgba(0, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+
+.stats-trigger-btn.hidden {
+  transform: translateX(100%);
+  opacity: 0;
+}

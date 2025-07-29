@@ -897,6 +897,8 @@ async function handleMessage(userPrompt, socketId, username) {
   } catch (error) {
     // Enhanced error logging for debugging
     logger.error(`Error in handleMessage: ${error.message}`);
+    logger.error(`Error type: ${typeof error}, Error constructor: ${error.constructor.name}`);
+    logger.error(`Error code: ${error.code}, Error response exists: ${!!error.response}`);
     
     if (error.response) {
       // HTTP error response from LMStudio
@@ -958,6 +960,8 @@ async function handleMessage(userPrompt, socketId, username) {
       return; // Don't send regular response
     } else {
       logger.error('⚠️ UNKNOWN ERROR in LMStudio communication');
+      logger.error(`Full error object: ${JSON.stringify(error, null, 2)}`);
+      logger.error(`Error name: ${error.name}, Error constructor: ${error.constructor.name}`);
       logger.error(`Full error details: ${JSON.stringify({
         message: error.message,
         code: error.code,
@@ -970,8 +974,12 @@ async function handleMessage(userPrompt, socketId, username) {
         socketId: socketId, 
         username: username,
         details: {
-          message: error.message,
-          code: error.code
+          message: error.message || 'No error message',
+          code: error.code || 'No error code',
+          name: error.name || 'Unknown error type',
+          errorType: typeof error,
+          hasResponse: !!error.response,
+          hasRequest: !!error.request
         }
       });
       return; // Don't send regular response

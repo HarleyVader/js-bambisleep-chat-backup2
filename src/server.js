@@ -27,6 +27,7 @@ import os from 'os';
 import path from 'path';
 import profileRoute from './routes/profile.js';
 import psychodelicTriggerManiaRouter from './routes/psychodelic-trigger-mania.js';
+import realtimeStatsService from './services/realtimeStatsService.js';
 import sessionService from './services/sessionService.js';
 import spiralsWorker from './workers/spirals.js';
 import urlValidator from './utils/urlValidator.js';
@@ -1112,6 +1113,11 @@ function createXPSystem() {
       socket.bambiData.xp = oldXP + amount;
       const newLevel = this.calculateLevel(socket.bambiData.xp);
 
+      // Track XP award with realtime stats
+      if (socket.bambiUsername && socket.bambiUsername !== 'anonBambi') {
+        realtimeStatsService.trackXPAward(socket.bambiUsername, amount, reason);
+      }
+
       socket.emit('xp:update', {
         xp: socket.bambiData.xp,
         level: newLevel,
@@ -1182,6 +1188,9 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
             });
           }
         });
+        
+        // Start session tracking for realtime stats
+        realtimeStatsService.startSession(username, socket.id);
       }        // Add socket to global store with worker reference  
       socketStoreManager.addSocket(socketStore, socket.id, { socket, worker: lmstudio, files: [] });
       logger.info(`Client connected: ${socket.id} sockets: ${socketStore.size}`);
@@ -1248,6 +1257,11 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
 
           // Broadcast message to all connected clients first for responsiveness
           io.emit('chat message', messageData);
+
+          // Track message activity for realtime stats
+          if (senderUsername && senderUsername !== 'anonBambi') {
+            realtimeStatsService.trackActivity(senderUsername, 'message', { messageText });
+          }
 
           // Handle mention+trigger combinations
           for (const mt of mentionTriggers) {
@@ -1318,6 +1332,13 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
                 username: senderUsername,
                 triggers: detectedTriggers
               });
+
+              // Track audio trigger activity for realtime stats
+              if (senderUsername && senderUsername !== 'anonBambi') {
+                realtimeStatsService.trackActivity(senderUsername, 'audio_trigger', { 
+                  triggers: detectedTriggers.map(t => t.name) 
+                });
+              }
 
               // Log audio interactions
               for (const trigger of detectedTriggers) {
@@ -1558,6 +1579,11 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
         socket.on('disconnect', (reason) => {
           try {
             logger.info('Client disconnected:', socket.id, 'Reason:', reason);
+            
+            // End session tracking for realtime stats
+            if (socket.bambiUsername && socket.bambiUsername !== 'anonBambi') {
+              realtimeStatsService.endSession(socket.bambiUsername);
+            }
             
             // Get socket data and clean up using centralized management
             socketStoreManager.removeSocket(socketStore, socket.id);
