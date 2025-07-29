@@ -65,6 +65,11 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
     <% } else { %>
       <button class="control-btn disabled" title="Reach Level 6 to unlock">Advanced Binaural 🔒</button>
     <% } %>
+    
+    <!-- Live Stats button - always available -->
+    <% if (userXp !== undefined) { %>
+      <button id="stats-btn" class="control-btn" data-target="stats-panel">📊 Live Stats</button>
+    <% } %>
   </div>
 
   <!-- Control panels section -->
@@ -324,21 +329,72 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
         <p>Keep chatting with Bambi to earn XP and level up.</p>
       </div>
     <% } %>
+    
+    <!-- Live Stats Panel - Always available if user has XP data -->
+    <% if (userXp !== undefined) { %>
+      <div id="stats-panel" class="control-panel">
+        <h3>📊 Live Statistics</h3>
+        
+        <div class="stats-section">
+          <div class="stats-section-title">Current Session</div>
+          <div class="stats-grid">
+            <div class="stats-item">
+              <div class="stats-value session-time" id="session-duration">00:00</div>
+              <div class="stats-label">Session Time</div>
+            </div>
+            <div class="stats-item">
+              <div class="stats-value" id="session-xp">0</div>
+              <div class="stats-label">XP Earned</div>
+            </div>
+            <div class="stats-item">
+              <div class="stats-value xp-rate" id="xp-per-hour">0</div>
+              <div class="stats-label">XP/Hour</div>
+            </div>
+            <div class="stats-item">
+              <div class="stats-value" id="user-rank">#-</div>
+              <div class="stats-label">Your Rank</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="stats-section">
+          <div class="stats-section-title">Activity</div>
+          <div class="stats-grid">
+            <div class="stats-item">
+              <div class="stats-value" id="messages-count">0</div>
+              <div class="stats-label">Messages</div>
+            </div>
+            <div class="stats-item">
+              <div class="stats-value" id="triggers-count">0</div>
+              <div class="stats-label">Triggers</div>
+            </div>
+            <div class="stats-item">
+              <div class="stats-value" id="audio-count">0</div>
+              <div class="stats-label">Audio</div>
+            </div>
+            <div class="stats-item">
+              <div class="stats-value" id="next-level-xp">0</div>
+              <div class="stats-label">XP to Next</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="stats-actions">
+          <button id="refresh-stats" class="secondary-btn">🔄 Refresh</button>
+          <button id="reset-session" class="secondary-btn">🔄 Reset Session</button>
+        </div>
+      </div>
+    <% } %>
   </div>
-  <!-- XP progress bar with realtime stats integration -->
+  <!-- XP progress bar -->
   <% if (userXp !== undefined) { %>
     <div class="xp-progress-container">
-      <div class="xp-progress-header">
-        <div class="xp-progress-label" id="xp-progress-label">
-          <% if (userLevel < xpRequirements.length && nextLevelXP) { %>
-            Level <%= userLevel %> • <%= userXp %> XP / <%= nextLevelXP %> XP
-          <% } else { %>
-            Level <%= userLevel %> • <%= userXp %> XP (MAX LEVEL)
-          <% } %>
-        </div>
-        <button id="stats-trigger-btn" class="stats-trigger-btn" title="Show Realtime Stats">
-          📊 Stats
-        </button>
+      <div class="xp-progress-label" id="xp-progress-label">
+        <% if (userLevel < xpRequirements.length && nextLevelXP) { %>
+          Level <%= userLevel %> • <%= userXp %> XP / <%= nextLevelXP %> XP
+        <% } else { %>
+          Level <%= userLevel %> • <%= userXp %> XP (MAX LEVEL)
+        <% } %>
       </div>
       <div class="xp-progress-bar">
         <% if (userLevel < xpRequirements.length && nextLevelXP) { %>
@@ -346,58 +402,6 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
         <% } else { %>
           <div class="xp-progress-fill" id="xp-progress-fill" style="width: 100%;"></div>
         <% } %>
-      </div>
-    </div>
-
-    <!-- Realtime Stats Panel -->
-    <div id="realtime-stats-panel" class="stats-panel">
-      <div class="stats-panel-header">
-        <div class="stats-panel-title">Live Stats</div>
-        <button id="stats-close-btn" class="stats-toggle-btn" title="Close Stats">×</button>
-      </div>
-      
-      <div class="stats-section">
-        <div class="stats-section-title">Current Session</div>
-        <div class="stats-grid">
-          <div class="stats-item">
-            <div class="stats-value session-time" id="session-duration">00:00</div>
-            <div class="stats-label">Session Time</div>
-          </div>
-          <div class="stats-item">
-            <div class="stats-value" id="session-xp">0</div>
-            <div class="stats-label">XP Earned</div>
-          </div>
-          <div class="stats-item">
-            <div class="stats-value xp-rate" id="xp-per-hour">0</div>
-            <div class="stats-label">XP/Hour</div>
-          </div>
-          <div class="stats-item">
-            <div class="stats-value" id="user-rank">#-</div>
-            <div class="stats-label">Your Rank</div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="stats-section">
-        <div class="stats-section-title">Activity</div>
-        <div class="stats-grid">
-          <div class="stats-item">
-            <div class="stats-value" id="messages-count">0</div>
-            <div class="stats-label">Messages</div>
-          </div>
-          <div class="stats-item">
-            <div class="stats-value" id="triggers-count">0</div>
-            <div class="stats-label">Triggers</div>
-          </div>
-          <div class="stats-item">
-            <div class="stats-value" id="audio-count">0</div>
-            <div class="stats-label">Audio</div>
-          </div>
-          <div class="stats-item">
-            <div class="stats-value" id="next-level-xp">0</div>
-            <div class="stats-label">XP to Next</div>
-          </div>
-        </div>
       </div>
     </div>
   <% } %>
@@ -415,47 +419,14 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
     let sessionStartTime = Date.now();
     let currentUsername = document.body.getAttribute('data-username') || '<%= profile?.username || "anonBambi" %>';
     
-    // Realtime stats panel management
-    const statsPanel = document.getElementById('realtime-stats-panel');
-    const statsTriggerBtn = document.getElementById('stats-trigger-btn');
-    const statsCloseBtn = document.getElementById('stats-close-btn');
-    
-    if (statsTriggerBtn && statsPanel) {
-      statsTriggerBtn.addEventListener('click', function() {
-        if (statsPanel.classList.contains('active')) {
-          hideStatsPanel();
-        } else {
-          showStatsPanel();
-        }
-      });
-    }
-    
-    if (statsCloseBtn) {
-      statsCloseBtn.addEventListener('click', hideStatsPanel);
-    }
-    
-    function showStatsPanel() {
-      if (!statsPanel) return;
-      statsPanel.classList.add('active');
-      statsTriggerBtn.classList.add('hidden');
-      realtimeStatsEnabled = true;
-      startStatsUpdates();
-    }
-    
-    function hideStatsPanel() {
-      if (!statsPanel) return;
-      statsPanel.classList.remove('active');
-      statsTriggerBtn.classList.remove('hidden');
-      realtimeStatsEnabled = false;
-      stopStatsUpdates();
-    }
-    
+    // Stats panel management functions
     function startStatsUpdates() {
       if (statsUpdateInterval) clearInterval(statsUpdateInterval);
       
       // Update stats every 2 seconds
       statsUpdateInterval = setInterval(updateRealtimeStats, 2000);
       updateRealtimeStats(); // Initial update
+      realtimeStatsEnabled = true;
     }
     
     function stopStatsUpdates() {
@@ -463,6 +434,7 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
         clearInterval(statsUpdateInterval);
         statsUpdateInterval = null;
       }
+      realtimeStatsEnabled = false;
     }
     
     async function updateRealtimeStats() {
@@ -490,9 +462,12 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
       // Update session XP
       const sessionXP = document.getElementById('session-xp');
       if (sessionXP && stats.currentSession) {
-        sessionXP.textContent = stats.currentSession.xpEarned || 0;
-        sessionXP.classList.add('pulse');
-        setTimeout(() => sessionXP.classList.remove('pulse'), 600);
+        const newValue = stats.currentSession.xpEarned || 0;
+        if (sessionXP.textContent !== newValue.toString()) {
+          sessionXP.textContent = newValue;
+          sessionXP.classList.add('pulse');
+          setTimeout(() => sessionXP.classList.remove('pulse'), 600);
+        }
       }
       
       // Update XP/hour rate
@@ -574,6 +549,13 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
         this.classList.add('active');
         const targetPanel = document.getElementById(targetId);
         if (targetPanel) targetPanel.classList.add('active');
+        
+        // Handle stats panel activation
+        if (targetId === 'stats-panel') {
+          startStatsUpdates();
+        } else {
+          stopStatsUpdates();
+        }
         
         localStorage.setItem('bambiLastTab', targetId);
       });
@@ -813,6 +795,38 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
         sendSettingsToWorker('triggers', { activeTriggers: e.detail.activeTriggers });
       }
     });
+    
+    // Stats panel button handlers
+    const refreshStatsBtn = document.getElementById('refresh-stats');
+    const resetSessionBtn = document.getElementById('reset-session');
+    
+    if (refreshStatsBtn) {
+      refreshStatsBtn.addEventListener('click', function() {
+        updateRealtimeStats();
+        this.textContent = '✓ Refreshed';
+        setTimeout(() => {
+          this.textContent = '🔄 Refresh';
+        }, 1500);
+      });
+    }
+    
+    if (resetSessionBtn) {
+      resetSessionBtn.addEventListener('click', function() {
+        sessionStartTime = Date.now();
+        // Reset displayed values
+        document.getElementById('session-duration').textContent = '00:00';
+        document.getElementById('session-xp').textContent = '0';
+        document.getElementById('xp-per-hour').textContent = '0';
+        document.getElementById('messages-count').textContent = '0';
+        document.getElementById('triggers-count').textContent = '0';
+        document.getElementById('audio-count').textContent = '0';
+        
+        this.textContent = '✓ Reset';
+        setTimeout(() => {
+          this.textContent = '🔄 Reset Session';
+        }, 1500);
+      });
+    }
   });
 </script>
 

@@ -1,4 +1,5 @@
 // Realtime Stats Service - Enhanced XP and Analytics System
+
 import Logger from '../utils/logger.js';
 import mongoose from 'mongoose';
 
