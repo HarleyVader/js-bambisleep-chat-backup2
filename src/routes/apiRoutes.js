@@ -189,7 +189,8 @@ router.get('/api/profile/:username/data', async (req, res) => {
       systemControls: profile.systemControls || { 
         activeTriggers: [],
         collarEnabled: false,
-        collarText: ''
+        collarText: '',
+        aiModel: 'lmstudio'
       }
     });
   } catch (error) {
@@ -226,7 +227,7 @@ router.get('/api/profile/:username/system-controls', async (req, res) => {
     // Return system controls data
     res.json({
       activeTriggers: profile.activeTriggers || [],
-      systemControls: profile.systemControls || {},
+      systemControls: profile.systemControls || { aiModel: 'lmstudio' },
       level: profile.level || 0,
       xp: profile.xp || 0
     });
@@ -289,6 +290,18 @@ router.post('/api/profile/:username/system-controls', async (req, res) => {
     // Update hypnosis settings if provided
     if (req.body.hypnosisEnabled !== undefined) {
       profile.systemControls.hypnosisEnabled = !!req.body.hypnosisEnabled;
+    }
+    
+    // Update AI model selection if provided
+    if (req.body.aiModel !== undefined) {
+      // Validate the AI model selection
+      const validModels = ['lmstudio', 'huggingface'];
+      if (validModels.includes(req.body.aiModel)) {
+        profile.systemControls.aiModel = req.body.aiModel;
+        logger.info(`Updated AI model for ${username} to: ${req.body.aiModel}`);
+      } else {
+        logger.warning(`Invalid AI model selection for ${username}: ${req.body.aiModel}`);
+      }
     }
     
     // Save the updated profile

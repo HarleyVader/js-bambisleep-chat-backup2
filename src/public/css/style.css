@@ -48,6 +48,28 @@ body {
     scrollbar-color: var(--primary-alt) var(--primary-color);
 }
 
+/* Webkit scrollbar fallback for better browser support */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    width: 8px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+    background: var(--primary-color);
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+    background: var(--primary-alt);
+    border-radius: 4px;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+    background: var(--nav-alt);
+}
+
 .container, 
 .create-profile-section, 
 .stats-dashboard,

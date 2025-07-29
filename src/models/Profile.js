@@ -55,6 +55,39 @@ const ProfileSchema = new mongoose.Schema({
     triggersActivated: { type: Number, default: 0 },
     messagesPosted: { type: Number, default: 0 },
     joinDate: { type: Date, default: Date.now }
+  },
+  systemControls: {
+    collarEnabled: { type: Boolean, default: false },
+    collarText: { type: String, default: '' },
+    aiModel: { 
+      type: String, 
+      enum: ['lmstudio', 'huggingface'], 
+      default: 'lmstudio' 
+    },
+    spiralsEnabled: { type: Boolean, default: false },
+    spiral1Width: { type: Number, default: 5.0 },
+    spiral2Width: { type: Number, default: 3.0 },
+    spiral1Speed: { type: Number, default: 20 },
+    spiral2Speed: { type: Number, default: 15 },
+    hypnosisEnabled: { type: Boolean, default: false },
+    useStreaming: { type: Boolean, default: false },
+    brainwaveEnabled: { type: Boolean, default: false },
+    brainwaveMode: { 
+      type: String, 
+      enum: ['alpha', 'beta', 'theta', 'delta'], 
+      default: 'alpha' 
+    },
+    carrierFrequency: { type: Number, default: 200 },
+    brainwaveVolume: { type: Number, default: 50 },
+    customFrequency: { type: Number, default: 10 },
+    advancedBinauralEnabled: { type: Boolean, default: false },
+    binauralPattern: { 
+      type: String, 
+      enum: ['descent', 'ascent', 'wave'], 
+      default: 'descent' 
+    },
+    patternDuration: { type: Number, default: 20 },
+    transitionTime: { type: Number, default: 30 }
   }
 });
 

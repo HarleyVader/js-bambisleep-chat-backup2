@@ -232,7 +232,8 @@ router.get('/api/profile/:username/data', async (req, res) => {
       systemControls: profile.systemControls || { 
         activeTriggers: [],
         collarEnabled: false,
-        collarText: ''
+        collarText: '',
+        aiModel: 'lmstudio'
       }
     });
   } catch (error) {
@@ -266,7 +267,7 @@ router.get('/api/profile/:username/system-controls', async (req, res) => {
     // Return system controls data
     res.json({
       activeTriggers: profile.activeTriggers || [],
-      systemControls: profile.systemControls || {},
+      systemControls: profile.systemControls || { aiModel: 'lmstudio' },
       level: profile.level || 0,
       xp: profile.xp || 0
     });

@@ -975,22 +975,30 @@ const modelCache = {
  */
 function setupSocketHandlers(io, socketStore, filteredWords) {
   try {
-    // Initialize the LMStudio worker thread
+    // Initialize both worker threads
     const lmstudio = new Worker(path.join(__dirname, 'workers/lmstudio.js'));
+    const huggingface = new Worker(path.join(__dirname, 'workers/huggingface.js'));
 
-    // Set up worker handlers
-    const workerHandlers = setupWorkerHandlers(lmstudio, io);
+    // Create workers object for handlers
+    const workers = { lmstudio, huggingface };
+
+    // Set up worker handlers for both workers
+    const lmstudioHandlers = setupWorkerHandlers(lmstudio, io, 'lmstudio');
+    const huggingfaceHandlers = setupWorkerHandlers(huggingface, io, 'huggingface');
     
     // Store references for restart
-    if (workerHandlers && workerHandlers.setReferences) {
-      workerHandlers.setReferences(socketStore, filteredWords);
+    if (lmstudioHandlers && lmstudioHandlers.setReferences) {
+      lmstudioHandlers.setReferences(socketStore, filteredWords);
+    }
+    if (huggingfaceHandlers && huggingfaceHandlers.setReferences) {
+      huggingfaceHandlers.setReferences(socketStore, filteredWords);
     }
 
     // Set up XP system
     const xpSystem = createXPSystem();
 
-    // Set up socket connection handlers
-    setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWords);
+    // Set up socket connection handlers with both workers
+    setupConnectionHandlers(io, socketStore, workers, xpSystem, filteredWords);
 
   } catch (error) {
     logger.error('Error setting up socket handlers:', error);
@@ -1000,16 +1008,16 @@ function setupSocketHandlers(io, socketStore, filteredWords) {
 /**
  * Set up worker message handlers
  */
-function setupWorkerHandlers(lmstudio, io) {
+function setupWorkerHandlers(worker, io, workerName) {
   // Store references for restart
   let currentSocketStore = null;
   let currentFilteredWords = null;
 
   // Restart the worker automatically to maintain AI service availability
-  lmstudio.on('exit', (code) => {
-    logger.error(`Worker thread exited with code ${code}`);
+  worker.on('exit', (code) => {
+    logger.error(`${workerName} worker thread exited with code ${code}`);
     if (io) {
-      io.emit('system', { message: 'AI service restarting, please wait...' });
+      io.emit('system', { message: `${workerName} AI service restarting, please wait...` });
     }
     setTimeout(() => {
       if (currentSocketStore && currentFilteredWords) {
@@ -1018,31 +1026,33 @@ function setupWorkerHandlers(lmstudio, io) {
     }, 1000);
   });
 
-  // Set up worker message handlers
-  lmstudio.on("message", async (msg) => {
-    try {
-      const handlers = {
-        'log': () => logger.info(msg.data, msg.socketId),
-        'response': () => handleWorkerResponse(msg, io),
-        'error': () => handleWorkerError(msg, io),
-        'worker:settings:response': () => io.to(msg.socketId)?.emit('worker:settings:response', msg.data),
-        'xp:update': () => io.to(msg.socketId)?.emit('xp:update', msg.data),
-        'detected-triggers': () => io.to(msg.socketId)?.emit('detected-triggers', msg.triggers),
-        'connection_error': () => io.to(msg.socketId)?.emit('connection_error', { error: msg.error, details: msg.details }),
-        'model_error': () => io.to(msg.socketId)?.emit('model_error', { error: msg.error, details: msg.details }),
-        'server_error': () => io.to(msg.socketId)?.emit('server_error', { error: msg.error, details: msg.details }),
-        'unknown_error': () => io.to(msg.socketId)?.emit('unknown_error', { error: msg.error, details: msg.details })
-      };
+  // Set up worker message handlers for both workers
+  const setupWorkerHandlers = (worker, workerName) => {
+    worker.on("message", async (msg) => {
+      try {
+        const handlers = {
+          'log': () => logger.info(`[${workerName}]`, msg.data, msg.socketId),
+          'response': () => handleWorkerResponse(msg, io),
+          'error': () => handleWorkerError(msg, io),
+          'worker:settings:response': () => io.to(msg.socketId)?.emit('worker:settings:response', msg.data),
+          'xp:update': () => io.to(msg.socketId)?.emit('xp:update', msg.data),
+          'detected-triggers': () => io.to(msg.socketId)?.emit('detected-triggers', msg.triggers),
+          'connection_error': () => io.to(msg.socketId)?.emit('connection_error', { error: msg.error, details: msg.details }),
+          'model_error': () => io.to(msg.socketId)?.emit('model_error', { error: msg.error, details: msg.details }),
+          'server_error': () => io.to(msg.socketId)?.emit('server_error', { error: msg.error, details: msg.details }),
+          'unknown_error': () => io.to(msg.socketId)?.emit('unknown_error', { error: msg.error, details: msg.details })
+        };
 
-      const handler = handlers[msg.type];
-      if (handler) await handler();
-    } catch (error) {
-      logger.error('Error in lmstudio message handler:', error);
-    }
-  });
+        const handler = handlers[msg.type];
+        if (handler) await handler();
+      } catch (error) {
+        logger.error(`Error in ${workerName} message handler:`, error);
+      }
+    });
 
-  lmstudio.on('info', (info) => logger.info('Worker info:', info));
-  lmstudio.on('error', (err) => handleWorkerError(err, io));
+    worker.on('info', (info) => logger.info(`[${workerName}] Worker info:`, info));
+    worker.on('error', (err) => handleWorkerError(err, io));
+  };
   
   // Return the handlers object with setReferences method
   return {
@@ -1140,7 +1150,27 @@ function createXPSystem() {
 /**
  * Set up connection handlers
  */
-function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWords) {
+function setupConnectionHandlers(io, socketStore, workers, xpSystem, filteredWords) {
+  // Helper function to get the appropriate worker for a user
+  async function getWorkerForUser(username) {
+    if (username === 'anonBambi') {
+      return workers.lmstudio; // Default for anonymous users
+    }
+    
+    try {
+      // Get user's AI model preference from database
+      const Profile = (await import('./models/Profile.js')).default;
+      const profile = await Profile.findOne({ username });
+      
+      const aiModel = profile?.systemControls?.aiModel || 'lmstudio';
+      logger.debug(`User ${username} prefers AI model: ${aiModel}`);
+      
+      return aiModel === 'huggingface' ? workers.huggingface : workers.lmstudio;
+    } catch (error) {
+      logger.error(`Error getting AI model preference for ${username}: ${error.message}`);
+      return workers.lmstudio; // Fallback to LMStudio
+    }
+  }
   // Simple filter function to avoid bad words
   function filter(content) {
     if (!content || !filteredWords || !filteredWords.length) return content;
@@ -1454,13 +1484,17 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
           logger.error('Error getting profile data:', error);
           callback({ success: false, error: 'Failed to load profile data' });
         }
-      });        // Route AIGF messages to worker thread for processing
-      socket.on("message", (message) => {
+      });      // Route AIGF messages to worker thread for processing
+      socket.on("message", async (message) => {
         try {
           // Track when the request started for performance monitoring
           const startTime = Date.now();
 
-          lmstudio.postMessage({
+          // Get the appropriate worker for this user
+          const selectedWorker = await getWorkerForUser(socket.bambiUsername);
+          logger.debug(`Selected worker for ${socket.bambiUsername} based on profile preference`);
+
+          selectedWorker.postMessage({
             type: "message",
             prompt: message,
             socketId: socket.id,
@@ -1539,20 +1573,31 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
 
       // Fixed triggers handler - not nested inside other handlers
       socket.on('triggers', async (data) => {
-        logger.info('Received triggers:', data);
-        lmstudio.postMessage({
-          type: 'triggers',
-          triggers: data.triggerNames,
-          socketId: socket.id
-        });          // Award XP for using triggers
-        awardUserXP(socket, xpSystem, 2, 'triggers');
+        try {
+          logger.info('Received triggers:', data);
+          
+          // Get the appropriate worker for this user
+          const selectedWorker = await getWorkerForUser(socket.bambiUsername);
+          
+          selectedWorker.postMessage({
+            type: 'triggers',
+            triggers: data.triggerNames,
+            socketId: socket.id
+          });
+          
+          // Award XP for using triggers
+          awardUserXP(socket, xpSystem, 2, 'triggers');
+        } catch (error) {
+          logger.error('Error in triggers handler:', error);
+        }
       });
 
       // Collar text handling - moved outside other handlers
       socket.on('collar', async (collarData) => {
         try {
           const filteredCollar = filter(collarData.data);
-          lmstudio.postMessage({
+          const selectedWorker = await getWorkerForUser(socket.bambiUsername);
+          selectedWorker.postMessage({
             type: 'collar',
             data: filteredCollar,
             socketId: socket.id
@@ -1602,7 +1647,7 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
         });
 
       // Bridge between client UI and worker thread for real-time settings updates
-      socket.on('worker:settings:update', (data) => {
+      socket.on('worker:settings:update', async (data) => {
         try {
           if (!data || !data.section) {
             return socket.emit('worker:settings:response', {
@@ -1626,7 +1671,8 @@ function setupConnectionHandlers(io, socketStore, lmstudio, xpSystem, filteredWo
           }
 
           // Forward settings to worker
-          lmstudio.postMessage({
+          const selectedWorker = await getWorkerForUser(socket.bambiUsername);
+          selectedWorker.postMessage({
             type: 'settings:update',
             data: data
           });

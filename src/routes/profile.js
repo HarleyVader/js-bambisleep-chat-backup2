@@ -107,6 +107,7 @@ router.get('/:username', async (req, res) => {
           systemControls: {
             collarEnabled: false,
             collarText: '',
+            aiModel: 'lmstudio', // Default to LMStudio, can be 'lmstudio' or 'huggingface'
             spiralsEnabled: false,
             spiral1Width: 5.0,
             spiral2Width: 3.0,
