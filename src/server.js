@@ -1222,7 +1222,7 @@ function setupConnectionHandlers(io, socketStore, workers, xpSystem, filteredWor
         // Start session tracking for realtime stats
         realtimeStatsService.startSession(username, socket.id);
       }        // Add socket to global store with worker reference  
-      socketStoreManager.addSocket(socketStore, socket.id, { socket, worker: lmstudio, files: [] });
+      socketStoreManager.addSocket(socketStore, socket.id, { socket, worker: workers.lmstudio, files: [] });
       logger.info(`Client connected: ${socket.id} sockets: ${socketStore.size}`);
 
       // Emit current online users to all clients

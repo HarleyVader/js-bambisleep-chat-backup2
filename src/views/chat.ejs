@@ -67,9 +67,18 @@
 <script src="/js/chat.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Initialize socket
+    // Initialize socket with error handling
     const socket = io();
     window.socket = socket;
+    
+    // Socket connection error handling
+    socket.on('connect_error', function(error) {
+      console.error('Socket connection error:', error);
+    });
+    
+    socket.on('disconnect', function(reason) {
+      console.log('Socket disconnected:', reason);
+    });
     
     // Chat form submission
     const chatForm = document.getElementById('chat-form');
@@ -79,9 +88,13 @@
       e.preventDefault();
       
       const message = chatInput.value.trim();
-      if (message) {
-        socket.emit('chat message', { data: message });
-        chatInput.value = '';
+      if (message && message.length > 0) {
+        try {
+          socket.emit('chat message', { data: message });
+          chatInput.value = '';
+        } catch (error) {
+          console.error('Error sending message:', error);
+        }
       }
     });
 
@@ -316,7 +329,8 @@
 
     // Handle special chat events
     socket.on('chat mention', function(data) {
-      if (data.mentionedUser === '<%= username %>') {
+      const currentUsername = '<%= username || "anonBambi" %>';
+      if (data.mentionedUser === currentUsername) {
         addGlowEffect();
       }
     });
@@ -326,7 +340,8 @@
     });
 
     socket.on('chat mention trigger', function(data) {
-      if (data.mentionedUser === '<%= username %>') {
+      const currentUsername = '<%= username || "anonBambi" %>';
+      if (data.mentionedUser === currentUsername) {
         addGlowEffect();
         const count = data.count || 1;
         if (count > 1) {
