@@ -325,15 +325,20 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
       </div>
     <% } %>
   </div>
-  <!-- XP progress bar -->
+  <!-- XP progress bar with realtime stats integration -->
   <% if (userXp !== undefined) { %>
     <div class="xp-progress-container">
-      <div class="xp-progress-label" id="xp-progress-label">
-        <% if (userLevel < xpRequirements.length && nextLevelXP) { %>
-          Level <%= userLevel %> • <%= userXp %> XP / <%= nextLevelXP %> XP
-        <% } else { %>
-          Level <%= userLevel %> • <%= userXp %> XP (MAX LEVEL)
-        <% } %>
+      <div class="xp-progress-header">
+        <div class="xp-progress-label" id="xp-progress-label">
+          <% if (userLevel < xpRequirements.length && nextLevelXP) { %>
+            Level <%= userLevel %> • <%= userXp %> XP / <%= nextLevelXP %> XP
+          <% } else { %>
+            Level <%= userLevel %> • <%= userXp %> XP (MAX LEVEL)
+          <% } %>
+        </div>
+        <button id="stats-trigger-btn" class="stats-trigger-btn" title="Show Realtime Stats">
+          📊 Stats
+        </button>
       </div>
       <div class="xp-progress-bar">
         <% if (userLevel < xpRequirements.length && nextLevelXP) { %>
@@ -341,6 +346,58 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
         <% } else { %>
           <div class="xp-progress-fill" id="xp-progress-fill" style="width: 100%;"></div>
         <% } %>
+      </div>
+    </div>
+
+    <!-- Realtime Stats Panel -->
+    <div id="realtime-stats-panel" class="stats-panel">
+      <div class="stats-panel-header">
+        <div class="stats-panel-title">Live Stats</div>
+        <button id="stats-close-btn" class="stats-toggle-btn" title="Close Stats">×</button>
+      </div>
+      
+      <div class="stats-section">
+        <div class="stats-section-title">Current Session</div>
+        <div class="stats-grid">
+          <div class="stats-item">
+            <div class="stats-value session-time" id="session-duration">00:00</div>
+            <div class="stats-label">Session Time</div>
+          </div>
+          <div class="stats-item">
+            <div class="stats-value" id="session-xp">0</div>
+            <div class="stats-label">XP Earned</div>
+          </div>
+          <div class="stats-item">
+            <div class="stats-value xp-rate" id="xp-per-hour">0</div>
+            <div class="stats-label">XP/Hour</div>
+          </div>
+          <div class="stats-item">
+            <div class="stats-value" id="user-rank">#-</div>
+            <div class="stats-label">Your Rank</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="stats-section">
+        <div class="stats-section-title">Activity</div>
+        <div class="stats-grid">
+          <div class="stats-item">
+            <div class="stats-value" id="messages-count">0</div>
+            <div class="stats-label">Messages</div>
+          </div>
+          <div class="stats-item">
+            <div class="stats-value" id="triggers-count">0</div>
+            <div class="stats-label">Triggers</div>
+          </div>
+          <div class="stats-item">
+            <div class="stats-value" id="audio-count">0</div>
+            <div class="stats-label">Audio</div>
+          </div>
+          <div class="stats-item">
+            <div class="stats-value" id="next-level-xp">0</div>
+            <div class="stats-label">XP to Next</div>
+          </div>
+        </div>
       </div>
     </div>
   <% } %>
@@ -351,6 +408,155 @@ const systemControls = profile && profile.systemControls ? profile.systemControl
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     window.xpRequirements = [1000, 2500, 4500, 7000, 12000, 36000, 112000, 332000];
+    
+    // Initialize realtime stats tracking
+    let realtimeStatsEnabled = false;
+    let statsUpdateInterval = null;
+    let sessionStartTime = Date.now();
+    let currentUsername = document.body.getAttribute('data-username') || '<%= profile?.username || "anonBambi" %>';
+    
+    // Realtime stats panel management
+    const statsPanel = document.getElementById('realtime-stats-panel');
+    const statsTriggerBtn = document.getElementById('stats-trigger-btn');
+    const statsCloseBtn = document.getElementById('stats-close-btn');
+    
+    if (statsTriggerBtn && statsPanel) {
+      statsTriggerBtn.addEventListener('click', function() {
+        if (statsPanel.classList.contains('active')) {
+          hideStatsPanel();
+        } else {
+          showStatsPanel();
+        }
+      });
+    }
+    
+    if (statsCloseBtn) {
+      statsCloseBtn.addEventListener('click', hideStatsPanel);
+    }
+    
+    function showStatsPanel() {
+      if (!statsPanel) return;
+      statsPanel.classList.add('active');
+      statsTriggerBtn.classList.add('hidden');
+      realtimeStatsEnabled = true;
+      startStatsUpdates();
+    }
+    
+    function hideStatsPanel() {
+      if (!statsPanel) return;
+      statsPanel.classList.remove('active');
+      statsTriggerBtn.classList.remove('hidden');
+      realtimeStatsEnabled = false;
+      stopStatsUpdates();
+    }
+    
+    function startStatsUpdates() {
+      if (statsUpdateInterval) clearInterval(statsUpdateInterval);
+      
+      // Update stats every 2 seconds
+      statsUpdateInterval = setInterval(updateRealtimeStats, 2000);
+      updateRealtimeStats(); // Initial update
+    }
+    
+    function stopStatsUpdates() {
+      if (statsUpdateInterval) {
+        clearInterval(statsUpdateInterval);
+        statsUpdateInterval = null;
+      }
+    }
+    
+    async function updateRealtimeStats() {
+      if (!realtimeStatsEnabled || currentUsername === 'anonBambi') return;
+      
+      try {
+        const response = await fetch(`/api/stats/realtime/${currentUsername}`);
+        if (response.ok) {
+          const stats = await response.json();
+          updateStatsDisplay(stats);
+        }
+      } catch (error) {
+        console.warn('Failed to fetch realtime stats:', error);
+      }
+    }
+    
+    function updateStatsDisplay(stats) {
+      // Update session duration
+      const sessionDuration = document.getElementById('session-duration');
+      if (sessionDuration && stats.currentSession) {
+        const duration = stats.currentSession.duration || (Date.now() - sessionStartTime);
+        sessionDuration.textContent = formatDuration(duration);
+      }
+      
+      // Update session XP
+      const sessionXP = document.getElementById('session-xp');
+      if (sessionXP && stats.currentSession) {
+        sessionXP.textContent = stats.currentSession.xpEarned || 0;
+        sessionXP.classList.add('pulse');
+        setTimeout(() => sessionXP.classList.remove('pulse'), 600);
+      }
+      
+      // Update XP/hour rate
+      const xpPerHour = document.getElementById('xp-per-hour');
+      if (xpPerHour && stats.currentSession) {
+        const rate = Math.round(stats.currentSession.xpPerHour || 0);
+        xpPerHour.textContent = rate;
+        xpPerHour.className = 'stats-value xp-rate';
+        if (rate < 100) xpPerHour.classList.add('declining');
+      }
+      
+      // Update user rank
+      const userRank = document.getElementById('user-rank');
+      if (userRank && stats.rank) {
+        userRank.textContent = `#${stats.rank}`;
+      }
+      
+      // Update activity counters
+      if (stats.currentSession && stats.currentSession.activities) {
+        const activities = stats.currentSession.activities;
+        
+        const messagesCount = document.getElementById('messages-count');
+        if (messagesCount) messagesCount.textContent = activities.messages || 0;
+        
+        const triggersCount = document.getElementById('triggers-count');
+        if (triggersCount) triggersCount.textContent = activities.triggers || 0;
+        
+        const audioCount = document.getElementById('audio-count');
+        if (audioCount) audioCount.textContent = activities.audio || 0;
+      }
+      
+      // Update XP to next level
+      const nextLevelXP = document.getElementById('next-level-xp');
+      if (nextLevelXP && stats.xpToNextLevel !== undefined) {
+        nextLevelXP.textContent = stats.xpToNextLevel;
+      }
+    }
+    
+    function formatDuration(milliseconds) {
+      const seconds = Math.floor(milliseconds / 1000);
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      
+      if (hours > 0) {
+        return `${hours}:${String(minutes % 60).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+      } else {
+        return `${minutes}:${String(seconds % 60).padStart(2, '0')}`;
+      }
+    }
+    
+    // Socket integration for realtime updates
+    if (typeof socket !== 'undefined') {
+      socket.on('stats:xp:update', function(data) {
+        if (data.username === currentUsername && realtimeStatsEnabled) {
+          updateRealtimeStats(); // Refresh stats on XP update
+        }
+      });
+      
+      socket.on('stats:activity:update', function(data) {
+        if (data.username === currentUsername && realtimeStatsEnabled) {
+          updateStatsDisplay(data.sessionStats);
+        }
+      });
+    }
     
     // Tab navigation
     const controlButtons = document.querySelectorAll('.control-btn:not(.disabled)');

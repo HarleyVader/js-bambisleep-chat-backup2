@@ -34,12 +34,13 @@ class RealtimeStatsService {
   /**
    * Start tracking user session
    */
-  startSession(userId, username) {
-    const sessionId = `${userId}-${Date.now()}`;
+  startSession(username, socketId) {
+    const sessionId = `${username}-${Date.now()}`;
     const sessionData = {
-      userId,
+      userId: username,
       username,
       sessionId,
+      socketId,
       startTime: Date.now(),
       xpEarned: 0,
       messagesCount: 0,
@@ -49,7 +50,7 @@ class RealtimeStatsService {
       isActive: true
     };
 
-    this.sessionStats.set(sessionId, sessionData);
+    this.sessionStats.set(username, sessionData); // Use username as key for easier lookup
     this.updateActiveUserCount();
     
     logger.debug(`Session started for ${username}: ${sessionId}`);
@@ -59,8 +60,8 @@ class RealtimeStatsService {
   /**
    * End user session and save stats
    */
-  async endSession(sessionId, io = null) {
-    const session = this.sessionStats.get(sessionId);
+  async endSession(username, io = null) {
+    const session = this.sessionStats.get(username);
     if (!session) return;
 
     const duration = Date.now() - session.startTime;
@@ -70,22 +71,22 @@ class RealtimeStatsService {
 
     try {
       await this.saveSessionToDatabase(session);
-      await this.updateUserStats(session.userId, session);
+      await this.updateUserStats(session.username, session);
       
       // Emit final session stats
       if (io) {
         io.emit('session:ended', {
-          sessionId,
+          sessionId: session.sessionId,
           duration,
           xpEarned: session.xpEarned,
           stats: this.getSessionSummary(session)
         });
       }
 
-      this.sessionStats.delete(sessionId);
+      this.sessionStats.delete(username);
       this.updateActiveUserCount();
       
-      logger.debug(`Session ended for ${session.username}: ${sessionId}`);
+      logger.debug(`Session ended for ${session.username}: ${session.sessionId}`);
     } catch (error) {
       logger.error('Error ending session:', error);
     }
@@ -94,21 +95,21 @@ class RealtimeStatsService {
   /**
    * Track XP award in realtime
    */
-  async trackXPAward(userId, username, amount, reason, io = null) {
+  async trackXPAward(username, amount, reason, io = null) {
     try {
       // Update session stats
-      const activeSession = this.getActiveSession(userId);
+      const activeSession = this.getActiveSession(username);
       if (activeSession) {
         activeSession.xpEarned += amount;
         activeSession.lastActivity = Date.now();
       }
 
       // Update user cache
-      if (!this.statsCache.has(userId)) {
-        await this.loadUserStats(userId);
+      if (!this.statsCache.has(username)) {
+        await this.loadUserStats(username);
       }
       
-      const userStats = this.statsCache.get(userId);
+      const userStats = this.statsCache.get(username);
       if (userStats) {
         userStats.totalXP += amount;
         userStats.xpThisSession += amount;
@@ -125,7 +126,6 @@ class RealtimeStatsService {
       // Emit realtime update
       if (io) {
         io.emit('stats:xp:update', {
-          userId,
           username,
           amount,
           reason,
@@ -145,9 +145,9 @@ class RealtimeStatsService {
   /**
    * Track activity in realtime
    */
-  async trackActivity(userId, username, activityType, data = {}, io = null) {
+  async trackActivity(username, activityType, data = {}, io = null) {
     try {
-      const activeSession = this.getActiveSession(userId);
+      const activeSession = this.getActiveSession(username);
       if (!activeSession) return;
 
       activeSession.lastActivity = Date.now();
@@ -157,7 +157,7 @@ class RealtimeStatsService {
         case 'message':
           activeSession.messagesCount++;
           break;
-        case 'trigger':
+        case 'audio_trigger':
           activeSession.triggersUsed++;
           break;
         case 'audio':
@@ -166,11 +166,11 @@ class RealtimeStatsService {
       }
 
       // Update user cache
-      if (!this.statsCache.has(userId)) {
-        await this.loadUserStats(userId);
+      if (!this.statsCache.has(username)) {
+        await this.loadUserStats(username);
       }
 
-      const userStats = this.statsCache.get(userId);
+      const userStats = this.statsCache.get(username);
       if (userStats) {
         userStats[`${activityType}Count`] = (userStats[`${activityType}Count`] || 0) + 1;
       }
@@ -178,7 +178,6 @@ class RealtimeStatsService {
       // Emit realtime activity update
       if (io) {
         io.emit('stats:activity:update', {
-          userId,
           username,
           activityType,
           sessionStats: this.getSessionSummary(activeSession),
@@ -227,27 +226,22 @@ class RealtimeStatsService {
   /**
    * Get active session for user
    */
-  getActiveSession(userId) {
-    for (const session of this.sessionStats.values()) {
-      if (session.userId === userId && session.isActive) {
-        return session;
-      }
-    }
-    return null;
+  getActiveSession(username) {
+    return this.sessionStats.get(username) || null;
   }
 
   /**
    * Load user stats into cache
    */
-  async loadUserStats(userId) {
+  async loadUserStats(username) {
     try {
       const Profile = mongoose.models.Profile;
       if (!Profile) return null;
 
-      const profile = await Profile.findOne({ username: userId });
+      const profile = await Profile.findOne({ username });
       if (profile) {
         const userStats = {
-          userId,
+          userId: username,
           totalXP: profile.xp || 0,
           level: this.calculateLevel(profile.xp || 0),
           xpThisSession: 0,
@@ -260,7 +254,7 @@ class RealtimeStatsService {
           lastXPAward: null
         };
 
-        this.statsCache.set(userId, userStats);
+        this.statsCache.set(username, userStats);
         return userStats;
       }
     } catch (error) {
@@ -359,13 +353,13 @@ class RealtimeStatsService {
   /**
    * Update user stats in database
    */
-  async updateUserStats(userId, session) {
+  async updateUserStats(username, session) {
     try {
       const Profile = mongoose.models.Profile;
       if (!Profile) return;
 
       await Profile.findOneAndUpdate(
-        { username: userId },
+        { username },
         {
           $inc: {
             'usageStats.sessionsCount': 1,
@@ -450,15 +444,15 @@ class RealtimeStatsService {
   /**
    * Get user-specific dashboard stats
    */
-  async getUserDashboardStats(userId) {
+  async getUserDashboardStats(username) {
     try {
-      const userStats = this.statsCache.get(userId) || await this.loadUserStats(userId);
-      const activeSession = this.getActiveSession(userId);
+      const userStats = this.statsCache.get(username) || await this.loadUserStats(username);
+      const activeSession = this.getActiveSession(username);
       
       return {
         ...userStats,
         currentSession: activeSession ? this.getSessionSummary(activeSession) : null,
-        rank: await this.getUserRank(userId),
+        rank: await this.getUserRank(username),
         nextLevelXP: this.getNextLevelXP(userStats?.totalXP || 0),
         xpToNextLevel: this.getXPToNextLevel(userStats?.totalXP || 0)
       };
@@ -471,12 +465,12 @@ class RealtimeStatsService {
   /**
    * Get user rank
    */
-  async getUserRank(userId) {
+  async getUserRank(username) {
     try {
       const Profile = mongoose.models.Profile;
       if (!Profile) return 0;
 
-      const userProfile = await Profile.findOne({ username: userId });
+      const userProfile = await Profile.findOne({ username });
       if (!userProfile) return 0;
 
       const rank = await Profile.countDocuments({ xp: { $gt: userProfile.xp } });

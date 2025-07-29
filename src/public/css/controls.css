@@ -20,7 +20,7 @@
   color: #aaa;
 }
 
-/* XP progress bar styling */
+/* XP progress bar styling with stats integration */
 .xp-progress-container {
   margin-top: 20px;
   padding: 10px;
@@ -28,11 +28,40 @@
   border-radius: 5px;
 }
 
-.xp-progress-label {
+.xp-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 5px;
+}
+
+.xp-progress-label {
   font-size: 0.8em;
   color: rgba(255, 255, 255, 0.7);
-  text-align: center;
+  flex: 1;
+}
+
+.stats-trigger-btn {
+  background: rgba(0, 255, 255, 0.2);
+  border: 1px solid #00ffff;
+  color: #00ffff;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-size: 0.7em;
+  transition: all 0.3s ease;
+  margin-left: 10px;
+}
+
+.stats-trigger-btn:hover {
+  background: rgba(0, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+
+.stats-trigger-btn.hidden {
+  transform: translateX(100%);
+  opacity: 0;
 }
 
 .xp-progress-bar {
