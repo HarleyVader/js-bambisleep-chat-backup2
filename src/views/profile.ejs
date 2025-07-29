@@ -54,6 +54,18 @@
                                         Test High Level
                                     </button>
                                 </div>
+                                <!-- Cheat Menu -->
+                                <div class="mt-2">
+                                    <div class="btn-group" role="group" aria-label="Cheat Menu">
+                                        <button class="btn btn-info btn-sm" onclick="addXP()">
+                                            +1000 XP
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="resetLevel()">
+                                            Reset Level
+                                        </button>
+                                    </div>
+                                    <div class="small text-muted mt-1">Cheat Menu</div>
+                                </div>
                                 <% } %>
                         </div>
                     </div>
@@ -315,6 +327,56 @@
                                 } catch (error) {
                                     console.error('Error updating profile:', error);
                                     alert('Error updating profile. Please try again.');
+                                }
+                            }
+
+                            // Cheat function to add 1000 XP
+                            async function addXP() {
+                                const username = '<%= profile.username %>';
+                                try {
+                                    const response = await fetch(`/profile/${username}/debug/add-xp`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ xp: 1000 })
+                                    });
+
+                                    if (response.ok) {
+                                        const result = await response.json();
+                                        alert(`Added 1000 XP! ${result.message}`);
+                                        location.reload();
+                                    } else {
+                                        throw new Error('Failed to add XP');
+                                    }
+                                } catch (error) {
+                                    console.error('Error adding XP:', error);
+                                    alert('Error adding XP. Please try again.');
+                                }
+                            }
+
+                            // Cheat function to reset level
+                            async function resetLevel() {
+                                const username = '<%= profile.username %>';
+                                if (!confirm('Are you sure you want to reset your level to 0? This cannot be undone.')) {
+                                    return;
+                                }
+                                
+                                try {
+                                    const response = await fetch(`/profile/${username}/debug/reset-level`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ level: 0, xp: 0 })
+                                    });
+
+                                    if (response.ok) {
+                                        const result = await response.json();
+                                        alert(`Level reset! ${result.message}`);
+                                        location.reload();
+                                    } else {
+                                        throw new Error('Failed to reset level');
+                                    }
+                                } catch (error) {
+                                    console.error('Error resetting level:', error);
+                                    alert('Error resetting level. Please try again.');
                                 }
                             }
 

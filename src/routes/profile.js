@@ -1,12 +1,13 @@
-import express from 'express';
-import multer from 'multer';
-import { marked } from 'marked';
-import { promises as fs } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import Logger from '../utils/logger.js';
-import footerConfig from '../config/footer.config.js';
+import { dirname, join } from 'path';
 import { getModel, withDbConnection } from '../config/db.js';
+
+import Logger from '../utils/logger.js';
+import express from 'express';
+import { fileURLToPath } from 'url';
+import footerConfig from '../config/footer.config.js';
+import { promises as fs } from 'fs';
+import { marked } from 'marked';
+import multer from 'multer';
 
 const router = express.Router();
 const logger = new Logger('Profile');
@@ -392,6 +393,96 @@ router.post('/:username/debug/set-level', async (req, res) => {
   } catch (error) {
     logger.error(`Error setting debug level for ${req.params.username}:`, error);
     res.status(500).json({ error: 'Error updating profile' });
+  }
+});
+
+// Debug endpoint to add XP (development only)
+router.post('/:username/debug/add-xp', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { xp } = req.body;
+    
+    // Verify ownership
+    if (req.cookies?.bambiname !== encodeURIComponent(username)) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const Profile = getModel('Profile');
+    const profile = await withDbConnection(async () => {
+      return await Profile.findOne({ username });
+    });
+
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    // Add XP and potentially level up
+    const xpToAdd = parseInt(xp) || 1000;
+    profile.xp = (profile.xp || 0) + xpToAdd;
+
+    // Simple level calculation (assuming 1000 XP per level)
+    const newLevel = Math.floor(profile.xp / 1000);
+    const oldLevel = profile.level || 0;
+    profile.level = newLevel;
+
+    await withDbConnection(async () => {
+      return await profile.save();
+    });
+
+    const leveledUp = newLevel > oldLevel;
+    const message = leveledUp 
+      ? `Added ${xpToAdd} XP! Leveled up from ${oldLevel} to ${newLevel}!`
+      : `Added ${xpToAdd} XP! Now at ${profile.xp} XP (Level ${profile.level})`;
+
+    res.json({ 
+      success: true, 
+      message: message,
+      level: profile.level,
+      xp: profile.xp,
+      leveledUp: leveledUp
+    });
+  } catch (error) {
+    logger.error(`Error adding XP for ${req.params.username}:`, error);
+    res.status(500).json({ error: 'Error adding XP' });
+  }
+});
+
+// Debug endpoint to reset level (development only)
+router.post('/:username/debug/reset-level', async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    // Verify ownership
+    if (req.cookies?.bambiname !== encodeURIComponent(username)) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const Profile = getModel('Profile');
+    const profile = await withDbConnection(async () => {
+      return await Profile.findOne({ username });
+    });
+
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+
+    // Reset level and XP to 0
+    profile.level = 0;
+    profile.xp = 0;
+
+    await withDbConnection(async () => {
+      return await profile.save();
+    });
+
+    res.json({ 
+      success: true, 
+      message: `Level reset to 0. Fresh start!`,
+      level: profile.level,
+      xp: profile.xp
+    });
+  } catch (error) {
+    logger.error(`Error resetting level for ${req.params.username}:`, error);
+    res.status(500).json({ error: 'Error resetting level' });
   }
 });
 
