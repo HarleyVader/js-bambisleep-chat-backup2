@@ -1,8 +1,9 @@
 // Realtime Stats Service - Enhanced XP and Analytics System
 
+import { Activity, DailyStats, SessionStats, UserStats, XPAward } from '../models/LiveStats.js';
+
 import Logger from '../utils/logger.js';
 import mongoose from 'mongoose';
-import { SessionStats, XPAward, Activity, DailyStats, UserStats } from '../models/LiveStats.js';
 
 const logger = new Logger('RealtimeStatsService');
 

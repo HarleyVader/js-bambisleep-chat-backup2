@@ -15,10 +15,13 @@
         </div>
         
         <div class="chat-messages">
+          <div id="loading-indicator" class="loading-indicator" style="display: none;">
+            <span>Loading older messages...</span>
+          </div>
           <ul id="chat-response">
             <% if (chatMessages && chatMessages.length > 0) { %>
               <% chatMessages.forEach(msg => { %>
-                <li>
+                <li data-timestamp="<%= msg.timestamp %>">
                   <span class="chat-time"><%= new Date(msg.timestamp).toLocaleTimeString([], {hour12: false}) %></span> -
                   <span class="chat-username"><a href="/profile/<%= msg.username %>" class="username-link"><%= msg.username %></a>:</span>
                   <span class="chat-message"><%= msg.data %></span>
@@ -187,18 +190,102 @@
       }, 3000);
     }
 
-    // Auto-scroll to bottom and maintain 50 messages max
+    // Auto-scroll to bottom and maintain unlimited messages with infinite scroll
+    let isLoadingMessages = false;
+    let hasMoreMessages = true;
+    
     function autoScrollToBottom() {
-      const chatResponse = document.getElementById('chat-response');
       const chatMessages = document.querySelector('.chat-messages');
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Load older messages for infinite scroll
+    async function loadOlderMessages() {
+      if (isLoadingMessages || !hasMoreMessages) return;
       
-      // Remove oldest messages if we have more than 50
-      while (chatResponse.children.length > 50) {
-        chatResponse.removeChild(chatResponse.firstChild);
+      isLoadingMessages = true;
+      const loadingIndicator = document.getElementById('loading-indicator');
+      const chatResponse = document.getElementById('chat-response');
+      
+      // Show loading indicator
+      loadingIndicator.style.display = 'block';
+      
+      // Get timestamp of oldest message by finding the data-timestamp attribute or using a different approach
+      let oldestTimestamp = null;
+      const messageNodes = chatResponse.querySelectorAll('li');
+      
+      // We need to reconstruct timestamp from the HTML. Let's add data attributes to messages.
+      // For now, let's use a simpler approach - get the oldest from server on first load
+      if (messageNodes.length > 0) {
+        // Use a more reliable method - we'll store the timestamp when we render messages
+        const firstNonSystemMessage = Array.from(messageNodes).find(node => 
+          !node.classList.contains('system-message') && 
+          !node.classList.contains('countdown-message'));
+        
+        if (firstNonSystemMessage) {
+          // Store timestamp as data attribute when creating messages
+          oldestTimestamp = firstNonSystemMessage.dataset.timestamp;
+          
+          // Fallback: try to reconstruct from time display (assumes today)
+          if (!oldestTimestamp) {
+            const timeElement = firstNonSystemMessage.querySelector('.chat-time');
+            if (timeElement) {
+              const timeText = timeElement.textContent;
+              const today = new Date();
+              const [hours, minutes, seconds] = timeText.split(':');
+              const messageDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 
+                                         parseInt(hours), parseInt(minutes), parseInt(seconds || 0));
+              oldestTimestamp = messageDate.toISOString();
+            }
+          }
+        }
       }
       
-      // Always scroll to bottom
-      chatMessages.scrollTop = chatMessages.scrollHeight;
+      if (!oldestTimestamp) {
+        loadingIndicator.style.display = 'none';
+        isLoadingMessages = false;
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/chat/messages?limit=50&before=${oldestTimestamp}`);
+        const data = await response.json();
+        
+        if (data.messages && data.messages.length > 0) {
+          // Store current scroll position
+          const chatMessages = document.querySelector('.chat-messages');
+          const currentScrollHeight = chatMessages.scrollHeight;
+          
+          // Prepend messages to the top
+          const fragment = document.createDocumentFragment();
+          data.messages.forEach(msg => {
+            const li = document.createElement('li');
+            li.dataset.timestamp = msg.timestamp; // Store timestamp for future pagination
+            li.innerHTML = `
+              <span class="chat-time">${new Date(msg.timestamp).toLocaleTimeString([], {hour12: false})}</span> -
+              <span class="chat-username"><a href="/profile/${msg.username}" class="username-link">${msg.username}</a>:</span>
+              <span class="chat-message">${msg.data}</span>
+            `;
+            fragment.appendChild(li);
+          });
+          
+          chatResponse.insertBefore(fragment, chatResponse.firstChild);
+          
+          // Maintain scroll position
+          const newScrollHeight = chatMessages.scrollHeight;
+          chatMessages.scrollTop = newScrollHeight - currentScrollHeight;
+          
+          hasMoreMessages = data.hasMore;
+        } else {
+          hasMoreMessages = false;
+        }
+      } catch (error) {
+        console.error('Error loading older messages:', error);
+      }
+      
+      // Hide loading indicator
+      loadingIndicator.style.display = 'none';
+      isLoadingMessages = false;
     }
 
     // Show countdown in chat
@@ -252,6 +339,7 @@
     // Handle regular chat messages
     socket.on('chat message', function(data) {
       const li = document.createElement('li');
+      li.dataset.timestamp = data.timestamp; // Store timestamp for pagination
       li.innerHTML = `
         <span class="chat-time">${new Date(data.timestamp).toLocaleTimeString([], {hour12: false})}</span> -
         <span class="chat-username"><a href="/profile/${data.username}" class="username-link">${data.username}</a>:</span>
@@ -259,8 +347,23 @@
       `;
       document.getElementById('chat-response').appendChild(li);
       
-      // Auto-scroll to bottom and maintain message limit
+      // Auto-scroll to bottom for new messages
       autoScrollToBottom();
+    });
+
+    // Infinite scroll functionality
+    const chatMessages = document.querySelector('.chat-messages');
+    let scrollTimeout;
+    
+    chatMessages.addEventListener('scroll', function() {
+      // Debounce scroll events
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        // Check if scrolled to top (within 10px threshold)
+        if (chatMessages.scrollTop <= 10 && hasMoreMessages && !isLoadingMessages) {
+          loadOlderMessages();
+        }
+      }, 100);
     });
 
     // Initial scroll to bottom on page load
@@ -569,6 +672,23 @@
   .unsafe-url-warning {
     color: var(--error);
     font-weight: bold;
+  }
+  
+  .loading-indicator {
+    text-align: center;
+    padding: 10px;
+    color: var(--tertiary-alt);
+    font-style: italic;
+    background: rgba(var(--nav-color-rgb), 0.5);
+    border-radius: var(--border-radius);
+    margin-bottom: 10px;
+    border: 1px solid var(--border-color);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
   }
 </style>
 

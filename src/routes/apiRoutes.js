@@ -8,19 +8,40 @@ const router = express.Router();
 const logger = new Logger('API Routes');
 
 /**
- * Route to get chat messages
+ * Route to get chat messages with pagination
  * Endpoint: GET /api/chat/messages
+ * Query params: limit (default 50), before (timestamp for pagination)
  */
 router.get('/chat/messages', async (req, res) => {
   try {
-    // Get requested limit with default of 50
+    // Get requested limit with default of 50, max 100
     const limit = Math.min(parseInt(req.query.limit || '50', 10), 100);
+    const before = req.query.before ? new Date(req.query.before) : null;
     
-    // Get messages from database or cache
-    // This is a placeholder - replace with your actual data source
-    const messages = []; // Replace with actual data
+    // Import sessionService dynamically
+    const { default: sessionService } = await import('../services/sessionService.js');
     
-    res.json({ messages });
+    let messages = [];
+    if (before) {
+      // Get messages older than the 'before' timestamp
+      messages = await sessionService.ChatMessage.find({
+        timestamp: { $lt: before }
+      })
+      .sort({ timestamp: -1 })
+      .limit(limit)
+      .lean();
+      
+      // Return in chronological order (oldest first)
+      messages = messages.reverse();
+    } else {
+      // Get most recent messages (default behavior)
+      messages = await sessionService.ChatMessage.getRecentMessages(limit);
+    }
+    
+    res.json({ 
+      messages,
+      hasMore: messages.length === limit // Indicate if there might be more messages
+    });
   } catch (error) {
     logger.error('Error fetching chat messages:', error);
     res.status(500).json({ error: 'Error fetching messages' });
