@@ -320,7 +320,18 @@
                                     if (response.ok) {
                                         const result = await response.json();
                                         alert(`Profile updated: ${result.message}`);
-                                        location.reload();
+                                        // Update UI instead of page reload
+                                        if (window.uiSync) {
+                                            window.uiSync.broadcastChange('profile-update', { 
+                                                level: 8, 
+                                                xp: 500000 
+                                            });
+                                        }
+                                        // Update local display
+                                        const levelEl = document.querySelector('.stat-item');
+                                        const xpEl = document.querySelectorAll('.stat-item')[1];
+                                        if (levelEl) levelEl.innerHTML = '<strong>Level:</strong> 8';
+                                        if (xpEl) xpEl.innerHTML = '<strong>XP:</strong> 500000';
                                     } else {
                                         throw new Error('Failed to update profile');
                                     }
@@ -371,7 +382,19 @@
                                     if (response.ok) {
                                         const result = await response.json();
                                         showNotification(`🎉 ${result.message}`, 'success', 5000);
-                                        setTimeout(() => location.reload(), 1000); // Delay reload to show notification
+                                        // Update UI instead of page reload
+                                        if (window.uiSync) {
+                                            window.uiSync.broadcastChange('xp-update', { 
+                                                xp: result.newXp || (parseInt(document.querySelectorAll('.stat-item')[1].textContent.split(':')[1]) + 1000)
+                                            });
+                                        }
+                                        // Update local XP display
+                                        setTimeout(() => {
+                                            const xpEl = document.querySelectorAll('.stat-item')[1];
+                                            if (xpEl && result.newXp) {
+                                                xpEl.innerHTML = `<strong>XP:</strong> ${result.newXp}`;
+                                            }
+                                        }, 1000);
                                     } else {
                                         throw new Error('Failed to add XP');
                                     }
@@ -605,9 +628,18 @@
                             // Load session history on page load
                             window.addEventListener('load', loadSessionHistory);
 
-                            // Make function global for onclick
-                            window.showSessionDetails = showSessionDetails;
-                        </script>
-    </body>
-
-</html>
+            // Make function global for onclick
+            window.showSessionDetails = showSessionDetails;
+        </script>
+        
+        <!-- UI Sync Script -->
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="/js/ui-sync.js"></script>
+        <script>
+            // Initialize socket for UI sync if not already connected
+            if (typeof socket === 'undefined') {
+                const socket = io();
+                window.socket = socket;
+            }
+        </script>
+    </body></html>

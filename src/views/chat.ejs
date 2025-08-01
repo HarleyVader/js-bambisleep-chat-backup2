@@ -107,6 +107,11 @@
       chatResponse.style.fontSize = fontSize + 'px';
       fontSizeDisplay.textContent = fontSize + 'px';
       localStorage.setItem('chatFontSize', fontSize);
+      
+      // Broadcast font change to other clients
+      if (window.uiSync) {
+        window.uiSync.broadcastChange('font-update', { fontSize: fontSize });
+      }
     }
     
     document.getElementById('font-increase').addEventListener('click', function() {
@@ -708,5 +713,6 @@
 </style>
 
 <link rel="stylesheet" href="/css/chat.css">
+<script src="/js/ui-sync.js"></script>
 
 <%- include('partials/footer'); %>

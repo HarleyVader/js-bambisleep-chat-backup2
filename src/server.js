@@ -1232,6 +1232,13 @@ function setupConnectionHandlers(io, socketStore, workers, xpSystem, filteredWor
       
       io.emit('online users', onlineUsers);
 
+      // UI synchronization handler
+      socket.on('ui-change', (change) => {
+        // Broadcast UI changes to all clients except sender
+        socket.broadcast.emit('ui-update', change);
+        logger.info(`UI change broadcasted: ${change.type} from ${socket.bambiUsername}`);
+      });
+
       // Enhanced chat message handling
       socket.on('chat message', async (msg) => {
         try {
