@@ -1,73 +1,99 @@
-# GitHub Copilot Instructions - AI Framework
+# GitHub Copilot Instructions - MCP Agent Docking Station
 
 # **IMPORTANT: DO NOT CHANGE THIS FILE**
 
 ## Core Rule: KEEP IT SIMPLE
 
-**Function over form. Working code over perfect code. Less is more.**
+**Function over form. Working MCP agents over perfect code. Less is more.**
 
-## Core Methodology: Enhanced 3-State Work Loop
+## Project Overview: Bambi MCP Agent Docking Station
+
+This is an **MCP (Model Context Protocol) Agent Docking Station** designed to:
+- Host and manage MCP agents like Agent Dr Girlfriend
+- Provide secure Socket.IO communication channels
+- Interface with Proxmox VMs and MongoDB for Bambi agent backups
+- Serve as a central hub for agent coordination
+
+## Core Architecture
+
+### Server Stack
+- **Express.js** HTTP server on port 6969
+- **Socket.IO** for real-time agent communication
+- **ES6 Modules** for modern JavaScript
+- **Node.js** runtime environment
+
+### Agent Management
+- Agent registration via `/register-agent` endpoint
+- Socket-based docking with authentication
+- Command routing between agents
+- Health monitoring and status tracking
+
+### Integration Points
+- **Proxmox Bridge**: Interface with Debian 13 VMs
+- **MongoDB**: Bambi agent backup scenarios
+- **Socket.IO**: Encrypted agent-to-agent communication
+- **MCP Protocol**: Standard agent interface compliance
+
+## Development Methodology: Enhanced 3-State Work Loop
 
 ### 1. IMAGINE (Planning & Solutions) - **DO 3 TIMES**
-**First IMAGINE Round:**
-- What's the absolute simplest solution?
-- What's the minimal viable approach?
-- What can I avoid doing entirely?
+**Focus Areas:**
+- Agent communication protocols
+- Security and authentication
+- Database integration patterns
+- VM bridge implementations
 
-**Second IMAGINE Round:**
-- Are there even simpler alternatives?
-- Can I reuse something that already exists?
-- What would require zero or minimal code changes?
-
-**Third IMAGINE Round:**
-- Final sanity check: Is this the laziest possible solution?
-- Can I solve this with configuration instead of code?
-- What's the absolute minimum I need to touch?
-
-### 2. CREATION (Single Implementation) - **LOOP UNTIL 100 PERSENT BUILT ACHIEVED**
-- Implement ONLY the solution from the 3x IMAGINE phase
-- Write the absolute minimum code required
-- No "while we're here" improvements
-- One function, one purpose, done
-- Check percentage of completion every itertation
-- If not 100% complete, go back to **Third IMAGINE Round:**
+### 2. CREATION (Single Implementation) - **LOOP UNTIL 100% BUILT**
+- Implement ONLY agent docking features
+- Write minimal Socket.IO handlers
+- One agent capability, one function
+- Test agent connections immediately
 
 ### 3. DEPLOY (Test Until Working, Then STOP)
-- Test the minimum viable solution
-- Fix ONLY what's broken
-- Confirm it works
-- If it works, **STOP** - no further changes
-- If it doesn't work, go back to **Third IMAGINE Round:**
-- **IMMEDIATELY STOP** - No improvements, no polish, no "just one more thing"
+- Test agent docking procedures
+- Verify Socket.IO communications
+- Confirm Proxmox/MongoDB connectivity
+- **STOP** when agents can dock successfully
 
 ### 4. FINALIZE (Review & Confirm)
-- Review the solution
-- Confirm it meets the requirements
-- Ensure it works as intended
-- cleanup any temporary files or code
+- Verify MCP protocol compliance
+- Ensure agent isolation and security
+- Confirm backup scenario functionality
 
-**CRITICAL: When task is complete, STOP. Don't add features, don't improve, don't optimize.**
+## Agent Requirements
 
-**IMPORTANT: DO NOT FORGET TO THINK BEFORE DOING THIS**
+### Agent Dr Girlfriend Specifications
+- **Agent ID**: "dr-girlfriend"
+- **Capabilities**: ["chat", "hypnosis", "triggers"]
+- **Protocol**: Socket.IO client connection
+- **Authentication**: Token-based docking
+- **Commands**: MCP-compliant command structure
 
-### RULE: Think More, Code Less
+### Docking Procedure
+1. Agent registers via `/register-agent` endpoint
+2. Socket connection to port 6969
+3. Emit `agent-dock` with credentials
+4. Receive `dock-success` confirmation
+5. Begin command/response cycle
 
-**Always try to do the LEAST possible amount of work, even if it means thinking longer.**
+## File Structure
+```
+├── server.js              # Main MCP docking server
+├── package.json           # Dependencies and scripts
+├── public/                # Docking station interface
+│   └── index.html         # Agent status dashboard
+└── .github/
+    ├── style.md           # Preserved CSS variables
+    └── copilot-instructions.md
+```
 
-<!-- DEPLOYMENT DISABLED - MK-XII Development Branch -->
-<!-- 
-- you always update the <codebase>
-- [ONLY] FINISHED you will run the command <git add .>
-- [ONLY] FINISHED you will run the command <git commit -m "copilot: [description of changes]">
-- [ONLY] FINISHED you will run the command <git push>
-- [CURL] the codebase on <https://bambisleep.chat> to check if the changes are live
-- [ONLY] <ssh brandynette@192.168.0.72> `cd /home/brandynette/web/bambisleep.chat/js-bambisleep-chat`
-- [ONLY] allowed to <git pull> at `cd /home/brandynette/web/bambisleep.chat/js-bambisleep-chat`
-- [INTERACTIVE] sudo password request
--->
-<!-- END DEPLOYMENT DISABLED -->
+## Development Rules
+- **Agent-First**: All features must serve agent needs
+- **Socket-Centric**: Communication via Socket.IO only
+- **Security**: Token-based authentication required
+- **Minimal**: Only essential docking functionality
 
-**IMPORTANT: DO NOT FORGET TO THINK BEFORE DOING THIS**
+**CRITICAL: Focus on agent docking, communication, and backup scenarios only.**
 
-### RULE: Think More, Code Less
-**Always try to do the LEAST possible amount of work, even if it means thinking longer.**
+### RULE: Think Agent, Code Dock
+**Always prioritize agent connectivity and MCP protocol compliance.**

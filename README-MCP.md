@@ -17,19 +17,21 @@ npm run dev
 
 ## Agent Docking Interface
 
-- **Server**: http://localhost:6969
-- **Dashboard**: http://localhost:6969 (Agent status interface)
-- **Health**: http://localhost:6969/health
+- **Server**: <http://localhost:6969>
+- **Dashboard**: <http://localhost:6969> (Agent status interface)
+- **Health**: <http://localhost:6969/health>
 
 ## Agent Dr Girlfriend Integration
 
 ### Docking Procedure
+
 1. Register agent: `POST /register-agent`
-2. Connect Socket.IO to port 6969  
+2. Connect Socket.IO to port 6969
 3. Emit `agent-dock` with credentials
 4. Begin MCP command cycle
 
 ### Example Agent Connection
+
 ```javascript
 import io from 'socket.io-client';
 
