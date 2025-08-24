@@ -4,7 +4,7 @@
  * Manages MCP tools and authentication for /api/mcp/ endpoints
  */
 
-import MCPCrypto from '../crypto-utils.js';
+import MCPCrypto from '../src/crypto-utils.js';
 import crypto from 'crypto';
 
 class MCPToolsRegistry {
