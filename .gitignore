@@ -91,7 +91,6 @@ dist
 
 # Gatsby files
 .cache/
-public
 
 # Storybook build outputs
 .out
@@ -138,3 +137,22 @@ sessions/
 /temp-audio/
 *.wav.tmp
 *.mp3.tmp
+
+# Repository workspaces (worker threads)
+repo-workspace/
+test-repo-workspace/
+**/node_modules/
+*.npm-cache/
+.mcp-isolation.json
+
+# Demo and test files
+demo-*.js
+test-*.js
+deployment-status.js
+
+# GitHub API Keys and Secrets
+.env
+.env.local
+.env.production
+github-token.txt
+*.pem

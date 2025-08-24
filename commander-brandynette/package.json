@@ -1,0 +1,26 @@
+{
+    "name": "commander-brandynette",
+    "version": "1.0.0",
+    "description": "MCP Agent Prototype for Bambi Docking Station - Agent Dr Girlfriend",
+    "type": "module",
+    "main": "agent.js",
+    "scripts": {
+        "start": "node agent.js",
+        "dock": "node agent.js",
+        "test": "node tests/test-docking.js"
+    },
+    "dependencies": {
+        "socket.io-client": "^4.7.2",
+        "axios": "^1.5.0",
+        "uuid": "^9.0.0"
+    },
+    "keywords": [
+        "mcp",
+        "agent",
+        "bambi",
+        "socket.io",
+        "docking"
+    ],
+    "author": "HarleyVader",
+    "license": "MIT"
+}

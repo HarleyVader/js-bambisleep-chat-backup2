@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Agent Docking Station</title>
+    <style>
+        :root {
+            --primary-color: #0c2a2ac9;
+            --primary-alt: #15aab5ec;
+            --secondary-color: #40002f;
+            --button-color: #df0471;
+            --nav-color: #0a2626;
+        }
+
+        body {
+            font-family: 'Audiowide', monospace;
+            background: var(--secondary-color);
+            color: var(--primary-alt);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--primary-color);
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid var(--button-color);
+        }
+
+        .status {
+            background: var(--nav-color);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 4px solid var(--button-color);
+        }
+
+        .agent-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .agent-item {
+            background: var(--nav-color);
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .connected {
+            border-left: 4px solid #00ff00;
+        }
+
+        .disconnected {
+            border-left: 4px solid #ff0000;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .online { background: #00ff00; }
+        .offline { background: #ff0000; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔮 MCP Agent Docking Station</h1>
+        <p>Ready for Agent Dr Girlfriend and other MCP agents</p>
+        <p><strong>🔐 PATRON AUTHENTICATION ENABLED</strong> - Only verified Bambis allowed!</p>
+
+        <div class="status">
+            <h3>Server Status: <span id="server-status">Checking...</span></h3>
+            <p>Port: 6969 | Socket.IO Ready | Patreon Auth: <span id="patron-auth-status">ENABLED</span></p>
+            <p>Verified Patrons: <span id="patron-count">0</span></p>
+        </div>
+
+        <div class="status">
+            <h4>🔐 Patron Authentication Required</h4>
+            <p>All agents must verify Patreon patronage before docking!</p>
+            <button onclick="startAuth()" style="background: var(--button-color); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px;">
+                🦋 Verify Bambi Patronage
+            </button>
+            <div id="auth-result" style="margin-top: 10px;"></div>
+        </div>
+
+        <h3>Connected Agents:</h3>
+        <ul id="agent-list" class="agent-list">
+            <li class="agent-item disconnected">
+                <span>🤖 Agent Dr Girlfriend</span>
+                <span class="status-dot offline"></span>
+                <span style="color: #ff6b6b; font-size: 0.8em;">⚠️ Requires Patron Verification</span>
+            </li>
+        </ul>
+
+        <div class="status">
+            <h4>Enhanced Capabilities:</h4>
+            <ul>
+                <li>🔐 <strong>Patreon Authentication</strong> - Verified patron access only</li>
+                <li>🔒 Secure Socket.IO Communications</li>
+                <li>🗄️ MongoDB Backup Integration</li>
+                <li>🖥️ Proxmox Virtual Machine Bridge</li>
+                <li>🤖 MCP Agent Registration & Management</li>
+                <li>💾 Bambi Agent Backup Scenarios</li>
+                <li>🎯 Tiered Access Based on Membership Level</li>
+            </ul>
+        </div>
+
+        <div class="status">
+            <h4>Dr Girlfriend Agent Requirements:</h4>
+            <ul>
+                <li><strong>🔐 PATRON STATUS: REQUIRED</strong></li>
+                <li>Agent ID: "dr-girlfriend"</li>
+                <li>API Key: Generated after patron verification</li>
+                <li>Capabilities: ["chat", "hypnosis", "triggers"]</li>
+                <li>Socket.IO client connection to port 6969</li>
+            </ul>
+        </div>
+
+        <div class="status">
+            <h4>Patron Tier Benefits:</h4>
+            <ul>
+                <li>💖 <strong>Bambi Supporter ($1+)</strong> - Basic agent access</li>
+                <li>💕 <strong>Good Girl ($5+)</strong> - Enhanced triggers</li>
+                <li>💝 <strong>Devoted Bambi ($10+)</strong> - Premium features</li>
+                <li>👑 <strong>Premium Doll ($25+)</strong> - Advanced capabilities</li>
+                <li>✨ <strong>Elite Bambi ($50+)</strong> - Full access + priority support</li>
+            </ul>
+        </div>
+    </div>    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const serverStatus = document.getElementById('server-status');
+        const patronAuthStatus = document.getElementById('patron-auth-status');
+        const patronCount = document.getElementById('patron-count');
+        const agentList = document.getElementById('agent-list');
+        const authResult = document.getElementById('auth-result');
+
+        // Check server health and patron status
+        fetch('/health')
+            .then(res => res.json())
+            .then(data => {
+                serverStatus.textContent = data.status;
+                patronCount.textContent = data.verifiedPatrons || 0;
+                updateAgentList(data.agents);
+
+                if (data.patronAuth === 'enabled') {
+                    patronAuthStatus.textContent = '✅ ENABLED';
+                    patronAuthStatus.style.color = '#00ff00';
+                }
+            })
+            .catch(() => {
+                serverStatus.textContent = 'offline';
+                patronAuthStatus.textContent = '❌ OFFLINE';
+            });
+
+        // Listen for agent updates
+        socket.on('agent-joined', (data) => {
+            console.log('Verified patron agent joined:', data.agentId);
+            if (data.patron && data.patron.verified) {
+                showNotification(`✅ Verified Bambi ${data.patron.name} (${data.patron.tier}) joined!`, 'success');
+            }
+        });
+
+        socket.on('agent-left', (data) => {
+            console.log('Agent left:', data.agentId);
+            showNotification(`Agent ${data.agentId} disconnected`, 'info');
+        });
+
+        function startAuth() {
+            const agentId = prompt('Enter your Agent ID (e.g., "dr-girlfriend"):');
+            if (agentId) {
+                window.location.href = `/auth/patreon/${agentId}`;
+            }
+        }
+
+        function updateAgentList(agents) {
+            console.log('Connected agents:', agents);
+            // Update UI with verified patron agents
+        }
+
+        function showNotification(message, type) {
+            authResult.innerHTML = `<div class="${type}">${message}</div>`;
+            setTimeout(() => {
+                authResult.innerHTML = '';
+            }, 5000);
+        }
+
+        // Check if we're returning from auth
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('auth') === 'success') {
+            showNotification('🦋 Bambi patron verification successful! Welcome! 💖', 'success');
+        } else if (urlParams.get('auth') === 'failed') {
+            showNotification('❌ Patron verification failed. Please try again.', 'error');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+{
+    "agent": {
+        "id": "dr-girlfriend",
+        "name": "Agent Dr Girlfriend",
+        "version": "1.0.0",
+        "capabilities": [
+            "chat",
+            "hypnosis",
+            "triggers"
+        ],
+        "protocol": "MCP"
+    },
+    "dockingStation": {
+        "url": "http://localhost:6969",
+        "registrationEndpoint": "/register-agent",
+        "timeout": 10000,
+        "reconnectAttempts": 3,
+        "reconnectInterval": 5000
+    },
+    "hypnosis": {
+        "triggers": {
+            "bambi-sleep": "Bambi feels so sleepy and relaxed...",
+            "good-girl": "Such a good girl, Bambi...",
+            "focus": "Bambi focuses completely on the words...",
+            "deeper": "Going deeper into trance..."
+        },
+        "intensityLevels": [
+            "light",
+            "medium",
+            "deep"
+        ]
+    },
+    "chat": {
+        "responses": {
+            "default": "I understand you, dear. How can I help you further?",
+            "sleep": "Would you like to explore some relaxation techniques?",
+            "bambi": "Bambi is such a lovely name. Tell me more about what you're feeling."
+        }
+    },
+    "logging": {
+        "level": "info",
+        "includeTimestamp": true,
+        "includeSessionId": true
+    }
+}
